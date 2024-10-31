@@ -1113,27 +1113,6 @@ watch(
   { deep: true }
 );
 
-watch(
-  selectedInvoiceItems,
-  async (newItems, oldItems) => {
-    for (let i = 0; i < newItems.length; i++) {
-      const newProductId = newItems[i].product_id;
-      const oldProductId = oldItems[i]?.product_id;
-
-      // Fetch stock only if product_id has changed and is set
-      if (newProductId && newProductId !== oldProductId) {
-        try {
-          const response = await axios.get(`/api/products/${newProductId}/stock`);
-          selectedInvoiceItems.value[i].stock = response.data.stock;
-        } catch (error) {
-          console.error(`Error fetching stock for product ${newProductId}:`, error);
-          selectedInvoiceItems.value[i].stock = 0; // Default if error
-        }
-      }
-    }
-  },
-  { deep: true }
-);
 
 watch(
   selectedInvoiceItems,
