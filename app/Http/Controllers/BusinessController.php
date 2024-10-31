@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 class BusinessController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource.a
      */
 
     public function index()
@@ -132,6 +132,8 @@ class BusinessController extends Controller
             $oldData = $business->toArray();
             $oldName = $business->business_Name;
             $oldImage = $business->business_image;
+            
+            $business->save();
 
             $changes = [];
             $ignoreImageChange = false; // New flag to ignore specific image changes

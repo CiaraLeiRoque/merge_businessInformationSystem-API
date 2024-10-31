@@ -3,6 +3,8 @@ import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
 
 const business = ref({
     business_id: null,
@@ -21,11 +23,26 @@ const business = ref({
     image: null,
 });
 
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
+
 const phoneError = ref('');
 const telephoneError = ref('');
 const nameError = ref('');
 const emailError = ref('');
 const addressError = ref('');
+
 
 const validatePhone = () => {
     if (/\D/.test(business.value.phone)) {
@@ -54,12 +71,15 @@ const validateName = () => {
 const validateEmail = () => {
     if (!business.value.email) {
         emailError.value = "This field cannot be empty";
-    } else if (!/^[\w.-]+@[a-zA-Z\d.-]+\.[a-zA-Z]{2,}$/.test(business.value.email)) {
+    } else if (/[A-Z]/.test(business.value.email)) {
+        emailError.value = "Email must be in lowercase only";
+    } else if (!/^[\w.-]+@[a-z\d.-]+\.[a-z]{2,}$/.test(business.value.email)) {
         emailError.value = "Please enter a valid email format";
     } else {
         emailError.value = '';
     }
 };
+
 
 const validateAddress = () => {
     addressError.value = business.value.address ? '' : "This field cannot be empty";
@@ -203,28 +223,31 @@ const onProfilePictureChange = (event) => {
 
 // Handle business update
 const updateBusiness = async () => {
+    // Run validations
     validateName();
     validateEmail();
     validateAddress();
     validatePhone();
     validateTelephone();
 
+    // Check if any errors exist
     if (nameError.value || emailError.value || addressError.value || phoneError.value || telephoneError.value) {
-        alert('Please correct the errors before updating the business profile.');
+        showToast("Please correct the errors before updating the business profile.", "error");
         return;
     }
 
     if (!business.value.business_id) {
-        alert("Business ID is missing!");
+        showToast("Business ID is missing", "error");
         return;
     }
 
+    // Prepare form data
     const formData = new FormData();
     formData.append('business_Name', business.value.name.trim());
     formData.append('business_Email', business.value.email.trim());
-    formData.append('business_Province', business.value.province);
-    formData.append('business_City', business.value.city);
-    formData.append('business_Barangay', business.value.barangay);
+    formData.append('business_Province', business.value.province || '');
+    formData.append('business_City', business.value.city || '');
+    formData.append('business_Barangay', business.value.barangay || '');
     formData.append('business_Address', business.value.address.trim());
 
     formData.append('business_Phone_Number', business.value.phone.trim() || '');
@@ -234,11 +257,12 @@ const updateBusiness = async () => {
     formData.append('business_Instagram', business.value.instagram || '');
     formData.append('business_Tiktok', business.value.tiktok || '');
 
-
+    // Conditionally add image
     if (business.value.image instanceof File) {
         formData.append('business_image', business.value.image);
     }
 
+    // Send the update request
     try {
         const response = await axios.post(`/api/Business/${business.value.business_id}`, formData, {
             headers: {
@@ -248,17 +272,25 @@ const updateBusiness = async () => {
         });
 
         if (response.data.success) {
-
-            alert('Business profile updated successfully');
-            window.location.reload();  // This will refresh the page
-
+            showToast("Business Info Has Been Updated", "success");
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);  
         } else {
-            alert('Failed to update business profile');
+            showToast("An error occurred while updating", "error");
         }
     } catch (error) {
-        alert('Failed to update business profile');
+    if (error.response && error.response.data.errors) {
+        console.error("Validation errors:", error.response.data.errors);
+        showToast("Please fix validation errors.", "error");
+    } else {
+        console.error("Error updating business profile:", error);
+        showToast("Failed to update business profile", "error");
     }
+}
+
 };
+
 
 
 
@@ -268,7 +300,6 @@ const updateBusiness = async () => {
     <template>
         <AuthenticatedLayout>
             <Head title="Update Business Profile" />
-
             <div class="container mx-auto p-4 flex flex-col md:flex-row">
                 <!-- Left Column (Form Fields) -->
                 <div class="w-full md:w-1/2 pt-20">
@@ -497,5 +528,18 @@ const updateBusiness = async () => {
                     </div>
                 </div>
             </div>
+
+            <ErrorToast
+                v-if="showErrorToast"
+                :visible="showErrorToast"
+                :message="toastMessage"
+                @close="showErrorToast = false"
+                />
+                <SuccessToast
+                v-if="showSuccessToast"
+                :visible="showSuccessToast"
+                :message="toastMessage"
+                @close="showSuccessToast = false"
+            />
         </AuthenticatedLayout>
     </template>
