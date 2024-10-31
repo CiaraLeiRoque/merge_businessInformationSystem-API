@@ -262,22 +262,29 @@ const filteredInvoices = computed(() => {
 
 //ADD INVOICES
 const addInvoice = async () => {
+    // Run validations
     validateInvoiceID();
     validateDate(); 
     validateStatus();
     validatePtype();
     validateTerms();
+
+    // Check for validation errors before proceeding
     if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value) {
         alert('Please correct the errors before adding an Invoice.');
         return;
     }
 
     try {
-        // Create FormData and send request to create the invoice
+        // Create FormData and handle nullable fields
         const formData = new FormData();
         for (const key in newInvoice.value) {
-            formData.append(key, newInvoice.value[key]);
+            const value = newInvoice.value[key];
+            // Set nullable fields to empty string if empty
+            formData.append(key, value === "" ? "" : value);
         }
+
+        // Send POST request to create the invoice
         const response = await axios.post('/api/invoice', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -286,31 +293,24 @@ const addInvoice = async () => {
 
         // Fetch the invoice_system_id from the response
         invoiceSystemId = response.data.invoice_system_id;
-        //const invoiceSystemId = response.data.invoice_system_id;
-
-        // Set the invoice_system_id for the new invoice item
-        // newInvoiceItem.value.invoice_system_id = invoiceSystemId;
 
         console.log("Invoice created successfully:", response);
         console.log("Invoice System ID:", invoiceSystemId);
 
-
-
-
         // Fetch updated list of invoices
         fetchInvoices();
-        
-        // Send the new invoice item
-        //await addInvoiceItem(newInvoiceItem.value); // Call addInvoiceItem with the single item
 
-            currentStepAdd.value = 2; // Move to the next step
+        // Move to the next step
+        currentStepAdd.value = 2;
         addInvoiceItem();
 
         console.log("currentStepAdd value:", currentStepAdd.value);
     } catch (error) {
-        console.error("Error adding invoice:", error);
+        console.error("Error adding invoice:", error.response ? error.response.data : error.message);
     }
 };
+
+
 
 
 
@@ -1003,24 +1003,26 @@ const editInvoiceDetails = async (invoice) => {
 
 //----------------------------------------------FOR UPDATING INVOICE------------------------------------------
 const updateInvoice = async () => {
+    // Run validations
     validateUpdateInvoiceID();
     validateUpdateDate();
     validateUpdateStatus();
     validateUpdatePtype();
     validateUpdateTerms();
 
+    // Check for validation errors before proceeding
     if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value) {
         alert('Please correct the errors before updating the Invoice.');
         return;
     }
-    try {
 
-        // Create a FormData object and append the necessary fields
+    try {
+        // Create a FormData object and handle nullable fields
         const formData = new FormData();
         for (const key in editInvoice.value) {
-            if (editInvoice.value[key] !== null && editInvoice.value[key] !== undefined) {
-                formData.append(key, editInvoice.value[key]);
-            }
+            const value = editInvoice.value[key];
+            // Set nullable fields to empty string if empty
+            formData.append(key, value === "" || value === null ? "" : value);
         }
         
         // Use the invoice_system_id from editInvoice for the request URL
@@ -1036,11 +1038,11 @@ const updateInvoice = async () => {
             invoices.value[index] = response.data;
         }
         
-        // Hide the edit invoice modal
+        // Hide the edit invoice modal and update invoice item
         updateInvoiceItem();
 
     } catch (error) {
-        console.error("Error updating invoice:", error);
+        console.error("Error updating invoice:", error.response ? error.response.data : error.message);
     }
 };
 
