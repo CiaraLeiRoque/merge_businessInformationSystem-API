@@ -62,7 +62,7 @@ public function show($invoice_id)
         
                 //FOR CUSTOMER INFO IN INVOICE
                     'customer_Name' => 'required|string|max:255',
-                    'customer_Address' => 'required|string|max:255',
+                    'customer_Address' => 'nullable|string|max:255',
                     'customer_TIN' => 'required|integer',
                     'customer_Business_Style' => 'required|string|max:255',
                     'customer_PO_No' => 'required|integer',
@@ -220,7 +220,7 @@ public function show($invoice_id)
             'authorized_Representative' => 'required|string|max:255',
             'payment_Type' => 'required|string|max:255',
             'customer_Name' => 'required|string|max:255',
-            'customer_Address' => 'required|string|max:255',
+            'customer_Address' => 'nullable|string|max:255',
             'customer_TIN' => 'required|integer',
             'customer_Business_Style' => 'required|string|max:255',
             'customer_PO_No' => 'required|integer',
