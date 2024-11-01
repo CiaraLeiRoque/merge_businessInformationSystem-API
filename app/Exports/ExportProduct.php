@@ -40,7 +40,6 @@ class ExportProduct implements FromQuery, WithHeadings, WithStyles, WithMapping
             $product->featured,
             $product->on_sale,
             $product->on_sale_price,
-            $product->seniorPWD_discountable,
             $product->business_id,
             $product->created_at,
             $product->updated_at,
@@ -70,7 +69,6 @@ class ExportProduct implements FromQuery, WithHeadings, WithStyles, WithMapping
             'Featured',
             'On Sale',
             'On Sale Price',
-            'Senior/PWD Discountable',
             
             
             'Business ID',

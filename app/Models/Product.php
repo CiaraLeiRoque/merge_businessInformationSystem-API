@@ -21,7 +21,6 @@ class Product extends Model
         'description',
         'expDate',
         'image',
-        'seniorPWD_discountable',
         'on_sale',
         'on_sale_price',
         'featured',

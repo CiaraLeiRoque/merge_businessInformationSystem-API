@@ -31,7 +31,6 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
             'featured'               => $row['featured'],
             'on_sale'                => $row['on_sale'],
             'on_sale_price'          => $row['on_sale_price'],
-            'seniorPWD_discountable' => $row['seniorpwd_discountable'],
             'business_id'            => $row['business_id'],
             'created_at'             => $this->transformDate($row['created_at']),
             'updated_at'             => $this->transformDate($row['updated_at']),
@@ -79,7 +78,6 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
             '*.featured'               => 'required|in:true,false',
             '*.on_sale'                => 'required|in:yes,no',
             '*.on_sale_price'          => 'nullable|numeric',
-            '*.seniorpwd_discountable' => 'required|in:yes,no',
             '*.business_id'            => 'required|integer',
             '*.created_at'             => 'nullable|date',
             '*.updated_at'             => 'nullable|date',
@@ -94,7 +92,6 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
         return [
             '*.featured.in'               => 'The featured field must be either "true" or "false".',
             '*.on_sale.in'                => 'The on sale field must be either "yes" or "no".',
-            '*.seniorpwd_discountable.in' => 'The Senior/PWD Discountable field must be either "yes" or "no".',
         ];
     }
 }
