@@ -47,13 +47,12 @@
                     <div class="flex flex-row justify-center px-8 space-x-6 mt-2"> 
                         <!-- Visitors & Views Chart -->
                         <div class="custom-chart-width p-4 border border-black rounded-lg w-full" style="height: 275px;"> 
-
                             <canvas id="visitorsViewsChart" class="w-full" style="height: 150px;"></canvas> 
                         </div>
 
                         <!-- Retention Rate Chart -->
                         <div class="custom-chart-width p-4 border border-black rounded-lg w-full" style="height: 275px;"> 
-                            <canvas id="retentionRateChart" class="w-full" style="height: 150px;"></canvas> 
+                            <canvas id="engagementRateChart" class="w-full" style="height: 150px;"></canvas> 
                         </div>
                     </div>
                 </div>
@@ -127,69 +126,72 @@ const imagePreviewUrl = ref(null);
 const editImagePreviewUrl = ref(null);
 
 // Analytics Data
-const analyticsData = ref([]);
-const totalPageViews = ref(0);
-const totalVisitors = ref(0);
-const bounceRate = ref(0);
-const averageEngagementTime = ref(0);
-const totalSessions = ref(0);
-const retentionRate = ref(0);
-const selectedPeriod = ref(7);
-
 let visitorsViewsChart = null;
-let retentionRateChart = null;
+let engagementRateChart = null;
 
-onMounted(() => {
-    fetchAnalyticsData(selectedPeriod.value);
-});
+const selectedPeriod = ref(7);
+const views = ref(0);
+const visits = ref(0);
+const visitors = ref(0);
+const bounceRate = ref(0);
+const avgVisitTime = ref('');
+const engagementRate = ref(0);
 
-watch(selectedPeriod, () => {
-    fetchAnalyticsData(selectedPeriod.value);
-});
+const dailyData = ref([]);
 
-async function fetchAnalyticsData(days = 7) {
+const fetchAnalyticsData = async () => {
     try {
-        const response = await axios.get(`/analytics?days=${days}`);
-        analyticsData.value = response.data.analyticsData;
-        totalPageViews.value = response.data.totalPageViews;
-        totalVisitors.value = response.data.totalVisitors;
-        bounceRate.value = response.data.bounceRate;
-        averageEngagementTime.value = response.data.averageEngagementTimePerActiveUser;
-        totalSessions.value = response.data.totalSessions;
-        retentionRate.value = response.data.retentionRates;
+        const { data } = await axios.get(`/api/analytics`, {
+            params: { period: selectedPeriod.value },
+        });
 
-        updateVisitorsViewsChart();
-        updateRetentionRateChart();
+        views.value = data.metricsData.views;
+        visits.value = data.metricsData.visits;
+        visitors.value = data.metricsData.visitors;
+        bounceRate.value = data.metricsData.bounceRate;
+        avgVisitTime.value = data.metricsData.avgVisitTime;
+        engagementRate.value = data.metricsData.engagementRate;
+
+        dailyData.value = data.dailyData;
+
+        renderVisitorsViewsChart();
+        renderEngagementRateChart();
     } catch (error) {
-        console.error('Error fetching analytics data:', error);
+        console.error("Error fetching analytics data", error);
     }
-}
+};
 
-function updateVisitorsViewsChart() {
-    const ctx = document.getElementById('visitorsViewsChart').getContext('2d');
+const renderVisitorsViewsChart = () => {
+    // If chart already exists, destroy it before creating a new one
+    if (visitorsViewsChart) {
+        visitorsViewsChart.destroy();
+    }
 
-    if (visitorsViewsChart) visitorsViewsChart.destroy();
+    const labels = dailyData.value.map(data => data.date);
+    const viewsData = dailyData.value.map(data => data.views);
+    const visitorsData = dailyData.value.map(data => data.visitors);
 
-    const labels = Array.from({ length: selectedPeriod.value }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (selectedPeriod.value - 1 - i));
-        return date.toLocaleDateString();
-    });
-
+    const ctx = document.getElementById("visitorsViewsChart").getContext("2d");
     visitorsViewsChart = new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: {
             labels: labels,
             datasets: [
                 {
-                    label: 'Visitors',
-                    backgroundColor: '#4D82E9',
-                    data: analyticsData.value.map(item => item.activeUsers),
+                    label: "Visitors",
+                    data: visitorsData,
+                    backgroundColor: "#5E9FF2",
+                    borderColor: "#5E9FF2",
+                    borderWidth: 1,
+                    stack: 'combined',
                 },
                 {
-                    label: 'Views',
-                    backgroundColor: '#2A4F97',
-                    data: analyticsData.value.map(item => item.screenPageViews),
+                    label: "Views",
+                    data: viewsData,
+                    backgroundColor: "#3F6CA6",
+                    borderColor: "#3F6CA6",
+                    borderWidth: 1,
+                    stack: 'combined',
                 },
             ],
         },
@@ -205,41 +207,41 @@ function updateVisitorsViewsChart() {
                     stacked: true,
                 },
             },
-            plugins: {
+        plugins: {
                 legend: {
+                    display: true,
                     position: 'bottom',
                     labels: {
-                        usePointStyle: true,
+                        usePointStyle: true, // Use circles instead of rectangles for legend icons
                         pointStyle: 'circle',
                     },
                 },
             },
         },
     });
-}
+};
 
-function updateRetentionRateChart() {
-    const ctx = document.getElementById('retentionRateChart').getContext('2d');
+const renderEngagementRateChart = () => {
+    if (engagementRateChart) {
+        engagementRateChart.destroy();
+    }
 
-    if (retentionRateChart) retentionRateChart.destroy();
+    const labels = dailyData.value.map(data => data.date);
+    const engagementRateData = dailyData.value.map(data => data.engagementRate);
 
-    const labels = Array.from({ length: retentionRate.value.length }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (retentionRate.value.length - 1 - i));
-        return date.toLocaleDateString();
-    });
-
-    retentionRateChart = new Chart(ctx, {
-        type: 'line',
+    const ctx = document.getElementById("engagementRateChart").getContext("2d");
+    engagementRateChart = new Chart(ctx, {
+        type: "line",
         data: {
             labels: labels,
             datasets: [
                 {
-                    label: 'Retention Rate',
-                    backgroundColor: '#E0DFFD',
-                    borderColor: '#27378F',
+                    label: "Engagement Rate",
+                    data: engagementRateData,
+                    backgroundColor: "#E0DFFD",
+                    borderColor: "#27378F",
                     fill: true,
-                    data: retentionRate.value,
+                    tension: 0.1,
                 },
             ],
         },
@@ -247,18 +249,38 @@ function updateRetentionRateChart() {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
+                x: {
+                    ticks: {
+                        maxRotation: 15, // Set max rotation
+                        minRotation: 15, // Set min rotation to make them diagonal
+                    },
+                },
                 y: {
                     beginAtZero: true,
+                    ticks: {
+                        callback: (value) => `${value}%`,
+                    },
                 },
             },
             plugins: {
                 legend: {
-                    display: false,
+                    display: true,
+                    position: 'bottom',
                 },
             },
         },
     });
-}
+};
+
+watch(selectedPeriod, async () => {
+    await fetchAnalyticsData();  // Fetch new data based on selected period
+    renderVisitorsViewsChart();  // Re-render the chart with new data
+    renderEngagementRateChart();
+});
+
+
+// Fetch data initially and refetch on period change
+onMounted(fetchAnalyticsData);
 
 // Fetch Products and Categories
 const fetchProducts = async () => {
@@ -389,18 +411,36 @@ const fetchsocialmediaLinks = async() =>{
     }
 }
 function validateAndFormatUrl(url, baseUrl) {
-    // Check if url already starts with "https://www."
-    const isValidLink = url.startsWith(`https://www.${baseUrl}`);
-    
-    // If valid, return the URL as is
-    if (isValidLink) {
-        console.log("This link is valid");
+    if (!url) return ''; // Return empty if no URL provided
+
+    // Remove whitespace and convert link to lowercase for uniformity
+    url = url.trim().toLowerCase();
+
+    // Regular expressions to identify different formats
+    const fullUrlRegex = new RegExp(`^(https?://)?(www\\.)?${baseUrl.replace('.', '\\.')}`, 'i');
+    const handleRegex = new RegExp(`^/?([\\w.-]+)$`, 'i'); // Matches just the handle like "namehere" or "/namehere"
+
+    // Case 1: If URL matches the full URL structure, ensure it has "https://www."
+    if (fullUrlRegex.test(url)) {
+        if (!url.startsWith('https://')) {
+            url = `https://${url}`;
+        }
+        if (!url.includes('www.')) {
+            url = url.replace(/https?:\/\//, 'https://www.');
+        }
         return url;
-    } else {
-        // Else, construct the full URL with the base URL + string
-        console.log("This link is not valid");
-        return `https://www.${baseUrl}/${url}`;
     }
+
+    // Case 2: If URL is just a handle, construct full URL
+    const match = url.match(handleRegex);
+    if (match) {
+        const handle = match[1];
+        return `https://www.${baseUrl}/${handle}`;
+    }
+
+    // Case 3: Catch-all for invalid formats, return empty string
+    console.warn("Invalid URL format provided:", url);
+    return '';
 }
 
 fetchsocialmediaLinks();
