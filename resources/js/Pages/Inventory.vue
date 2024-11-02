@@ -4,6 +4,7 @@ import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import { Head } from '@inertiajs/vue3';
 
 const products = ref([]);
 const showAddProductModal = ref(false);
@@ -843,6 +844,7 @@ function sortByExpDate() {
 </script>
 
 <template>
+    <Head title="Inventory" />
     <AuthenticatedLayout>
 
 

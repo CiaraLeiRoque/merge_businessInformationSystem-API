@@ -2,6 +2,7 @@
 import { Inertia } from '@inertiajs/inertia';
 import { onMounted, ref } from 'vue';
 import{usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 
 
 const businessInfo = {
@@ -114,6 +115,7 @@ async function getWebsiteInfo(){
 </script>
 
 <template>
+    <Head title="About Us" />
         <!-- header -->
         <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">

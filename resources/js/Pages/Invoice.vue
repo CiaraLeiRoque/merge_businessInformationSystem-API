@@ -5,6 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { parse } from '@fortawesome/fontawesome-svg-core';
+import { Head } from '@inertiajs/vue3';
 //DECLARATIONS
 const invoices = ref([]); // holds list of invoices fetched from the server
 const invoice_computations= ref([]);
@@ -1910,7 +1911,7 @@ function sortByDate() {
 
 
 <template>
-    <Head title="Home" />
+    <Head title="Invoice" />
 
     <AuthenticatedLayout>
         <div class="py-5 h-full ">
