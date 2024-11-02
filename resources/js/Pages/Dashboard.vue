@@ -1,4 +1,5 @@
 <template>
+    <Head title="Dashboard" />
     <AuthenticatedLayout>
         <div class="flex flex-row">
             <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
@@ -111,6 +112,8 @@ import VueCal from 'vue-cal';
 import 'vue-cal/dist/vuecal.css';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Chart, registerables } from 'chart.js';
+import { Head } from '@inertiajs/vue3';
+
 
 Chart.register(...registerables);
 

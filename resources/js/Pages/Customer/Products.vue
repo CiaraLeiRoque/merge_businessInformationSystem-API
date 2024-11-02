@@ -3,6 +3,7 @@ import { text } from '@fortawesome/fontawesome-svg-core';
 import { Inertia } from '@inertiajs/inertia';
 import { onMounted, ref, reactive } from 'vue';
 import{usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 
 const businessInfo = {
     businessImage: ref(''),
@@ -201,6 +202,7 @@ function goTochatPage(){
 </script>
 
 <template>
+    <Head title="Products" />
         <!-- header -->
         <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">

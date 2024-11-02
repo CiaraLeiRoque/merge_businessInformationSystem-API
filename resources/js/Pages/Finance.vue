@@ -5,7 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FinanceCategoriesModal  from "@/Components/FinanceCategories.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { Link, useForm } from '@inertiajs/vue3';
-
+import { Head } from '@inertiajs/vue3';
 const finances = ref([]);
 const financeListedCategories = ref([]);
 const showAddFinanceModal = ref(false);
@@ -457,6 +457,7 @@ function sortByAmount() {
 </script>
 
 <template>
+    <Head title="Finance" />
     <AuthenticatedLayout>
 
         <div class="py-5 h-full">

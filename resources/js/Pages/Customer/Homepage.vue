@@ -2,6 +2,7 @@
 import { Inertia } from '@inertiajs/inertia';
 import { onMounted, ref } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
+import { Head } from '@inertiajs/vue3';
 
 const businessInfo = {
     businessImage: ref(''),
@@ -171,6 +172,7 @@ const formatUrl = (url) => {
 </script>
 
 <template>
+    <Head title="Home" />
         <!-- header -->
         <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">
