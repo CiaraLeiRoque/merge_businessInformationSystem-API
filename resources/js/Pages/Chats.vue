@@ -102,7 +102,7 @@ const updateChatbotData = async () => {
 
 
 <template>
-    <Head title="Chatbot" />
+    <Head title="Update Chat Responses" />
     
     <AuthenticatedLayout>
         <div class="container mx-auto p-4 flex flex-col md:flex-row">
