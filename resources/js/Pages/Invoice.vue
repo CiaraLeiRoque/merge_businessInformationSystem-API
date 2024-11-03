@@ -362,7 +362,6 @@ const addInvoice = async () => {
     validateStatus();
     validatePtype();
     validateTerms();
-<<<<<<< Updated upstream
     validateCname();
     validateBstyle();
     validateCashier();
@@ -370,10 +369,6 @@ const addInvoice = async () => {
     // Check for validation errors before proceeding
     if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value || CnameError.value || BstyleError.value || CashierError.value) {
         showToast("Please correct the errors before adding an invoice", "error");
-=======
-    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value) {
-        alert('Please correct the errors before adding an Invoice.');
->>>>>>> Stashed changes
         return;
     }
 
