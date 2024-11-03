@@ -282,7 +282,7 @@ const updateBusiness = async () => {
 
             setTimeout(() => {
                 window.location.reload();
-            }, 2000);  
+            }, 1000);  
         } else {
             showToast("An error occurred while updating", "error");
         }
@@ -322,18 +322,18 @@ function checkNegative() {
             <Head title="Update Business Profile" />
             <div class="container mx-auto p-4 flex flex-col md:flex-row">
                 <!-- Left Column (Form Fields) -->
-                <div class="w-full md:w-1/2 pt-20">
+                <div class="w-full pl-6 md:w-1/2 pt-20">
                     <h1 class="text-3xl font-bold mb-4">Update Business Profile</h1>
 
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                             <label for="business-name" class="block text-gray-700 text-sm font-bold mb-2">
-                                <span>Business Name <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 64 characters only)</span></span>
+                                <span>Business Name <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 48 characters only)</span></span>
                             </label>
                             <input
                                 type="text"
-                                maxlength="64"
+                                maxlength="48"
                                 id="business-name"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 v-model="business.name"
@@ -344,10 +344,11 @@ function checkNegative() {
 
                         <div>
                             <label for="email-address" class="block text-gray-700 text-sm font-bold mb-2">
-                                <span>Business Email Address <span class="text-red-500">*</span></span>
+                                <span>Business Email Address <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 48 characters only)</span></span>
                             </label>
                             <input
                                 type="email"
+                                maxlength="48"
                                 id="email-address"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 v-model="business.email"

@@ -84,10 +84,14 @@ const updateChatbotData = async () => {
         console.log("Response data:", response.data);
 
         if (response.data.success) {
-            showToast("Business Info Has Been Updated", "success");
+            showDeleteModal.value = false;
+            showSuccessModal.value = true;
+            setTimeout(() => {
+            showSuccessModal.value = false;
+            }, 1000) 
             setTimeout(() => {
                 window.location.reload();
-            }, 2000);  
+            }, 1000);  
         } else {
             showToast("Failed to update respons", "error");
 
@@ -98,6 +102,15 @@ const updateChatbotData = async () => {
     }
 };
 
+const openDeleteModal = () => {
+  showDeleteModal.value = true
+}
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+}
+const showDeleteModal = ref(false);
+const showSuccessModal = ref(false);
+
 </script>
 
 
@@ -107,7 +120,7 @@ const updateChatbotData = async () => {
     <AuthenticatedLayout>
         <div class="container mx-auto p-4 flex flex-col md:flex-row">
             <!-- Left Column (Business Details) -->
-            <div class="w-full md:w-1/2 pt-20">
+            <div class="w-full pl-6 md:w-1/2 pt-20">
                 <h1 class="text-3xl font-bold mb-4">Update Chatbot Responses</h1>
                 <div class="space-y-6">
                     <div>
@@ -122,7 +135,7 @@ const updateChatbotData = async () => {
                                 v-model="chatbot.bwh"
                             >
                     </div>
-                    <div>
+                    <div>   
                         <label for="product-description" class="block text-gray-700 text-sm font-bold mb-2">
                                 Product Description
                             </label>
@@ -176,7 +189,7 @@ const updateChatbotData = async () => {
                         <button
                             type="button"
                             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            @click="updateChatbotData"
+                            @click="openDeleteModal"
                         >
                             Update Responses
                         </button>
@@ -293,6 +306,34 @@ const updateChatbotData = async () => {
                 </div>
                 <Chatbot />
         </div>
+
+        <transition name="modal-fade" >
+            <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+                <div @click.stop class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                    <font-awesome-icon icon="fa-solid fa-question" size="8x" style="margin-top:2px; color: blue;"/>
+                    <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Updated Information</h2>
+                    <p class="mb-4 text-center">Are you sure you want to update the Chatbot Responses?</p>
+                    <div class="flex justify-center space-x-2">
+                        <button @click="closeDeleteModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            No
+                        </button>
+                        <button @click="updateChatbotData" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">
+                            Yes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+        <transition name="modal-fade" >
+            <div v-if="showSuccessModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
+                <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                    <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
+                    <h2 class="text-xl font-bold mb-4">Success!</h2>
+                    <p class="mb-4">The Chatbot Responses has been successfully Updated.</p>
+                </div>
+            </div>
+        </transition>
+
             <ErrorToast
                 v-if="showErrorToast"
                 :visible="showErrorToast"
@@ -307,5 +348,21 @@ const updateChatbotData = async () => {
             />
     </AuthenticatedLayout>
 </template>
+<style scoped>
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
 
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
 
+.modal-fade-enter-to,
+.modal-fade-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+</style>

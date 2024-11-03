@@ -121,27 +121,27 @@
     <div class="invoice-box">
     <table width="100%" style="border-collapse: collapse;">
     <tr class="top">
-    <td colspan="3">
-        <table width="100%">
-            <tr>
-                <!-- Left-aligned content -->
-                <td class="title" style="text-align: left;">
-                    <img src="storage/business_logos/{{ $businessImage }}" style="width:140px;" />
-                </td>
+        <td colspan="3">
+            <table width="100%">
+                <tr>
+                    <!-- Left-aligned content -->
+                    <td class="title" style="text-align: left;">
+                        <img src="storage/business_logos/{{ $businessImage }}" style="width:140px; height: 140px; border-radius: 50%; object-fit: cover;"  />
+                    </td>
 
-                <!-- Empty space between the left and right td -->
-                <td>&nbsp;</td>
+                    <!-- Empty space between the left and right td -->
+                    <td>&nbsp;</td>
 
-                <!-- Right-aligned content -->
-                <td style="text-align: right;">
-                    <p style="margin-bottom:0px; font-weight: bold; font-size: 37px; white-space: nowrap;">{{ $businessName }}</p>
-                    Address: {{ $businessAddress }}<br />
-                    TIN: {{ $businessTIN ?? 'N/A'}}
-                </td>
-            </tr>
-        </table>
-    </td>
-</tr>
+                    <!-- Right-aligned content -->
+                    <td style="text-align: right;">
+                        <p style="line-height: 38px; margin-bottom:0px; font-weight: bold; font-size: 37px;">{{ $businessName }}</p>
+                        Address: {{ $businessAddress }}<br />
+                        TIN: {{ $businessTIN ?? 'N/A'}}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
 
 <tr> <!-- Optional height to create spacing -->
     <td colspan="3" style="height: 20px;"></td> <!-- Empty row for spacing -->

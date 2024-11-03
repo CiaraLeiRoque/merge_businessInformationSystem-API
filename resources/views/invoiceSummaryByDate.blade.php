@@ -118,7 +118,7 @@
             </td>
             <td>&nbsp;</td> <!-- Non-breaking space for empty cell -->
             <td style="text-align: right;">
-                <p style="margin-bottom:0px; font-weight: bold; font-size: 37px">{{ $invoice->last()->business_Name }}</p>
+                <p style="line-height: 38px; margin-bottom:0px; font-weight: bold; font-size: 37px">{{ $invoice->last()->business_Name }}</p>
                 Address: {{ $invoice->last()->business_Address }}<br />
                 TIN: {{ $invoice->last()->business_TIN ?? 'N/A'}}
             </td>

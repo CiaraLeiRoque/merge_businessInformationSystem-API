@@ -847,6 +847,13 @@ function sortByExpDate() {
         }
     });
 }
+
+function validateInput() {
+  // Check if the value is not a number or if it's less than 0
+  if (isNaN(inputValue.value) || inputValue.value < 0) {
+    inputValue.value = 0;
+  }
+}
 </script>
 
 <template>
@@ -1299,8 +1306,8 @@ function sortByExpDate() {
                             <div class="col-span-2 grid grid-cols-2 gap-3">
                                 <!-- Name Field -->
                                 <div class="col-span-2">
-                                    <label for="name" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block  text-white">Name <span class="text-red-500">*</span></label>
-                                    <input type="text" id="name" v-model="newProduct.name" class="input-field w-full text-xs p-1" required />
+                                    <label for="name" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block  text-white">Name <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 64 characters only)</span></label>
+                                    <input maxlength="64" type="text" id="name" v-model="newProduct.name" class="input-field w-full text-xs p-1" required />
                                     <span v-if="validationErrors.name" class="text-red-500 text-xs">{{ validationErrors.name }}</span>
                                 </div>
                                 <!-- Price Field -->

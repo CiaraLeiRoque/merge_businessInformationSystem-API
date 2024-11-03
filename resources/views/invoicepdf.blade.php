@@ -127,7 +127,7 @@
 
                             <!-- Right-aligned content -->
                             <td style="text-align: right;">
-                                <p style="margin-bottom:0px; font-weight: bold; font-size: 35px">{{$invoice->business_Name}}</p>
+                                <p style="line-height: 38px; margin-bottom:0px; font-weight: bold; font-size: 35px">{{$invoice->business_Name}}</p>
                                 Address: {{ $invoice->business_Address }}<br />
                                 TIN: {{ $invoice->business_TIN ?? 'N/A'}}
                             </td>

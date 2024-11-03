@@ -476,3 +476,25 @@ const formatUrl = (url) => {
 <Chatbot />
     </section>
 </template>
+<style scoped>
+body, html {
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.bg-website-main,
+.bg-website-main1 {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Ensure all sections have full width */
+section {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+</style>
