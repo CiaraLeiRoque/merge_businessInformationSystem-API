@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
@@ -23,7 +23,7 @@ const business = ref({
     image: null,
 });
 
-const showErrorToast = ref(false);
+const showErrorToast = ref(false);  
 const showSuccessToast = ref(false);
 const toastMessage = ref('');
 
@@ -36,6 +36,31 @@ const showToast = (message, type) => {
     showSuccessToast.value = false;
   }, 3000);
 };
+
+const COOLDOWN_DAYS = 7;
+const COOLDOWN_KEY = 'business_update_cooldown';
+
+const isCooldownActive = computed(() => {
+  const lastUpdateTimestamp = localStorage.getItem(COOLDOWN_KEY);
+  if (!lastUpdateTimestamp) return false;
+
+  const lastUpdateDate = new Date(parseInt(lastUpdateTimestamp, 10));
+  const now = new Date();
+  const daysDifference = (now - lastUpdateDate) / (1000 * 60 * 60 * 24);
+
+  return daysDifference < COOLDOWN_DAYS;
+});
+
+const cooldownRemainingDays = computed(() => {
+  const lastUpdateTimestamp = localStorage.getItem(COOLDOWN_KEY);
+  if (!lastUpdateTimestamp) return 0;
+
+  const lastUpdateDate = new Date(parseInt(lastUpdateTimestamp, 10));
+  const now = new Date();
+  const daysDifference = COOLDOWN_DAYS - (now - lastUpdateDate) / (1000 * 60 * 60 * 24);
+
+  return Math.max(0, Math.ceil(daysDifference));
+});
 
 const phoneError = ref('');
 const telephoneError = ref('');
@@ -230,6 +255,11 @@ const updateBusiness = async () => {
     validatePhone();
     validateTelephone();
 
+    if (isCooldownActive.value) {
+    showToast(`You can update again in ${cooldownRemainingDays.value} days.`, 'error');
+    return;
+  }
+
     // Check if any errors exist
     if (nameError.value || emailError.value || addressError.value || phoneError.value || telephoneError.value) {
         showToast("Please correct the errors before updating the business profile.", "error");
@@ -278,7 +308,7 @@ const updateBusiness = async () => {
             showSuccessModal.value = false;
             }, 1000) 
 
-
+            localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
 
             setTimeout(() => {
                 window.location.reload();
@@ -460,33 +490,49 @@ function checkNegative() {
                         </div>
                     </div>
                 </div>
-                <transition name="modal-fade" >
+                <transition name="modal-fade">
                     <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-                        <div @click.stop class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
-                            <font-awesome-icon icon="fa-solid fa-question" size="8x" style="margin-top:2px; color: blue;"/>
-                            <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Updated Information</h2>
-                            <p class="mb-4 text-center">Are you sure you want to update the Business Information?</p>
-                            <div class="flex justify-center space-x-2">
-                                <button @click="closeDeleteModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    No
-                                </button>
-                                <button @click="updateBusiness" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">
-                                    Yes
-                                </button>
-                            </div>
+                    <div @click.stop class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                        <font-awesome-icon icon="fa-solid fa-question" size="8x" style="margin-top:2px; color: blue;"/>
+                        <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Updated Information</h2>
+                        <p class="mb-4 text-center">Are you sure you want to update the Business Information?</p>
+                        
+                        <!-- Button Section -->
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                        <div class="flex space-x-2">
+                            <button @click="closeDeleteModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            No
+                            </button>
+                            
+                            <!-- Update Button with Cooldown -->
+                            <button
+                            type="button"
+                            :disabled="isCooldownActive"
+                            class="bg-blue-500 hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            @click="updateBusiness"
+                            >
+                            Yes
+                            </button>
+                        </div>
+
+                        <!-- Cooldown Message -->
+                        <div v-if="isCooldownActive" class="text-red-500 text-sm mt-2">
+                            You can update again in {{ cooldownRemainingDays }} day(s).
+                        </div>
                         </div>
                     </div>
-                </transition>
-                <transition name="modal-fade" >
-                    <div v-if="showSuccessModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
-                        <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
-                            <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
-                            <h2 class="text-xl font-bold mb-4">Success!</h2>
-                            <p class="mb-4">The Business Information has been successfully Updated.</p>
-                        </div>
                     </div>
                 </transition>
 
+                <transition name="modal-fade">
+                    <div v-if="showSuccessModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
+                    <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                        <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
+                        <h2 class="text-xl font-bold mb-4">Success!</h2>
+                        <p class="mb-4">The Business Information has been successfully Updated.</p>
+                    </div>
+                    </div>
+                </transition>
 
                 <!-- Right Column (Profile Picture and Social Links) -->
                 <div class="w-full md:w-1/2 flex flex-col items-center mt-8 md:mt-0 py-0">
