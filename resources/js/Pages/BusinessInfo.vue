@@ -496,6 +496,7 @@ function checkNegative() {
                         <font-awesome-icon icon="fa-solid fa-question" size="8x" style="margin-top:2px; color: blue;"/>
                         <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Updated Information</h2>
                         <p class="mb-4 text-center">Are you sure you want to update the Business Information?</p>
+                        <p class="mb-4 text-center">(This can only be done once every 7 days)</p>
                         
                         <!-- Button Section -->
                         <div class="flex flex-col items-center justify-center space-y-4">
