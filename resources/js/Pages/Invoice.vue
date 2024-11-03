@@ -1119,7 +1119,6 @@ const updateInvoice = async () => {
     validateUpdateBstyle();
     validateUpdateCashier();
 
-<<<<<<< Updated upstream
     if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value || UpdateCnameError.value || UpdateBstyleError.value || UpdateCashierError.value) {
         showToast("Please correct the errors before updating the invoice.", "error");
         return;
@@ -1132,12 +1131,6 @@ const updateInvoice = async () => {
     }
 
 
-=======
-    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value) {
-        alert('Please correct the errors before updating the Invoice.');
-        return;
-    }
->>>>>>> Stashed changes
     try {
 
         // Create a FormData object and append the necessary fields
