@@ -2,7 +2,8 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>A simple, clean, and responsive HTML invoice template</title>
+        <title>Invoice #{{$invoice->invoice_id}} - {{ \Carbon\Carbon::parse($invoice->date)->format('m-d-Y') }}</title>
+
 
 		<style>
 			.invoice-box {
@@ -100,7 +101,7 @@
 			}
 
             tr.item:nth-child(even) {
-            background-color: #fcf2f2;
+            background-color: #f3f3f3;
             }
             tr.item:nth-child(odd) {
                 background-color: #ffffff;
@@ -232,7 +233,7 @@
             </tr>
 
             <tr>
-                <table style="line-height: 7px; font-size:15px">
+                <table style="margin-top: 6px; line-height: 10px; font-size:15px">
                     <tr>
                         <td style="width: 210px;" colspan="1">
                         <span style="font-weight: 700;">VATable Sales: </span> {{ number_format($invoice_computation->VATable_Sales,2) }}

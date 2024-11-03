@@ -294,6 +294,12 @@ const updateBusiness = async () => {
 
 
 
+function checkNegative() {
+  if (inputValue.value < 0) {
+    inputValue.value = 0;
+  }
+}
+
 </script>
 
 
@@ -309,10 +315,11 @@ const updateBusiness = async () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                             <label for="business-name" class="block text-gray-700 text-sm font-bold mb-2">
-                                <span>Business Name <span class="text-red-500">*</span></span>
+                                <span>Business Name <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 64 characters only)</span></span>
                             </label>
                             <input
                                 type="text"
+                                maxlength="64"
                                 id="business-name"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 v-model="business.name"

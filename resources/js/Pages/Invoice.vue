@@ -357,12 +357,12 @@ const filteredInvoices = computed(() => {
 
 //ADD INVOICES
 const addInvoice = async () => {
-    // Run validations
     validateInvoiceID();
     validateDate(); 
     validateStatus();
     validatePtype();
     validateTerms();
+<<<<<<< Updated upstream
     validateCname();
     validateBstyle();
     validateCashier();
@@ -370,6 +370,10 @@ const addInvoice = async () => {
     // Check for validation errors before proceeding
     if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value || CnameError.value || BstyleError.value || CashierError.value) {
         showToast("Please correct the errors before adding an invoice", "error");
+=======
+    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value) {
+        alert('Please correct the errors before adding an Invoice.');
+>>>>>>> Stashed changes
         return;
     }
 
@@ -381,15 +385,11 @@ const addInvoice = async () => {
 
 
     try {
-        // Create FormData and handle nullable fields
+        // Create FormData and send request to create the invoice
         const formData = new FormData();
         for (const key in newInvoice.value) {
-            const value = newInvoice.value[key];
-            // Set nullable fields to empty string if empty
-            formData.append(key, value === "" ? "" : value);
+            formData.append(key, newInvoice.value[key]);
         }
-
-        // Send POST request to create the invoice
         const response = await axios.post('/api/invoice', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -398,24 +398,31 @@ const addInvoice = async () => {
 
         // Fetch the invoice_system_id from the response
         invoiceSystemId = response.data.invoice_system_id;
+        //const invoiceSystemId = response.data.invoice_system_id;
+
+        // Set the invoice_system_id for the new invoice item
+        // newInvoiceItem.value.invoice_system_id = invoiceSystemId;
 
         console.log("Invoice created successfully:", response);
         console.log("Invoice System ID:", invoiceSystemId);
 
+
+
+
         // Fetch updated list of invoices
         fetchInvoices();
+        
+        // Send the new invoice item
+        //await addInvoiceItem(newInvoiceItem.value); // Call addInvoiceItem with the single item
 
-        // Move to the next step
-        currentStepAdd.value = 2;
+            currentStepAdd.value = 2; // Move to the next step
         addInvoiceItem();
 
         console.log("currentStepAdd value:", currentStepAdd.value);
     } catch (error) {
-        console.error("Error adding invoice:", error.response ? error.response.data : error.message);
+        console.error("Error adding invoice:", error);
     }
 };
-
-
 
 
 
@@ -1108,7 +1115,6 @@ const editInvoiceDetails = async (invoice) => {
 
 //----------------------------------------------FOR UPDATING INVOICE------------------------------------------
 const updateInvoice = async () => {
-    // Run validations
     validateUpdateInvoiceID();
     validateUpdateDate();
     validateUpdateStatus();
@@ -1118,6 +1124,7 @@ const updateInvoice = async () => {
     validateUpdateBstyle();
     validateUpdateCashier();
 
+<<<<<<< Updated upstream
     if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value || UpdateCnameError.value || UpdateBstyleError.value || UpdateCashierError.value) {
         showToast("Please correct the errors before updating the invoice.", "error");
         return;
@@ -1130,13 +1137,20 @@ const updateInvoice = async () => {
     }
 
 
+=======
+    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value) {
+        alert('Please correct the errors before updating the Invoice.');
+        return;
+    }
+>>>>>>> Stashed changes
     try {
-        // Create a FormData object and handle nullable fields
+
+        // Create a FormData object and append the necessary fields
         const formData = new FormData();
         for (const key in editInvoice.value) {
-            const value = editInvoice.value[key];
-            // Set nullable fields to empty string if empty
-            formData.append(key, value === "" || value === null ? "" : value);
+            if (editInvoice.value[key] !== null && editInvoice.value[key] !== undefined) {
+                formData.append(key, editInvoice.value[key]);
+            }
         }
         
         // Use the invoice_system_id from editInvoice for the request URL
@@ -1152,11 +1166,11 @@ const updateInvoice = async () => {
             invoices.value[index] = response.data;
         }
         
-        // Hide the edit invoice modal and update invoice item
+        // Hide the edit invoice modal
         updateInvoiceItem();
 
     } catch (error) {
-        console.error("Error updating invoice:", error.response ? error.response.data : error.message);
+        console.error("Error updating invoice:", error);
     }
 };
 
@@ -1848,6 +1862,7 @@ const fetchInvoicesByDate = async () => {
         });
         invoicesByDate.value = response.data;
         isDateFiltered.value = true; // Set flag to true after fetching by date
+        return invoicesByDate.value
     } catch (error) {
         console.error("Error fetching invoices by date:", error);
     }
@@ -1867,14 +1882,12 @@ const clearDates = async () => {
 startDatePrint.value = '';
 endDatePrint.value = '';    
 };
+
 watch([startDate, endDate], async ([newStartDate, newEndDate]) => {
     if (newStartDate && newEndDate) {
-        // if(showPrintInvoiceSummaryByDate){
-        //     isDateFiltered.value = false;
-        // }
         await fetchInvoicesByDate();
+        console.log('Invoices by date:', invoicesByDate.value);
     } else {
-        // Reset financesByDate and isDateFiltered if dates are cleared
         invoicesByDate.value = [];
         isDateFiltered.value = false;
     }
@@ -2110,17 +2123,18 @@ function sortByDate() {
                                                 </div>
 
                                                 </td>
-                                            <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">PHP {{ roundToTwoDecimals(invoice.total_Amount_Due)  }}</td>
+                                            <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                                                PHP {{ invoice.computation ? invoice.computation.total_Amount_Due : 'N/A' }}
+                                            </td>
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
 
                                                 <div class="flex items-center justify-center w-full">
-                                                    
                                                     <span :class="{
-                                                        'text-sm bg-green-600 text-white py-1 px-3 rounded-full': invoice.status === 'paid',
-                                                        'text-sm bg-red-600 text-white py-1 px-3 rounded-full': invoice.status === 'unpaid',
-                                                        'text-sm bg-amber-600 shadow-none text-white py-1 px-3 rounded-full shadow-xs': invoice.status === 'pending refund',
-                                                        'text-sm bg-amber-600 text-white py-1 px-3 rounded-full': invoice.status === 'partially paid',
-                                                        'text-sm bg-green-600 shadow-none text-white py-1 px-3 rounded-full': invoice.status === 'refunded'
+                                                        'bg-green-600 text-white py-1 px-3 rounded-full': invoice.status === 'paid',
+                                                        'bg-red-600 text-white py-1 px-3 rounded-full': invoice.status === 'unpaid',
+                                                        'bg-amber-600 shadow-none text-white py-1 px-3 rounded-full shadow-xs': invoice.status === 'pending refund',
+                                                        'bg-amber-600 text-white py-1 px-3 rounded-full': invoice.status === 'partially paid',
+                                                        'bg-green-600 shadow-none text-white py-1 px-3 rounded-full': invoice.status === 'refunded'
                                                     }">
                                                     <font-awesome-icon v-if="invoice.status === 'paid'" icon="fa-solid fa-check" size="sm" class="mr-1" />
                                                     <font-awesome-icon v-if="invoice.status === 'unpaid'" icon="fa-solid fa-x" size="sm" class="mr-1" />
@@ -2133,6 +2147,7 @@ function sortByDate() {
                                                         invoice.status === 'pending refund' ? 'Pending Refund' : 
                                                         invoice.status === 'refunded' ? 'Refunded' : 
                                                         invoice.status }}</span>
+
                                                 </div>
 
                                             </td>

@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>A simple, clean, and responsive HTML invoice template</title>
+		<title>Invoice Summary From {{ $startDate->format('m-d-Y') }} to {{ $endDate->format('m-d-Y') }}</title>
 
 		<style>
 			.invoice-box {
@@ -100,7 +100,7 @@
 			}
 
             tr.item:nth-child(even) {
-            background-color: #fcf2f2;
+            background-color: #f3f3f3;
             }
             tr.item:nth-child(odd) {
                 background-color: #ffffff;

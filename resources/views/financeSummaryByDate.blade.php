@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>A simple, clean, and responsive HTML invoice template</title>
+		<title>Finance Summary From {{ $startDate->format('m-d-Y') }} to {{ $endDate->format('m-d-Y') }} </title>
 
 		<style>
 			.invoice-box {
@@ -100,7 +100,7 @@
 			}
 
             tr.item:nth-child(even) {
-            background-color: #fcf2f2;
+            background-color: #f3f3f3;
             }
             tr.item:nth-child(odd) {
                 background-color: #ffffff;
@@ -120,35 +120,42 @@
     <body>
     <div class="invoice-box">
     <table width="100%" style="border-collapse: collapse;">
-        <tr>
-            <td class="title" style="text-align: left;">
-                <img src="storage/business_logos/{{ $businessImage }}" style="width:140px; height: 140px; border-radius: 50%; object-fit: cover;" />
-            </td>
-            <td>&nbsp;</td> <!-- Non-breaking space for empty cell -->
-            <td style="text-align: right;">
-                <p style="margin-bottom:0px; font-weight: bold; font-size: 37px">{{ $businessName }}</p>
-                Address: {{ $businessAddress }}<br />
-                TIN: {{ $businessTIN ?? 'N/A'}}
-            </td>
-        </tr>
-        
+    <tr class="top">
+    <td colspan="3">
+        <table width="100%">
+            <tr>
+                <!-- Left-aligned content -->
+                <td class="title" style="text-align: left;">
+                    <img src="storage/business_logos/{{ $businessImage }}" style="width:140px;" />
+                </td>
 
-        <tr> <!-- Optional height to create spacing -->
-            <table style="margin-bottom:5px">
-                <td colspan="3"></td> <!-- Empty row for spacing -->
-            </table>    
+                <!-- Empty space between the left and right td -->
+                <td>&nbsp;</td>
 
-        </tr>
+                <!-- Right-aligned content -->
+                <td style="text-align: right;">
+                    <p style="margin-bottom:0px; font-weight: bold; font-size: 37px; white-space: nowrap;">{{ $businessName }}</p>
+                    Address: {{ $businessAddress }}<br />
+                    TIN: {{ $businessTIN ?? 'N/A'}}
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
 
-        <tr>
-            <td style="text-align: left; font-weight: 700; font-size: 28px;">
-                FINANCE SUMMARY 
-            </td>
-            <td>&nbsp;</td> <!-- Empty cell placeholder -->
-            <td style="text-align: right; font-size: 18px;">
-                <span style="font-weight: bold">Date from:</span> {{ $startDate->format('m-d-Y') }} <span style="font-weight: bold">to:</span> {{ $endDate->format('m-d-Y') }}
-            </td>
-        </tr>
+<tr> <!-- Optional height to create spacing -->
+    <td colspan="3" style="height: 20px;"></td> <!-- Empty row for spacing -->
+</tr>
+
+<tr>
+    <td style="text-align: left; font-weight: 700; font-size: 28px; white-space: nowrap;">
+        FINANCE SUMMARY 
+    </td>
+    <td>&nbsp;</td> <!-- Empty cell placeholder -->
+    <td style="text-align: right; font-size: 17px; width: 300px; white-space: nowrap;">
+        <span style="font-weight: bold">Date from:</span> {{ $startDate->format('m-d-Y') }} <span style="font-weight: bold">to:</span> {{ $endDate->format('m-d-Y') }}
+    </td>
+</tr>
 
 
 

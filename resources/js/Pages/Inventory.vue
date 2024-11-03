@@ -884,7 +884,7 @@ function sortByExpDate() {
                                                 <div class="py-2">
                                                     <!-- Stocks Option -->
                                                     <div class="px-4 py-2 flex justify-between items-center">
-                                                        <label for="stocks" class="text-sm text-gray-700">Stocks if it has </label>
+                                                        <label for="stocks" class="text-sm text-gray-700">Stocks if it has <span> </span></label>
                                                         <div class="flex items-center">
                                                             <input
                                                                 type="number"
