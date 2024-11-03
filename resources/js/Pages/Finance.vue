@@ -750,7 +750,6 @@ function validateInput() {
             </form>
             </div>
         </div>
-
         </transition>
 
         <transition name="modal-fade" >

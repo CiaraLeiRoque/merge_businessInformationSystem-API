@@ -562,6 +562,7 @@ function printInventorySummary() {
 const showSuccessAddModal = ref(false);
 const showSuccessModal = ref(false);
 const showSuccessEditModal = ref(false);
+const showSuccessNotifModal = ref(false);
 
 const emit = defineEmits(['financeDeleted', 'editFinance', 'viewFinance'])
 
@@ -675,7 +676,13 @@ const saveSettings = async () => {
             { stock_expDate: 'expDate', count: expiryDays.value }
         ]);
         fetchProducts;
-        alert('Settings saved successfully');
+        
+        
+        showSuccessNotifModal.value = true;
+        setTimeout(() => {
+        showSuccessNotifModal.value = false
+        }, 500) // Auto-close after 2 seconds
+
     } catch (error) {
         console.error('Error saving product notification settings:', error);
         alert('Error saving settings');
@@ -884,7 +891,7 @@ function sortByExpDate() {
                                                 <div class="py-2">
                                                     <!-- Stocks Option -->
                                                     <div class="px-4 py-2 flex justify-between items-center">
-                                                        <label for="stocks" class="text-sm text-gray-700">Stocks if it has <span> </span></label>
+                                                        <label for="stocks" class="text-sm text-gray-700">Stocks if it has <span class="mr-1"></span></label>
                                                         <div class="flex items-center">
                                                             <input
                                                                 type="number"
@@ -1182,6 +1189,15 @@ function sortByExpDate() {
             </button>
             </div>
         </transition> -->
+        <transition name="modal-fade" >
+            <div v-if="showSuccessNotifModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
+                <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                    <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
+                    <h2 class="text-xl font-bold mb-4">Success!</h2>
+                    <p class="mb-4">The Product Notifications has been successfully Saved!.</p>
+                </div>
+            </div>
+        </transition>
 
         <transition name="modal-fade" >
             <div v-if="showSuccessAddModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
