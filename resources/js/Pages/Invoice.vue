@@ -5,6 +5,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { parse } from '@fortawesome/fontawesome-svg-core';
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
+
 //DECLARATIONS
 const invoices = ref([]); // holds list of invoices fetched from the server
 const invoice_computations= ref([]);
@@ -79,6 +82,7 @@ const editInvoice = ref({
     business_TIN: 0,              
     invoice_system_id: null,
     invoice_id: null,
+    original_invoice_id: null,
     date: '',
     terms: '',
     status: '',
@@ -92,22 +96,54 @@ const editInvoice = ref({
     customer_OSCA_PWD_ID_No: 0,
   });
 
+
+//TOAST CODE
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
+
 //ERROR TRAPPING
 const invoiceIDError = ref('');
 const dateError = ref('');
 const statusError = ref('');
 const ptypeError = ref('');
 const termsError = ref('');
+const CnameError = ref('');
+const BstyleError= ref('');
+const CashierError= ref('');
 
 const UpdateinvoiceIDError = ref('');
 const UpdatedateError = ref('');
 const UpdatestatusError = ref('');
 const UpdateptypeError = ref('');
 const UpdatetermsError = ref('');
+const UpdateCnameError = ref('');
+const UpdateBstyleError= ref('');
+const UpdateCashierError= ref('');
+
+const checkInvoiceIdExists = (invoiceId, currentInvoiceId = null) => {
+    const exists = invoices.value.some(invoice => 
+        invoice.invoice_id === invoiceId && invoice.invoice_system_id !== currentInvoiceId
+    );
+    console.log(`Checking if invoice ID ${invoiceId} exists, excluding ${currentInvoiceId}: ${exists}`);
+    return exists;
+};
 
 const validateUpdateInvoiceID = () => {
     if (!editInvoice.value.invoice_id) {
         UpdateinvoiceIDError.value = "This field cannot be empty";
+    } else if (checkInvoiceIdExists(editInvoice.value.invoice_id, editInvoice.value.invoice_system_id)) {
+        UpdateinvoiceIDError.value = "Invoice ID already exists. Please use a unique Invoice ID or return to the original value.";
     } else {
         UpdateinvoiceIDError.value = '';
     }
@@ -145,13 +181,41 @@ const validateUpdateTerms = () => {
     }
 };
 
+const validateUpdateCname = () => {
+    if (!editInvoice.value.customer_Name) {
+        UpdateCnameError.value = "This field cannot be empty";
+    } else {
+        UpdateCnameError.value = '';
+    }
+};
+
+const validateUpdateBstyle = () => {
+    if (!editInvoice.value.customer_Business_Style) {
+        UpdateBstyleError.value = "This field cannot be empty";
+    } else {
+        UpdateBstyleError.value = '';
+    }
+};
+
+const validateUpdateCashier = () => {
+    if (!editInvoice.value.authorized_Representative) {
+        UpdateCashierError.value = "This field cannot be empty";
+    } else {
+        UpdateCashierError.value = '';
+    }
+};
+
 
 
 const validateInvoiceID = () => {
-    if (!newInvoice.value.invoice_id) {
+    const invoiceId = newInvoice.value.invoice_id;
+
+    if (!invoiceId) {
         invoiceIDError.value = "This field cannot be empty";
+    } else if (checkInvoiceIdExists(invoiceId)) {
+        invoiceIDError.value = "This invoice ID already exists";
     } else {
-        invoiceIDError.value = '';
+        invoiceIDError.value = '';  // Clear error if validation passes
     }
 };
 
@@ -187,6 +251,31 @@ const validateTerms = () => {
     }
 };
 
+const validateCname = () => {
+    if (!newInvoice.value.customer_Name) {
+        CnameError.value = "This field cannot be empty";
+    } else {
+        CnameError.value = '';
+    }
+};
+
+const validateBstyle = () => {
+    if (!newInvoice.value.customer_Business_Style) {
+        BstyleError.value = "This field cannot be empty";
+    } else {
+        BstyleError.value = '';
+    }
+};
+
+const validateCashier = () => {
+    if (!newInvoice.value.authorized_Representative) {
+        CashierError.value = "This field cannot be empty";
+    } else {
+        CashierError.value = '';
+    }
+};
+
+
 watch(showAddInvoiceModal, (newVal) => {
     if (newVal) {
         validateInvoiceID();
@@ -194,6 +283,9 @@ watch(showAddInvoiceModal, (newVal) => {
         validateStatus();
         validatePtype();
         validateTerms();
+        validateCname();
+        validateBstyle();
+        validateCashier();
     }
 });
 watch(showEditInvoiceModal, (newVal) => {
@@ -203,6 +295,9 @@ watch(showEditInvoiceModal, (newVal) => {
         validateUpdateStatus();
         validateUpdatePtype();
         validateUpdateTerms();
+        validateUpdateCname();
+        validateUpdateBstyle();
+        validateUpdateCashier();
     }
 });
 
@@ -268,12 +363,22 @@ const addInvoice = async () => {
     validateStatus();
     validatePtype();
     validateTerms();
+    validateCname();
+    validateBstyle();
+    validateCashier();
 
     // Check for validation errors before proceeding
-    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value) {
-        alert('Please correct the errors before adding an Invoice.');
+    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value || CnameError.value || BstyleError.value || CashierError.value) {
+        showToast("Please correct the errors before adding an invoice", "error");
         return;
     }
+
+    // Check for duplicate invoice ID
+    if (checkInvoiceIdExists(newInvoice.value.invoice_id)) {
+        showToast("Invoice ID already exists. Please use a unique Invoice ID.", "error");
+        return;
+    }
+
 
     try {
         // Create FormData and handle nullable fields
@@ -1009,12 +1114,21 @@ const updateInvoice = async () => {
     validateUpdateStatus();
     validateUpdatePtype();
     validateUpdateTerms();
+    validateUpdateCname();
+    validateUpdateBstyle();
+    validateUpdateCashier();
 
-    // Check for validation errors before proceeding
-    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value) {
-        alert('Please correct the errors before updating the Invoice.');
+    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value || UpdateCnameError.value || UpdateBstyleError.value || UpdateCashierError.value) {
+        showToast("Please correct the errors before updating the invoice.", "error");
         return;
     }
+
+    // Check for duplicate invoice ID, excluding the current invoice being edited
+    if (checkInvoiceIdExists(editInvoice.value.invoice_id, editInvoice.value.invoice_system_id)) {
+        showToast("Invoice ID already exists. Please use a unique Invoice ID.", "error");
+        return;
+    }
+
 
     try {
         // Create a FormData object and handle nullable fields
@@ -2268,6 +2382,7 @@ function sortByDate() {
                     
                         <!-- STEP 1: DIV FOR INVOICE AND CUSTOMER DETAILS -->
                         <form @submit.prevent="updateInvoice" class="border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg w-full">
+                            <input type="hidden" v-model="editInvoice.original_invoice_id">
                         <!-- Step 1: Invoice and Customer Details -->
                             <div class="flex flex-col p-10">
                                 <div class="grid grid-cols-3 gap-8 mb-4">
@@ -2323,7 +2438,8 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                         <label for="customer_Name" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Name</label>
-                                        <input type="text" id="customer_Name" v-model="editInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Name" v-model="editInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" @input="validateUpdateCname"/>
+                                        <div v-if="UpdateCnameError" class="text-red-500 text-sm">{{ UpdateCnameError }}</div>
                                     </div>
                                     <div class="">
                                         <label for="customer_Address" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Address</label>
@@ -2351,7 +2467,8 @@ function sortByDate() {
                                     </div>
                                     <div>
                                         <label for="customer_Business_Style" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Business Style</label>
-                                        <input type="text" id="customer_Business_Style" v-model="editInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Business_Style" v-model="editInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" @input="validateUpdateBstyle"/>
+                                        <div v-if="UpdateBstyleError" class="text-red-500 text-sm">{{ UpdateBstyleError }}</div>
                                     </div>
                                 
                                 </div>
@@ -2359,7 +2476,8 @@ function sortByDate() {
                                 
                                 <div class="">
                                     <label for="authorized_Representative" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Cashier/Authorized Representative</label>
-                                    <input type="text" id="authorized_Representative" v-model="editInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica"/>
+                                    <input type="text" id="authorized_Representative" v-model="editInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica" @input="validateUpdateCashier"/>
+                                    <div v-if="UpdateCashierError" class="text-red-500 text-sm">{{ UpdateCashierError }}</div>
                                 </div>                                
 
                             </div>
@@ -2710,7 +2828,8 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                         <label for="customer_Name" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Name</label>
-                                        <input type="text" id="customer_Name" v-model="newInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Name" v-model="newInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" @input="validateCname"/>
+                                        <div v-if="CnameError" class="text-red-500 text-sm">{{ CnameError }}</div>
                                     </div>
                                     <div class="">
                                         <label for="customer_Address" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Address</label>
@@ -2739,7 +2858,8 @@ function sortByDate() {
 
                                     <div>
                                         <label for="customer_Business_Style" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Business Style</label>
-                                        <input type="text" id="customer_Business_Style" v-model="newInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Business_Style" v-model="newInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Computer Repair Shop" @input="validateBstyle"/>
+                                        <div v-if="BstyleError" class="text-red-500 text-sm">{{ BstyleError }}</div>
                                     </div>
                                 
                                 </div>
@@ -2747,7 +2867,8 @@ function sortByDate() {
                                 
                                 <div class="">
                                     <label for="authorized_Representative" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Cashier/Authorized Representative</label>
-                                    <input type="text" id="authorized_Representative" v-model="newInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica"/>
+                                    <input type="text" id="authorized_Representative" v-model="newInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica" @input="validateCashier"/>
+                                    <div v-if="CashierError" class="text-red-500 text-sm">{{ CashierError }}</div>
                                 </div>                                
 
                             </div>
@@ -3370,8 +3491,18 @@ function sortByDate() {
         </div>
         </transition>
 
-
-
+                <ErrorToast
+                v-if="showErrorToast"
+                :visible="showErrorToast"
+                :message="toastMessage"
+                @close="showErrorToast = false"
+                />
+                <SuccessToast
+                v-if="showSuccessToast"
+                :visible="showSuccessToast"
+                :message="toastMessage"
+                @close="showSuccessToast = false"
+                />
 
     </AuthenticatedLayout>
 </template>
