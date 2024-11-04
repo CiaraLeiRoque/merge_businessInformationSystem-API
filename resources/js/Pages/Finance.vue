@@ -6,6 +6,7 @@ import FinanceCategoriesModal  from "@/Components/FinanceCategories.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { Link, useForm } from '@inertiajs/vue3';
 
+
 import ErrorToast from '@/Components/ErrorToast.vue';
 import SuccessToast from '@/Components/SuccessToast.vue';
 
@@ -488,6 +489,7 @@ function sortByAmount() {
 </script>
 
 <template>
+    <Head title="Finance" />
     <AuthenticatedLayout>
 
         <Head title="Finance" />

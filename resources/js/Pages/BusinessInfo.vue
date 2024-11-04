@@ -319,7 +319,7 @@ function checkNegative() {
 
     <template>
         <AuthenticatedLayout>
-            <Head title="Update Business Profile" />
+            <Head title="Business Profile" />
             <div class="container mx-auto p-4 flex flex-col md:flex-row">
                 <!-- Left Column (Form Fields) -->
                 <div class="w-full pl-6 md:w-1/2 pt-20">

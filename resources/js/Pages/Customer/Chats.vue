@@ -1,4 +1,5 @@
 <template>
+  <Head :title="pageTitle" />
           <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">
                 <img :src='businessImage' class="w-full h-full object-cover rounded-full"/>
@@ -122,8 +123,12 @@
   import axios from 'axios';
   import {Inertia} from '@inertiajs/inertia';
   import{usePage } from '@inertiajs/vue3';
+  import { Head } from '@inertiajs/vue3';
   
-  export default {
+    export default {
+      components: {
+      Head
+    },
     data() {
       return {
         messages: [],
@@ -135,6 +140,7 @@
         isLoading: true,
         website_footNote: '',
         userLogIn: false,
+        pageTitle: "Chat with Us"
         };
     },
     mounted() {

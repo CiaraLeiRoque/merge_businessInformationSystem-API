@@ -91,7 +91,6 @@ class ProductController extends Controller
             'description' => 'required|string|max:1000',
             'expDate' => 'required|date',
             'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120', // Validate the file input
-            'seniorPWD_discountable' => 'nullable|in:yes,no',
             'on_sale' => 'nullable|in:yes,no',
             'on_sale_price' => 'nullable|numeric',
             'featured' => 'required|in:true,false',
@@ -129,7 +128,6 @@ class ProductController extends Controller
             'description' => 'required|string|max:1000',
             'expDate' => 'required|date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'seniorPWD_discountable' => 'nullable|in:yes,no',
             'on_sale' => 'required|in:yes,no',
             'on_sale_price' => 'required|numeric',
             'featured' => 'required|in:true,false',

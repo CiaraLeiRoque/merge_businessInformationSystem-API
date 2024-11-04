@@ -5,6 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { parse } from '@fortawesome/fontawesome-svg-core';
+
 import ErrorToast from '@/Components/ErrorToast.vue';
 import SuccessToast from '@/Components/SuccessToast.vue';
 import { Head } from '@inertiajs/vue3';
