@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>A simple, clean, and responsive HTML invoice template</title>
+		<title>Invoice Summary From {{ $startDate->format('m-d-Y') }} to {{ $endDate->format('m-d-Y') }}</title>
 
 		<style>
 			.invoice-box {
@@ -100,7 +100,7 @@
 			}
 
             tr.item:nth-child(even) {
-            background-color: #fcf2f2;
+            background-color: #f3f3f3;
             }
             tr.item:nth-child(odd) {
                 background-color: #ffffff;
@@ -118,7 +118,7 @@
             </td>
             <td>&nbsp;</td> <!-- Non-breaking space for empty cell -->
             <td style="text-align: right;">
-                <p style="margin-bottom:0px; font-weight: bold; font-size: 37px">{{ $invoice->last()->business_Name }}</p>
+                <p style="line-height: 38px; margin-bottom:0px; font-weight: bold; font-size: 37px">{{ $invoice->last()->business_Name }}</p>
                 Address: {{ $invoice->last()->business_Address }}<br />
                 TIN: {{ $invoice->last()->business_TIN ?? 'N/A'}}
             </td>

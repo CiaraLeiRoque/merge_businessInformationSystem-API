@@ -2,9 +2,9 @@
     <Head title="Home" />
     <AuthenticatedLayout>
         <div class="flex flex-row">
-            <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
+            <div class="w-full sm:px-6 lg:px-8 pb-6 flex flex-col" style="width: 60vw;">
                 <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #0F2C4A;">
-                    <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
+                    <div class="h-36 p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
                         <div class="flex flex-row justify-center"><div class="flex flex-col text-center mr-20"><div style="font-size: 18px;"><b>Total Income (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalIncome }}</div></div>
                         <div class="flex flex-col text-center"><div style="font-size: 18px;"><b>Total Expenses (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalExpenses }}</div></div></div>
                         <div class="flex flex-row justify-center">
@@ -44,11 +44,14 @@
                     </div>
                     </div>
                 </div>                
-                    <!-- Visitors & Views and Retention Rate Charts side by side -->
+                    
+                
+                
+                
+                <!-- Visitors & Views and Retention Rate Charts side by side -->
                     <div class="flex flex-row justify-center px-8 space-x-6 mt-2"> 
                         <!-- Visitors & Views Chart -->
                         <div class="custom-chart-width p-4 border border-black rounded-lg w-full" style="height: 275px;"> 
-
                             <canvas id="visitorsViewsChart" class="w-full" style="height: 150px;"></canvas> 
                         </div>
 
@@ -415,18 +418,36 @@ const fetchsocialmediaLinks = async() =>{
     }
 }
 function validateAndFormatUrl(url, baseUrl) {
-    // Check if url already starts with "https://www."
-    const isValidLink = url.startsWith(`https://www.${baseUrl}`);
-    
-    // If valid, return the URL as is
-    if (isValidLink) {
-        console.log("This link is valid");
+    if (!url) return ''; // Return empty if no URL provided
+
+    // Remove whitespace and convert link to lowercase for uniformity
+    url = url.trim().toLowerCase();
+
+    // Regular expressions to identify different formats
+    const fullUrlRegex = new RegExp(`^(https?://)?(www\\.)?${baseUrl.replace('.', '\\.')}`, 'i');
+    const handleRegex = new RegExp(`^/?([\\w.-]+)$`, 'i'); // Matches just the handle like "namehere" or "/namehere"
+
+    // Case 1: If URL matches the full URL structure, ensure it has "https://www."
+    if (fullUrlRegex.test(url)) {
+        if (!url.startsWith('https://')) {
+            url = `https://${url}`;
+        }
+        if (!url.includes('www.')) {
+            url = url.replace(/https?:\/\//, 'https://www.');
+        }
         return url;
-    } else {
-        // Else, construct the full URL with the base URL + string
-        console.log("This link is not valid");
-        return `https://www.${baseUrl}/${url}`;
     }
+
+    // Case 2: If URL is just a handle, construct full URL
+    const match = url.match(handleRegex);
+    if (match) {
+        const handle = match[1];
+        return `https://www.${baseUrl}/${handle}`;
+    }
+
+    // Case 3: Catch-all for invalid formats, return empty string
+    console.warn("Invalid URL format provided:", url);
+    return '';
 }
 
 fetchsocialmediaLinks();

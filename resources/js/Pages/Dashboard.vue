@@ -414,18 +414,36 @@ const fetchsocialmediaLinks = async() =>{
     }
 }
 function validateAndFormatUrl(url, baseUrl) {
-    // Check if url already starts with "https://www."
-    const isValidLink = url.startsWith(`https://www.${baseUrl}`);
-    
-    // If valid, return the URL as is
-    if (isValidLink) {
-        console.log("This link is valid");
+    if (!url) return ''; // Return empty if no URL provided
+
+    // Remove whitespace and convert link to lowercase for uniformity
+    url = url.trim().toLowerCase();
+
+    // Regular expressions to identify different formats
+    const fullUrlRegex = new RegExp(`^(https?://)?(www\\.)?${baseUrl.replace('.', '\\.')}`, 'i');
+    const handleRegex = new RegExp(`^/?([\\w.-]+)$`, 'i'); // Matches just the handle like "namehere" or "/namehere"
+
+    // Case 1: If URL matches the full URL structure, ensure it has "https://www."
+    if (fullUrlRegex.test(url)) {
+        if (!url.startsWith('https://')) {
+            url = `https://${url}`;
+        }
+        if (!url.includes('www.')) {
+            url = url.replace(/https?:\/\//, 'https://www.');
+        }
         return url;
-    } else {
-        // Else, construct the full URL with the base URL + string
-        console.log("This link is not valid");
-        return `https://www.${baseUrl}/${url}`;
     }
+
+    // Case 2: If URL is just a handle, construct full URL
+    const match = url.match(handleRegex);
+    if (match) {
+        const handle = match[1];
+        return `https://www.${baseUrl}/${handle}`;
+    }
+
+    // Case 3: Catch-all for invalid formats, return empty string
+    console.warn("Invalid URL format provided:", url);
+    return '';
 }
 
 fetchsocialmediaLinks();

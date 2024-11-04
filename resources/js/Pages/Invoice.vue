@@ -5,7 +5,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { parse } from '@fortawesome/fontawesome-svg-core';
+
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
 import { Head } from '@inertiajs/vue3';
+
 //DECLARATIONS
 const invoices = ref([]); // holds list of invoices fetched from the server
 const invoice_computations= ref([]);
@@ -52,7 +56,6 @@ const newInvoice = ref({
 
 });
 
-
 const newInvoiceComputation = ref({
     VATable_Sales: 0,
     VAT_Exempt_Sales: 0,
@@ -80,6 +83,7 @@ const editInvoice = ref({
     business_TIN: 0,              
     invoice_system_id: null,
     invoice_id: null,
+    original_invoice_id: null,
     date: '',
     terms: '',
     status: '',
@@ -93,22 +97,54 @@ const editInvoice = ref({
     customer_OSCA_PWD_ID_No: 0,
   });
 
+
+//TOAST CODE
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
+
 //ERROR TRAPPING
 const invoiceIDError = ref('');
 const dateError = ref('');
 const statusError = ref('');
 const ptypeError = ref('');
 const termsError = ref('');
+const CnameError = ref('');
+const BstyleError= ref('');
+const CashierError= ref('');
 
 const UpdateinvoiceIDError = ref('');
 const UpdatedateError = ref('');
 const UpdatestatusError = ref('');
 const UpdateptypeError = ref('');
 const UpdatetermsError = ref('');
+const UpdateCnameError = ref('');
+const UpdateBstyleError= ref('');
+const UpdateCashierError= ref('');
+
+const checkInvoiceIdExists = (invoiceId, currentInvoiceId = null) => {
+    const exists = invoices.value.some(invoice => 
+        invoice.invoice_id === invoiceId && invoice.invoice_system_id !== currentInvoiceId
+    );
+    console.log(`Checking if invoice ID ${invoiceId} exists, excluding ${currentInvoiceId}: ${exists}`);
+    return exists;
+};
 
 const validateUpdateInvoiceID = () => {
     if (!editInvoice.value.invoice_id) {
         UpdateinvoiceIDError.value = "This field cannot be empty";
+    } else if (checkInvoiceIdExists(editInvoice.value.invoice_id, editInvoice.value.invoice_system_id)) {
+        UpdateinvoiceIDError.value = "Invoice ID already exists. Please use a unique Invoice ID or return to the original value.";
     } else {
         UpdateinvoiceIDError.value = '';
     }
@@ -146,13 +182,41 @@ const validateUpdateTerms = () => {
     }
 };
 
+const validateUpdateCname = () => {
+    if (!editInvoice.value.customer_Name) {
+        UpdateCnameError.value = "This field cannot be empty";
+    } else {
+        UpdateCnameError.value = '';
+    }
+};
+
+const validateUpdateBstyle = () => {
+    if (!editInvoice.value.customer_Business_Style) {
+        UpdateBstyleError.value = "This field cannot be empty";
+    } else {
+        UpdateBstyleError.value = '';
+    }
+};
+
+const validateUpdateCashier = () => {
+    if (!editInvoice.value.authorized_Representative) {
+        UpdateCashierError.value = "This field cannot be empty";
+    } else {
+        UpdateCashierError.value = '';
+    }
+};
+
 
 
 const validateInvoiceID = () => {
-    if (!newInvoice.value.invoice_id) {
+    const invoiceId = newInvoice.value.invoice_id;
+
+    if (!invoiceId) {
         invoiceIDError.value = "This field cannot be empty";
+    } else if (checkInvoiceIdExists(invoiceId)) {
+        invoiceIDError.value = "This invoice ID already exists";
     } else {
-        invoiceIDError.value = '';
+        invoiceIDError.value = '';  // Clear error if validation passes
     }
 };
 
@@ -188,6 +252,31 @@ const validateTerms = () => {
     }
 };
 
+const validateCname = () => {
+    if (!newInvoice.value.customer_Name) {
+        CnameError.value = "This field cannot be empty";
+    } else {
+        CnameError.value = '';
+    }
+};
+
+const validateBstyle = () => {
+    if (!newInvoice.value.customer_Business_Style) {
+        BstyleError.value = "This field cannot be empty";
+    } else {
+        BstyleError.value = '';
+    }
+};
+
+const validateCashier = () => {
+    if (!newInvoice.value.authorized_Representative) {
+        CashierError.value = "This field cannot be empty";
+    } else {
+        CashierError.value = '';
+    }
+};
+
+
 watch(showAddInvoiceModal, (newVal) => {
     if (newVal) {
         validateInvoiceID();
@@ -195,6 +284,9 @@ watch(showAddInvoiceModal, (newVal) => {
         validateStatus();
         validatePtype();
         validateTerms();
+        validateCname();
+        validateBstyle();
+        validateCashier();
     }
 });
 watch(showEditInvoiceModal, (newVal) => {
@@ -204,6 +296,9 @@ watch(showEditInvoiceModal, (newVal) => {
         validateUpdateStatus();
         validateUpdatePtype();
         validateUpdateTerms();
+        validateUpdateCname();
+        validateUpdateBstyle();
+        validateUpdateCashier();
     }
 });
 
@@ -268,10 +363,22 @@ const addInvoice = async () => {
     validateStatus();
     validatePtype();
     validateTerms();
-    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value) {
-        alert('Please correct the errors before adding an Invoice.');
+    validateCname();
+    validateBstyle();
+    validateCashier();
+
+    // Check for validation errors before proceeding
+    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value || CnameError.value || BstyleError.value || CashierError.value) {
+        showToast("Please correct the errors before adding an invoice", "error");
         return;
     }
+
+    // Check for duplicate invoice ID
+    if (checkInvoiceIdExists(newInvoice.value.invoice_id)) {
+        showToast("Invoice ID already exists. Please use a unique Invoice ID.", "error");
+        return;
+    }
+
 
     try {
         // Create FormData and send request to create the invoice
@@ -1009,11 +1116,22 @@ const updateInvoice = async () => {
     validateUpdateStatus();
     validateUpdatePtype();
     validateUpdateTerms();
+    validateUpdateCname();
+    validateUpdateBstyle();
+    validateUpdateCashier();
 
-    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value) {
-        alert('Please correct the errors before updating the Invoice.');
+    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value || UpdateCnameError.value || UpdateBstyleError.value || UpdateCashierError.value) {
+        showToast("Please correct the errors before updating the invoice.", "error");
         return;
     }
+
+    // Check for duplicate invoice ID, excluding the current invoice being edited
+    if (checkInvoiceIdExists(editInvoice.value.invoice_id, editInvoice.value.invoice_system_id)) {
+        showToast("Invoice ID already exists. Please use a unique Invoice ID.", "error");
+        return;
+    }
+
+
     try {
 
         // Create a FormData object and append the necessary fields
@@ -1092,15 +1210,15 @@ const addUpdateItemTextField = () => {
     });
     editInvoiceComputation.value.Less_SC_PWD_Discount_Percent = 0;
 };
+
 watch(
   selectedInvoiceItems,
-  async (newItems, oldItems) => {
+  async (newItems) => {
     for (let i = 0; i < newItems.length; i++) {
       const newProductId = newItems[i].product_id;
-      const oldProductId = oldItems[i]?.product_id;
 
-      // Fetch stock only if product_id has changed and is set
-      if (newProductId && newProductId !== oldProductId) {
+      // Fetch stock if product_id is set
+      if (newProductId) {
         try {
           const response = await axios.get(`/api/products/${newProductId}/stock`);
           selectedInvoiceItems.value[i].stock = response.data.stock;
@@ -1113,6 +1231,7 @@ watch(
   },
   { deep: true }
 );
+
 
 watch(
   selectedInvoiceItems,
@@ -1732,6 +1851,7 @@ const fetchInvoicesByDate = async () => {
         });
         invoicesByDate.value = response.data;
         isDateFiltered.value = true; // Set flag to true after fetching by date
+        return invoicesByDate.value
     } catch (error) {
         console.error("Error fetching invoices by date:", error);
     }
@@ -1751,14 +1871,12 @@ const clearDates = async () => {
 startDatePrint.value = '';
 endDatePrint.value = '';    
 };
+
 watch([startDate, endDate], async ([newStartDate, newEndDate]) => {
     if (newStartDate && newEndDate) {
-        // if(showPrintInvoiceSummaryByDate){
-        //     isDateFiltered.value = false;
-        // }
         await fetchInvoicesByDate();
+        console.log('Invoices by date:', invoicesByDate.value);
     } else {
-        // Reset financesByDate and isDateFiltered if dates are cleared
         invoicesByDate.value = [];
         isDateFiltered.value = false;
     }
@@ -1786,6 +1904,10 @@ const endDatePrint = ref('');
 
 function printInvoicesByDate() {
     try {
+        if (startDatePrint.value === '' || startDatePrint.value === null || startDatePrint.value === undefined) {
+            showToast("Please input the dates!", "error");
+            return
+        }
         const startDate = startDatePrint.value;
         const endDate = endDatePrint.value;
         
@@ -1906,6 +2028,19 @@ function sortByDate() {
         }
     });
 }
+
+// Watch function to monitor invoice_id
+function validateKeyPress(event) {
+  // Allow numbers (0-9) and the period/dot character
+  if (!/^[0-9.]$/.test(event.key)) {
+    event.preventDefault();
+  }
+}
+// function validateKeyPress(event) {
+//   if (event.key < '0' || event.key > '9') {
+//     event.preventDefault();
+//   }
+// }
 </script>
 
 
@@ -1994,17 +2129,18 @@ function sortByDate() {
                                                 </div>
 
                                                 </td>
-                                            <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">PHP {{ roundToTwoDecimals(invoice.total_Amount_Due)  }}</td>
+                                            <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                                                PHP {{ invoice.computation ? invoice.computation.total_Amount_Due : 'N/A' }}
+                                            </td>
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
 
                                                 <div class="flex items-center justify-center w-full">
-                                                    
                                                     <span :class="{
-                                                        'text-sm bg-green-600 text-white py-1 px-3 rounded-full': invoice.status === 'paid',
-                                                        'text-sm bg-red-600 text-white py-1 px-3 rounded-full': invoice.status === 'unpaid',
-                                                        'text-sm bg-amber-600 shadow-none text-white py-1 px-3 rounded-full shadow-xs': invoice.status === 'pending refund',
-                                                        'text-sm bg-amber-600 text-white py-1 px-3 rounded-full': invoice.status === 'partially paid',
-                                                        'text-sm bg-green-600 shadow-none text-white py-1 px-3 rounded-full': invoice.status === 'refunded'
+                                                        'bg-green-600 text-white py-1 px-3 rounded-full': invoice.status === 'paid',
+                                                        'bg-red-600 text-white py-1 px-3 rounded-full': invoice.status === 'unpaid',
+                                                        'bg-amber-600 shadow-none text-white py-1 px-3 rounded-full shadow-xs': invoice.status === 'pending refund',
+                                                        'bg-amber-600 text-white py-1 px-3 rounded-full': invoice.status === 'partially paid',
+                                                        'bg-green-600 shadow-none text-white py-1 px-3 rounded-full': invoice.status === 'refunded'
                                                     }">
                                                     <font-awesome-icon v-if="invoice.status === 'paid'" icon="fa-solid fa-check" size="sm" class="mr-1" />
                                                     <font-awesome-icon v-if="invoice.status === 'unpaid'" icon="fa-solid fa-x" size="sm" class="mr-1" />
@@ -2017,6 +2153,7 @@ function sortByDate() {
                                                         invoice.status === 'pending refund' ? 'Pending Refund' : 
                                                         invoice.status === 'refunded' ? 'Refunded' : 
                                                         invoice.status }}</span>
+
                                                 </div>
 
                                             </td>
@@ -2129,8 +2266,9 @@ function sortByDate() {
             <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div  @click.stop  class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
                     <font-awesome-icon icon="fa-solid fa-trash" size="8x" style="margin-top:2px; color: red;"/>
-                    <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Deletion</h2>
-                    <p class="mb-4 text-center">Are you sure you want to delete this Invoice?</p>
+                    <h2 class="mt-4 text-xl text-center font-bold mb-2">WARNING: Confirming Deletion</h2>
+                    <p class="text-center">Are you sure you want to delete this invoice?</p>
+                    <p class="mb-4 text-xs text-center">Note: this invoice will be permanently deleted.</p>
                     <div class="flex justify-center space-x-2">
                         <button @click="closeDeleteModal" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
                             No
@@ -2266,12 +2404,13 @@ function sortByDate() {
                     
                         <!-- STEP 1: DIV FOR INVOICE AND CUSTOMER DETAILS -->
                         <form @submit.prevent="updateInvoice" class="border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg w-full">
+                            <input type="hidden" v-model="editInvoice.original_invoice_id">
                         <!-- Step 1: Invoice and Customer Details -->
                             <div class="flex flex-col p-10">
                                 <div class="grid grid-cols-3 gap-8 mb-4">
                                     <div>
                                         <label for="invoice_id" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Invoice I.D. No.</label>
-                                        <input type="number" id="invoice_id" v-model="editInvoice.invoice_id" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm"  @input="validateUpdateInvoiceID" />
+                                        <input  @keypress="validateKeyPress" type="number" id="invoice_id" v-model="editInvoice.invoice_id" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm"  @input="validateUpdateInvoiceID" />
                                         <div v-if="UpdateinvoiceIDError" class="text-red-500 text-sm">{{ UpdateinvoiceIDError }}</div>
                                     </div>
                                     
@@ -2321,7 +2460,8 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                         <label for="customer_Name" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Name</label>
-                                        <input type="text" id="customer_Name" v-model="editInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Name" v-model="editInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" @input="validateUpdateCname"/>
+                                        <div v-if="UpdateCnameError" class="text-red-500 text-sm">{{ UpdateCnameError }}</div>
                                     </div>
                                     <div class="">
                                         <label for="customer_Address" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Address</label>
@@ -2334,22 +2474,22 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                             <label for="customer_TIN" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer TIN Number</label>
-                                            <input type="number" id="customer_TIN" v-model="editInvoice.customer_TIN" class="block w-full border-gray-300 rounded-bl-md rounded-r-mdd shadow-sm" placeholder="XXX-XXX-XXX-XXX-XXX"/>
+                                            <input @keypress="validateKeyPress" type="number" id="customer_TIN" v-model="editInvoice.customer_TIN" class="block w-full border-gray-300 rounded-bl-md rounded-r-mdd shadow-sm" placeholder="XXX-XXX-XXX-XXX-XXX"/>
                                     </div>
                                     <div class="">
                                         <label for="customer_OSCA_PWD_ID_No" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer OSCA/PWD I.D. No.</label>
-                                        <input type="number" id="customer_OSCA_PWD_ID_No" v-model="editInvoice.customer_OSCA_PWD_ID_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="XXXX"/>
+                                        <input  @keypress="validateKeyPress" type="number" id="customer_OSCA_PWD_ID_No" v-model="editInvoice.customer_OSCA_PWD_ID_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="XXXX"/>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-2  gap-8 mb-4">
                                     <div class="">
                                         <label for="customer_PO_No" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer P.O. Number</label>
-                                        <input type="number" id="customer_PO_No" v-model="editInvoice.customer_PO_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" type="number" id="customer_PO_No" v-model="editInvoice.customer_PO_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div>
                                         <label for="customer_Business_Style" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Business Style</label>
-                                        <input type="text" id="customer_Business_Style" v-model="editInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Business_Style" v-model="editInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" />
                                     </div>
                                 
                                 </div>
@@ -2357,7 +2497,8 @@ function sortByDate() {
                                 
                                 <div class="">
                                     <label for="authorized_Representative" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Cashier/Authorized Representative</label>
-                                    <input type="text" id="authorized_Representative" v-model="editInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica"/>
+                                    <input type="text" id="authorized_Representative" v-model="editInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica" @input="validateUpdateCashier"/>
+                                    <div v-if="UpdateCashierError" class="text-red-500 text-sm">{{ UpdateCashierError }}</div>
                                 </div>                                
 
                             </div>
@@ -2427,7 +2568,7 @@ function sortByDate() {
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmountUpdate(index)" v-model="field.quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmountUpdate(index)" v-model="field.quantity" placeholder="Qty." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2435,7 +2576,7 @@ function sortByDate() {
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input  :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.final_price" placeholder="Total Amount" />
+                                                <input  @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.final_price" placeholder="Total Amount" />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2493,15 +2634,15 @@ function sortByDate() {
                                             </td>
                                             
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="text-center no-spinner w-32" type="number" @input="updateTotalAdditionalAmountUpdate(index)" v-model="field.aCD_amount" placeholder="Amount." />
+                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-32" type="number" @input="updateTotalAdditionalAmountUpdate(index)" v-model="field.aCD_amount" placeholder="Amount." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="text-center no-spinner w-16" type="number" @input="updateTotalAdditionalAmountUpdate(index)" v-model="field.aCD_quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" @input="updateTotalAdditionalAmountUpdate(index)" v-model="field.aCD_quantity" placeholder="Qty." />
                                             </td>
                                             
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="no-spinner w-32 col-span-5" type="number" v-model="field.aCD_Total_Amount" :placeholder="`Input Total Amount`" />
+                                                <input @keypress="validateKeyPress" class="no-spinner w-32 col-span-5" type="number" v-model="field.aCD_Total_Amount" :placeholder="`Input Total Amount`" />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2546,7 +2687,7 @@ function sortByDate() {
 
                                     <div class="mt-2 mb-2 pl-10">
                                         <label for="VAT_Inclusive" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">VAT Inclusive</label>
-                                        <input ref="VatInclusiveUpdate" type="number" id="VAT_Inclusive" v-model="comp_VAT_InclusiveUpdate" class="w-96 block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="VatInclusiveUpdate" type="number" id="VAT_Inclusive" v-model="comp_VAT_InclusiveUpdate" class="w-96 block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-11">---------------------------------------------------------------------</div>
 
@@ -2557,12 +2698,13 @@ function sortByDate() {
                                         </div>
                                         <div class="grid grid-cols-5">
                                             <input type="number"
+                                            @keypress="validateKeyPress" 
                                                 ref="LessScPwdDiscountUpdate" 
                                                 id="Less_SC_PWD_Discount" 
                                                 v-model="editInvoiceComputation.Less_SC_PWD_Discount" 
                                                 class="col-span-4 w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm pr-6" />
                                             <div class="relative col-span-1">
-        <select 
+        <select     
             ref="LessScPwdDiscountPercentUpdate"
             v-model="editInvoiceComputation.Less_SC_PWD_Discount_Percent" 
             class="text-center no-spinner col-span-1 w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm" >
@@ -2578,7 +2720,7 @@ function sortByDate() {
 
                                     <div class="mb-2">
                                         <label for="VAT_Exempt_Sales" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Vat Exempt Sales</label>
-                                        <input ref="VatExemptSalesUpdate" 
+                                        <input @keypress="validateKeyPress" ref="VatExemptSalesUpdate" 
                                             type="number" 
                                             id="VAT_Exempt_Sales" 
                                             v-model="comp_VAT_Exempt_SalesUpdate" 
@@ -2587,7 +2729,7 @@ function sortByDate() {
 
                                     <div class="mb-2">
                                         <label for="Zero_Rated_Sales" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Zero Rated Sales</label>
-                                        <input ref="ZeroRatedSalesUpdate" type="number" id="Zero_Rated_Sales" v-model="editInvoiceComputation.Zero_Rated_Sales" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="ZeroRatedSalesUpdate" type="number" id="Zero_Rated_Sales" v-model="editInvoiceComputation.Zero_Rated_Sales" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
 
@@ -2596,32 +2738,32 @@ function sortByDate() {
                                 <div class="w-1/2">
                                     <div class="mb-2">
                                         <label for="VAT_Amount" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">VAT Amount</label>
-                                        <input ref="VaTAmountUpdate" type="number" id="VAT_Amount" v-model="comp_VAT_Amount_Less_AddUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="VaTAmountUpdate" type="number" id="VAT_Amount" v-model="comp_VAT_Amount_Less_AddUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Less_VAT" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Less VAT</label>
-                                        <input ref="LessVatUpdate" type="number" id="Less_VAT" v-model="comp_VAT_Amount_Less_AddUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="LessVatUpdate" type="number" id="Less_VAT" v-model="comp_VAT_Amount_Less_AddUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Amount_NET_of_VAT" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount NET of VAT</label>
-                                        <input ref="AmountNetOfVatUpdate" type="number" id="Amount_NET_of_VAT" v-model="comp_VATable_Sales_NET_of_VATUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="AmountNetOfVatUpdate" type="number" id="Amount_NET_of_VAT" v-model="comp_VATable_Sales_NET_of_VATUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="VATable_Sales" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">VATable Sales</label>
-                                        <input ref="VatableSalesUpdate" type="number" id="VATable_Sales" v-model="comp_VATable_Sales_NET_of_VATUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="VatableSalesUpdate" type="number" id="VATable_Sales" v-model="comp_VATable_Sales_NET_of_VATUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Amount_Due" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount Due</label>
-                                        <input ref="AmountDueUpdate" type="number" id="Amount_Due" v-model="comp_VAT_AmountDueUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="AmountDueUpdate" type="number" id="Amount_Due" v-model="comp_VAT_AmountDueUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Add_VAT" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Additional VAT</label>
-                                        <input ref="AddVatUpdate" type="number" id="Add_VAT" v-model="comp_VAT_Amount_Less_AddUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="AddVatUpdate" type="number" id="Add_VAT" v-model="comp_VAT_Amount_Less_AddUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
                                     <div class="mb-2">
                                         <label for="tax" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Tax</label>
-                                        <input ref="taxUpdate" type="number" id="tax" v-model="comp_TaxUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" ref="taxUpdate" type="number" id="tax" v-model="comp_TaxUpdate" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
                                 </div>
@@ -2659,7 +2801,7 @@ function sortByDate() {
                                 <div class="grid grid-cols-3 gap-8 mb-4">
                                     <div>
                                         <label for="invoice_id" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Invoice I.D. No.</label>
-                                        <input type="number" id="invoice_id" v-model="newInvoice.invoice_id" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" @input="validateInvoiceID"/>
+                                        <input @keypress="validateKeyPress" type="number" id="invoice_id" v-model="newInvoice.invoice_id" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" @input="validateInvoiceID"/>
                                         <div v-if="invoiceIDError" class="text-red-500 text-sm">{{ invoiceIDError }}</div>
                                     </div>
                                     
@@ -2708,7 +2850,8 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                         <label for="customer_Name" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Name</label>
-                                        <input type="text" id="customer_Name" v-model="newInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Name" v-model="newInvoice.customer_Name" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" @input="validateCname"/>
+                                        <div v-if="CnameError" class="text-red-500 text-sm">{{ CnameError }}</div>
                                     </div>
                                     <div class="">
                                         <label for="customer_Address" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Address</label>
@@ -2721,23 +2864,23 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                             <label for="customer_TIN" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer TIN Number</label>
-                                            <input type="number" id="customer_TIN" v-model="newInvoice.customer_TIN" class="block w-full border-gray-300 rounded-bl-md rounded-r-mdd shadow-sm" placeholder="XXX-XXX-XXX-XXX-XXX"/>
+                                            <input @keypress="validateKeyPress" type="number" id="customer_TIN" v-model="newInvoice.customer_TIN" class="block w-full border-gray-300 rounded-bl-md rounded-r-mdd shadow-sm" placeholder="XXX-XXX-XXX-XXX-XXX"/>
                                     </div>
                                     <div class="">
                                         <label for="customer_OSCA_PWD_ID_No" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer OSCA/PWD I.D. No.</label>
-                                        <input type="number" id="customer_OSCA_PWD_ID_No" v-model="newInvoice.customer_OSCA_PWD_ID_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="XXXX"/>
+                                        <input @keypress="validateKeyPress" type="number" id="customer_OSCA_PWD_ID_No" v-model="newInvoice.customer_OSCA_PWD_ID_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="XXXX"/>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-2  gap-8 mb-4">
                                     <div class="">
                                         <label for="customer_PO_No" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer P.O. Number</label>
-                                        <input type="number" id="customer_PO_No" v-model="newInvoice.customer_PO_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input @keypress="validateKeyPress" type="number" id="customer_PO_No" v-model="newInvoice.customer_PO_No" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
                                     <div>
                                         <label for="customer_Business_Style" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Business Style</label>
-                                        <input type="text" id="customer_Business_Style" v-model="newInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input type="text" id="customer_Business_Style" v-model="newInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Computer Repair Shop" />
                                     </div>
                                 
                                 </div>
@@ -2745,7 +2888,8 @@ function sortByDate() {
                                 
                                 <div class="">
                                     <label for="authorized_Representative" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Cashier/Authorized Representative</label>
-                                    <input type="text" id="authorized_Representative" v-model="newInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica"/>
+                                    <input type="text" id="authorized_Representative" v-model="newInvoice.authorized_Representative" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Maria Clara Veronica" @input="validateCashier"/>
+                                    <div v-if="CashierError" class="text-red-500 text-sm">{{ CashierError }}</div>
                                 </div>                                
 
                             </div>
@@ -2812,7 +2956,7 @@ function sortByDate() {
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2820,7 +2964,7 @@ function sortByDate() {
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.total_amount" placeholder="Total Amount" />
+                                                <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.total_amount" placeholder="Total Amount" />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2872,15 +3016,15 @@ function sortByDate() {
                                             </td>
                                             
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="text-center no-spinner w-32" type="number" @input="updateTotalAdditionalAmount(index)" v-model="field.aCD_amount" placeholder="Amount." />
+                                                <input  @keypress="validateKeyPress" class="text-center no-spinner w-32" type="number" @input="updateTotalAdditionalAmount(index)" v-model="field.aCD_amount" placeholder="Amount." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="text-center no-spinner w-16" type="number" @input="updateTotalAdditionalAmount(index)" v-model="field.aCD_quantity" placeholder="Qty." />
+                                                <input  @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" @input="updateTotalAdditionalAmount(index)" v-model="field.aCD_quantity" placeholder="Qty." />
                                             </td>
                                             
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input class="no-spinner w-32 col-span-5" type="number" v-model="field.aCD_Total_Amount" :placeholder="`Input Total Amount`" />
+                                                <input  @keypress="validateKeyPress" class="no-spinner w-32 col-span-5" type="number" v-model="field.aCD_Total_Amount" :placeholder="`Input Total Amount`" />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2925,7 +3069,7 @@ function sortByDate() {
 
                                     <div class="mt-2 mb-2 pl-10">
                                         <label for="VAT_Inclusive" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">VAT Inclusive</label>
-                                        <input ref="VatInclusive" type="number" id="VAT_Inclusive" v-model="comp_VAT_Inclusive" class="w-96 block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="VatInclusive" type="number" id="VAT_Inclusive" v-model="comp_VAT_Inclusive" class="w-96 block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-11">---------------------------------------------------------</div>
 
@@ -2936,6 +3080,7 @@ function sortByDate() {
                                         </div>
                                         <div class="grid grid-cols-5">
                                             <input type="number"
+                                             @keypress="validateKeyPress"
                                                 ref="LessScPwdDiscount" 
                                                 id="Less_SC_PWD_Discount" 
                                                 v-model="newInvoiceComputation.Less_SC_PWD_Discount" 
@@ -2958,6 +3103,7 @@ function sortByDate() {
                                     <div class="mb-2">
                                         <label for="VAT_Exempt_Sales" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Vat Exempt Sales</label>
                                         <input ref="VatExemptSales" 
+                                             @keypress="validateKeyPress"
                                             type="number" 
                                             id="VAT_Exempt_Sales" 
                                             v-model="comp_VAT_Exempt_Sales" 
@@ -2966,7 +3112,7 @@ function sortByDate() {
 
                                     <div class="mb-2">
                                         <label for="Zero_Rated_Sales" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Zero Rated Sales</label>
-                                        <input ref="ZeroRatedSales" type="number" id="Zero_Rated_Sales" v-model="newInvoiceComputation.Zero_Rated_Sales" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="ZeroRatedSales" type="number" id="Zero_Rated_Sales" v-model="newInvoiceComputation.Zero_Rated_Sales" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
 
@@ -2975,32 +3121,32 @@ function sortByDate() {
                                 <div class="w-1/2">
                                     <div class="mb-2">
                                         <label for="VAT_Amount" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">VAT Amount</label>
-                                        <input ref="VaTAmount" type="number" id="VAT_Amount" v-model="comp_VAT_Amount_Less_Add" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="VaTAmount" type="number" id="VAT_Amount" v-model="comp_VAT_Amount_Less_Add" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Less_VAT" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Less VAT</label>
-                                        <input ref="LessVat" type="number" id="Less_VAT" v-model="comp_VAT_Amount_Less_Add" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="LessVat" type="number" id="Less_VAT" v-model="comp_VAT_Amount_Less_Add" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Amount_NET_of_VAT" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount NET of VAT</label>
-                                        <input ref="AmountNetOfVat" type="number" id="Amount_NET_of_VAT" v-model="comp_VATable_Sales_NET_of_VAT" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="AmountNetOfVat" type="number" id="Amount_NET_of_VAT" v-model="comp_VATable_Sales_NET_of_VAT" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="VATable_Sales" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">VATable Sales</label>
-                                        <input ref="VatableSales" type="number" id="VATable_Sales" v-model="comp_VATable_Sales_NET_of_VAT" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="VatableSales" type="number" id="VATable_Sales" v-model="comp_VATable_Sales_NET_of_VAT" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Amount_Due" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount Due</label>
-                                        <input ref="AmountDue" type="number" id="Amount_Due" v-model="comp_VAT_AmountDue" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="AmountDue" type="number" id="Amount_Due" v-model="comp_VAT_AmountDue" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
                                     <div class="mb-2">
                                         <label for="Add_VAT" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Additional VAT</label>
-                                        <input ref="AddVat" type="number" id="Add_VAT" v-model="comp_VAT_Amount_Less_Add" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="AddVat" type="number" id="Add_VAT" v-model="comp_VAT_Amount_Less_Add" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
                                     <div class="mb-2">
                                         <label for="tax" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Tax</label>
-                                        <input ref="tax" type="number" id="tax" v-model="comp_Tax" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
+                                        <input  @keypress="validateKeyPress" ref="tax" type="number" id="tax" v-model="comp_Tax" class="w-full block border-gray-300 rounded-bl-md rounded-r-md shadow-sm"/>
                                     </div>
 
                                 </div>
@@ -3102,7 +3248,7 @@ function sortByDate() {
                                 <div class="grid grid-cols-2 gap-8 mb-4">
                                     <div class="">
                                             <label for="customer_TIN" class="w-44 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer TIN Number</label>
-                                            <input disabled type="number" id="customer_TIN" v-model="selectedInvoice.customer_TIN" class="block w-full border-gray-300 rounded-bl-md rounded-r-mdd shadow-sm" placeholder="XXX-XXX-XXX-XXX-XXX"/>
+                                            <input @keypress="validateKeyPress" disabled type="number" id="customer_TIN" v-model="selectedInvoice.customer_TIN" class="block w-full border-gray-300 rounded-bl-md rounded-r-mdd shadow-sm" placeholder="XXX-XXX-XXX-XXX-XXX"/>
                                     </div>
                                     <div class="">
                                         <label for="customer_OSCA_PWD_ID_No" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer OSCA/PWD I.D. No.</label>
@@ -3118,7 +3264,7 @@ function sortByDate() {
 
                                     <div>
                                         <label for="customer_Business_Style" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Business Style</label>
-                                        <input disabled type="text" id="customer_Business_Style" v-model="selectedInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz"/>
+                                        <input disabled type="text" id="customer_Business_Style" v-model="selectedInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Computer Repair Shop"/>
                                     </div>
                                 
                                 </div>
@@ -3368,8 +3514,18 @@ function sortByDate() {
         </div>
         </transition>
 
-
-
+                <ErrorToast
+                v-if="showErrorToast"
+                :visible="showErrorToast"
+                :message="toastMessage"
+                @close="showErrorToast = false"
+                />
+                <SuccessToast
+                v-if="showSuccessToast"
+                :visible="showSuccessToast"
+                :message="toastMessage"
+                @close="showSuccessToast = false"
+                />
 
     </AuthenticatedLayout>
 </template>

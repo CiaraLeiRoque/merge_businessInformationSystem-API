@@ -231,9 +231,9 @@ onMounted(fetchAnalyticsData);
 
 
         <!-- Footer buttons -->
-        <div class="fixed bottom-0 left-0 right-0 flex justify-center mb-10">
-            <button class="px-6 py-4 bg-black text-white mr-2" @click="goToPreviewHomePage">Preview Website</button>
-            <button class="px-6 py-4 bg-black text-white" @click="goToEditWebsite1">Edit Website</button>
+        <div class="ml-48 fixed bottom-0 left-0 right-0 flex justify-center mb-16">
+            <button class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-6 py-4 rounded-md" @click="goToPreviewHomePage">Preview Website</button>
+            <button class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-6 py-4 rounded-md" @click="goToEditWebsite1">Edit Website</button>
         </div>
     </AuthenticatedLayout>
 </template>

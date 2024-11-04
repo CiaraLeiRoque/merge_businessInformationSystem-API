@@ -5,7 +5,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import FinanceCategoriesModal  from "@/Components/FinanceCategories.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { Link, useForm } from '@inertiajs/vue3';
+
+
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
+
 import { Head } from '@inertiajs/vue3';
+
 const finances = ref([]);
 const financeListedCategories = ref([]);
 const showAddFinanceModal = ref(false);
@@ -319,7 +325,7 @@ function printFinanceSummaryByDate() {
     showPrintFinanceSummaryByDate.value = true;
 }
 const summaryOption = ref({
-  option: "",
+  option: "summaryPdf",
 });
 watch(
   () => summaryOption.value.option, // Watch the specific value within the ref
@@ -344,11 +350,37 @@ const toggleSelectAll = () => {
 };
 
 
+
+
+
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
+
 const startDatePrint = ref('');
 const endDatePrint = ref('');
 
 function printFinancesByDate() {
     try {
+        if (startDatePrint.value === '' || startDatePrint.value === null || startDatePrint.value === undefined) {
+            showToast("Please input the dates!", "error");
+            return
+        }
+        if (selectedCategories.value.length === 0) {
+            showToast("Please select the categories to print!", "error");
+            return
+        }
+        
         const startDate = startDatePrint.value;
         const endDate = endDatePrint.value;
         
@@ -459,6 +491,20 @@ function sortByAmount() {
 <template>
     <Head title="Finance" />
     <AuthenticatedLayout>
+
+        <Head title="Finance" />
+        <ErrorToast
+            v-if="showErrorToast"
+            :visible="showErrorToast"
+            :message="toastMessage"
+            @close="showErrorToast = false"
+            />
+            <SuccessToast
+            v-if="showSuccessToast"
+            :visible="showSuccessToast"
+            :message="toastMessage"
+            @close="showSuccessToast = false"
+        />
 
         <div class="py-5 h-full">
             <div class="max-w-auto h-full mx-auto sm:px-6 lg:px-8">
@@ -626,7 +672,7 @@ function sortByAmount() {
             <form @submit.prevent="addFinance" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="date" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Date<span class="text-red-500">*</span></label>
+                    <label for="date" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Date<span class="text-red-500"> *</span></label>
                     <input 
                     type="date" 
                     id="date" 
@@ -637,8 +683,11 @@ function sortByAmount() {
                 </div>
 
                 <div>
-                    <label for="description" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Description<span class="text-red-500">*</span></label>
+                    <label for="description" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">
+                        Description<span class="text-red-500">  *</span>
+                        <span class="text-gray-500 text-xs"> (max 64 characters only)</span></label>
                     <input 
+                    maxlength="64"
                     type="text" 
                     id="description" 
                     v-model="newFinance.description" 
@@ -650,7 +699,7 @@ function sortByAmount() {
 
                 <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="category" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Category<span class="text-red-500">*</span></label>
+                    <label for="category" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Category<span class="text-red-500"> *</span></label>
                     <select 
                     id="category" 
                     v-model="newFinance.category" 
@@ -664,7 +713,7 @@ function sortByAmount() {
                 </div>
 
                 <div>
-                    <label for="amount" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount<span class="text-red-500">*</span></label>
+                    <label for="amount" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount<span class="text-red-500"> *</span></label>
                     <div class=" relative rounded-md shadow-sm">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         
@@ -700,15 +749,15 @@ function sortByAmount() {
             </form>
             </div>
         </div>
-
         </transition>
 
         <transition name="modal-fade" >
             <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div @click.stop class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
                     <font-awesome-icon icon="fa-solid fa-trash" size="8x" style="margin-top:2px; color: red;"/>
-                    <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Deletion</h2>
-                    <p class="mb-4 text-center">Are you sure you want to delete this finance?</p>
+                    <h2 class="mt-4 text-xl text-center font-bold mb-2">WARNING: Confirming Deletion</h2>
+                    <p class="text-center">Are you sure you want to delete this finance?</p>
+                    <p class="mb-4 text-xs text-center">Note: this finance will be permanently deleted.</p>
                     <div class="flex justify-center space-x-2">
                         <button @click="closeDeleteModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             No
@@ -739,7 +788,7 @@ function sortByAmount() {
                 <form @submit.prevent="updateFinance" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="date" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Date<span class="text-red-500">*</span></label>
+                            <label for="date" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Date<span class="text-red-500"> *</span></label>
                             <input 
                                 disabled 
                                 type="date" 
@@ -751,7 +800,7 @@ function sortByAmount() {
                         </div>
 
                         <div>
-                            <label for="description" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Description<span class="text-red-500">*</span></label>
+                            <label for="description" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Description<span class="text-red-500"> *</span></label>
                             <input 
                                 disabled 
                                 type="text" 
@@ -765,7 +814,7 @@ function sortByAmount() {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="edit_category" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Category<span class="text-red-500">*</span></label>
+                            <label for="edit_category" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Category<span class="text-red-500"> *</span></label>
                             <select 
                                 id="edit_category" 
                                 v-model="editFinance.category" 
@@ -780,7 +829,7 @@ function sortByAmount() {
                         </div>
 
                         <div>
-                            <label for="amount" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount<span class="text-red-500">*</span></label>
+                            <label for="amount" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount<span class="text-red-500"> *</span></label>
                             <div class=" relative rounded-md shadow-sm">
                                 <input 
                                     disabled
@@ -838,7 +887,7 @@ function sortByAmount() {
                 <form @submit.prevent="updateFinance" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="date" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Date<span class="text-red-500">*</span></label>
+                            <label for="date" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Date<span class="text-red-500"> *</span></label>
                             <input 
                                 type="date" 
                                 id="date" 
@@ -849,7 +898,7 @@ function sortByAmount() {
                         </div>
 
                         <div>
-                            <label for="description" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Description<span class="text-red-500">*</span></label>
+                            <label for="description" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Description<span class="text-red-500"> *</span></label>
                             <input 
                                 type="text" 
                                 id="description" 
@@ -862,7 +911,7 @@ function sortByAmount() {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label for="category" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Category<span class="text-red-500">*</span></label>
+                            <label for="category" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Category<span class="text-red-500"> *</span></label>
                             <select 
                                 id="category" 
                                 v-model="editFinance.category" 
@@ -876,7 +925,7 @@ function sortByAmount() {
                         </div>
 
                         <div>
-                            <label for="amount" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount<span class="text-red-500">*</span></label>
+                            <label for="amount" class="pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 block text-sm font-medium text-white">Amount<span class="text-red-500"> *</span></label>
                             <div class=" relative rounded-md shadow-sm">
                                 <input 
                                     type="number" 
@@ -969,6 +1018,7 @@ function sortByAmount() {
                     <p class="w-44 block pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-xs text-white">Filter by Date:</p>
                     <div class="flex items-center space-x-2">
                     <input 
+                    required
                         id="startDate" 
                         v-model="startDatePrint" 
                         type="date" 
@@ -976,6 +1026,7 @@ function sortByAmount() {
                     />
                     <span class="text-gray-500">to</span>
                     <input 
+                    required
                         id="endDate" 
                         v-model="endDatePrint" 
                         type="date" 
@@ -1002,7 +1053,7 @@ function sortByAmount() {
                             id="select-all"
                             :checked="isAllSelected"
                             @change="toggleSelectAll"
-                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            class="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                         />
                         <label for="select-all" class="ml-2 text-sm text-gray-700">Select All</label>
                     </div>
@@ -1016,7 +1067,7 @@ function sortByAmount() {
                         :value="category.category"
                         :id="category.category" 
                         v-model="selectedCategories"
-                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        class="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                     />
                     <label :for="category.category" class="ml-2 text-sm text-gray-700">{{ category.category }}</label>
                     </div>

@@ -272,10 +272,17 @@ const updateBusiness = async () => {
         });
 
         if (response.data.success) {
-            showToast("Business Info Has Been Updated", "success");
+            showDeleteModal.value = false;
+            showSuccessModal.value = true;
+            setTimeout(() => {
+            showSuccessModal.value = false;
+            }, 1000) 
+
+
+
             setTimeout(() => {
                 window.location.reload();
-            }, 2000);  
+            }, 1000);  
         } else {
             showToast("An error occurred while updating", "error");
         }
@@ -291,8 +298,21 @@ const updateBusiness = async () => {
 
 };
 
+const showSuccessModal = ref(false);
+const showDeleteModal = ref(false);
+const openDeleteModal = () => {
+  showDeleteModal.value = true
+}
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+}
 
 
+function checkNegative() {
+  if (inputValue.value < 0) {
+    inputValue.value = 0;
+  }
+}
 
 </script>
 
@@ -302,17 +322,18 @@ const updateBusiness = async () => {
             <Head title="Business Profile" />
             <div class="container mx-auto p-4 flex flex-col md:flex-row">
                 <!-- Left Column (Form Fields) -->
-                <div class="w-full md:w-1/2 pt-20">
+                <div class="w-full pl-6 md:w-1/2 pt-20">
                     <h1 class="text-3xl font-bold mb-4">Update Business Profile</h1>
 
                     <div class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                             <label for="business-name" class="block text-gray-700 text-sm font-bold mb-2">
-                                <span>Business Name <span class="text-red-500">*</span></span>
+                                <span>Business Name <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 48 characters only)</span></span>
                             </label>
                             <input
                                 type="text"
+                                maxlength="48"
                                 id="business-name"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 v-model="business.name"
@@ -323,10 +344,11 @@ const updateBusiness = async () => {
 
                         <div>
                             <label for="email-address" class="block text-gray-700 text-sm font-bold mb-2">
-                                <span>Business Email Address <span class="text-red-500">*</span></span>
+                                <span>Business Email Address <span class="text-red-500">*</span> <span class="text-gray-500 text-xs">(max 48 characters only)</span></span>
                             </label>
                             <input
                                 type="email"
+                                maxlength="48"
                                 id="email-address"
                                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 v-model="business.email"
@@ -432,13 +454,40 @@ const updateBusiness = async () => {
                             <button
                                 type="button"
                                 class="bg-blue-500 hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                @click="updateBusiness"
+                                @click="openDeleteModal"
                             >
                                 Update Business
                             </button>
                         </div>
                     </div>
                 </div>
+                <transition name="modal-fade" >
+                    <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+                        <div @click.stop class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                            <font-awesome-icon icon="fa-solid fa-question" size="8x" style="margin-top:2px; color: blue;"/>
+                            <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Updated Information</h2>
+                            <p class="mb-4 text-center">Are you sure you want to update the Business Information?</p>
+                            <div class="flex justify-center space-x-2">
+                                <button @click="closeDeleteModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    No
+                                </button>
+                                <button @click="updateBusiness" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">
+                                    Yes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+                <transition name="modal-fade" >
+                    <div v-if="showSuccessModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
+                        <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
+                            <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
+                            <h2 class="text-xl font-bold mb-4">Success!</h2>
+                            <p class="mb-4">The Business Information has been successfully Updated.</p>
+                        </div>
+                    </div>
+                </transition>
+
 
                 <!-- Right Column (Profile Picture and Social Links) -->
                 <div class="w-full md:w-1/2 flex flex-col items-center mt-8 md:mt-0 py-0">
@@ -530,16 +579,35 @@ const updateBusiness = async () => {
             </div>
 
             <ErrorToast
-                v-if="showErrorToast"
-                :visible="showErrorToast"
-                :message="toastMessage"
-                @close="showErrorToast = false"
-                />
-                <SuccessToast
-                v-if="showSuccessToast"
-                :visible="showSuccessToast"
-                :message="toastMessage"
-                @close="showSuccessToast = false"
+            v-if="showErrorToast"
+            :visible="showErrorToast"
+            :message="toastMessage"
+            @close="showErrorToast = false"
+            />
+            <SuccessToast
+            v-if="showSuccessToast"
+            :visible="showSuccessToast"
+            :message="toastMessage"
+            @close="showSuccessToast = false"
             />
         </AuthenticatedLayout>
     </template>
+
+<style scoped>
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.modal-fade-enter-to,
+.modal-fade-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+</style>

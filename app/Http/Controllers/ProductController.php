@@ -61,8 +61,13 @@ class ProductController extends Controller
         // Find the product
         $product = Product::findOrFail($id);
 
-        // Update only the stock field
         $product->stock = $validated['stock'];
+
+        // Update only the stock field
+        if ($product->stock <= 0) {
+            $product->status = "Out of Stock";
+        }
+    
         $product->save();
 
         return response()->json(['message' => 'Stock updated successfully.', 'product' => $product], 200);

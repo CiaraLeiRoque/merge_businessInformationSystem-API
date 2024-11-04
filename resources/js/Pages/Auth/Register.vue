@@ -30,7 +30,7 @@ const submit = () => {
         <form @submit.prevent="submit" class="px-5">
            
             <div>
-                <div class="text-7xl flex flex-col justify-center items-center mb-14"><b>Register</b></div>
+                <div class="text-6xl flex flex-col justify-center items-center mb-6"><b>Register</b></div>
 
                 <InputLabel for="name" value="Name" />
 
@@ -47,7 +47,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <div class="mt-4">
+            <div class="mt-2">
                 <InputLabel for="email" value="Email" />
 
                 <TextInput
@@ -62,7 +62,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
+            <div class="mt-2">
                 <InputLabel for="password" value="Password" />
 
                 <TextInput
@@ -77,7 +77,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4">
+            <div class="mt-2">
                 <InputLabel for="password_confirmation" value="Confirm Password" />
 
                 <TextInput
@@ -93,7 +93,7 @@ const submit = () => {
             </div>
 
             <!-- New Address Field -->
-            <div class="mt-4">
+            <div class="mt-2">
                 <InputLabel for="address" value="Address" />
 
                 <TextInput
@@ -108,7 +108,7 @@ const submit = () => {
             </div>
 
             <!-- New Contact Number Field -->
-            <div class="mt-4">
+            <div class="mt-2">
                 <InputLabel for="contact_number" value="Contact Number" />
 
                 <TextInput

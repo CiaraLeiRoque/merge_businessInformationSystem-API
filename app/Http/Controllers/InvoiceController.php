@@ -62,7 +62,7 @@ public function show($invoice_id)
         
                 //FOR CUSTOMER INFO IN INVOICE
                     'customer_Name' => 'required|string|max:255',
-                    'customer_Address' => 'required|string|max:255',
+                    'customer_Address' => 'nullable|string|max:255',
                     'customer_TIN' => 'required|integer',
                     'customer_Business_Style' => 'required|string|max:255',
                     'customer_PO_No' => 'required|integer',
@@ -220,7 +220,7 @@ public function show($invoice_id)
             'authorized_Representative' => 'required|string|max:255',
             'payment_Type' => 'required|string|max:255',
             'customer_Name' => 'required|string|max:255',
-            'customer_Address' => 'required|string|max:255',
+            'customer_Address' => 'nullable|string|max:255',
             'customer_TIN' => 'required|integer',
             'customer_Business_Style' => 'required|string|max:255',
             'customer_PO_No' => 'required|integer',
@@ -245,22 +245,41 @@ public function show($invoice_id)
     
     
 
+    // public function getInvoiceByDate(Request $request)
+    // {
+    //     \Log::info('Incoming request data FOR FINANCE BY DATE:', $request->all());
+
+    //     if (!$request->has(['start_date', 'end_date'])) {
+    //         return response()->json(['error' => 'Start date and end date are required'], 400);
+    //     }
+
+        
+    //     $startDate = Carbon::parse($request->start_date)->startOfDay();
+    //     $endDate = Carbon::parse($request->end_date)->endOfDay();
+    
+    //     $invoicesByDate = Invoice::whereBetween('date', [$startDate, $endDate])
+    //                     ->orderBy('date')
+    //                     ->get();
+    
+    //     return response()->json($invoicesByDate);
+    // }
+
     public function getInvoiceByDate(Request $request)
     {
         \Log::info('Incoming request data FOR FINANCE BY DATE:', $request->all());
-
+        
         if (!$request->has(['start_date', 'end_date'])) {
             return response()->json(['error' => 'Start date and end date are required'], 400);
         }
-
         
         $startDate = Carbon::parse($request->start_date)->startOfDay();
         $endDate = Carbon::parse($request->end_date)->endOfDay();
-    
-        $invoicesByDate = Invoice::whereBetween('date', [$startDate, $endDate])
-                        ->orderBy('date')
-                        ->get();
-    
+        
+        $invoicesByDate = Invoice::with('computation')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('date')
+            ->get();
+        
         return response()->json($invoicesByDate);
     }
 
