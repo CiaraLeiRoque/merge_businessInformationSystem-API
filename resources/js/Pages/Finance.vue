@@ -9,6 +9,8 @@ import { Link, useForm } from '@inertiajs/vue3';
 import ErrorToast from '@/Components/ErrorToast.vue';
 import SuccessToast from '@/Components/SuccessToast.vue';
 
+import { Head } from '@inertiajs/vue3';
+
 const finances = ref([]);
 const financeListedCategories = ref([]);
 const showAddFinanceModal = ref(false);
@@ -483,17 +485,12 @@ function sortByAmount() {
     });
 }
 
-function validateInput() {
-  // Check if the value is not a number or if it's less than 0
-  if (isNaN(inputValue.value) || inputValue.value < 0) {
-    inputValue.value = 0;
-  }
-}
 </script>
 
 <template>
     <AuthenticatedLayout>
 
+        <Head title="Finance" />
         <ErrorToast
             v-if="showErrorToast"
             :visible="showErrorToast"

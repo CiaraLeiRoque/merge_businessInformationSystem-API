@@ -5,6 +5,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 
+import { Head } from '@inertiajs/vue3';
+
 const products = ref([]);
 const showAddProductModal = ref(false);
 const showCategoriesModal = ref(false);
@@ -925,15 +927,10 @@ function sortByExpDate() {
     });
 }
 
-function validateInput() {
-  // Check if the value is not a number or if it's less than 0
-  if (isNaN(inputValue.value) || inputValue.value < 0) {
-    inputValue.value = 0;
-  }
-}
 </script>
 
 <template>
+    <Head title="Inventory" />
     <AuthenticatedLayout>
 
 
@@ -1041,7 +1038,7 @@ function validateInput() {
                                 <table class="min-w-full">
                                     <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0">
                                     <tr>
-                                        <th class="px-2 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">ID No.</th>
+                                        <th class="px-2 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">ID</th>
                                         <th class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">Image</th>
 
                                         <th 

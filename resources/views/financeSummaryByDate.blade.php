@@ -119,7 +119,7 @@
 
     <body>
     <div class="invoice-box">
-    <table width="100%" style="border-collapse: collapse;">
+    <table width="100%" style="border-collapse: collapse;"> 
     <tr class="top">
         <td colspan="3">
             <table width="100%">

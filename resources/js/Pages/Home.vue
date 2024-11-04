@@ -1,9 +1,9 @@
 <template>
     <AuthenticatedLayout>
         <div class="flex flex-row">
-            <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
+            <div class="w-full sm:px-6 lg:px-8 pb-6 flex flex-col" style="width: 60vw;">
                 <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #0F2C4A;">
-                    <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
+                    <div class="h-36 p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
                         <div class="flex flex-row justify-center"><div class="flex flex-col text-center mr-20"><div style="font-size: 18px;"><b>Total Income (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalIncome }}</div></div>
                         <div class="flex flex-col text-center"><div style="font-size: 18px;"><b>Total Expenses (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalExpenses }}</div></div></div>
                         <div class="flex flex-row justify-center">
@@ -43,7 +43,11 @@
                     </div>
                     </div>
                 </div>                
-                    <!-- Visitors & Views and Retention Rate Charts side by side -->
+                    
+                
+                
+                
+                <!-- Visitors & Views and Retention Rate Charts side by side -->
                     <div class="flex flex-row justify-center px-8 space-x-6 mt-2"> 
                         <!-- Visitors & Views Chart -->
                         <div class="custom-chart-width p-4 border border-black rounded-lg w-full" style="height: 275px;"> 

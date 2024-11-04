@@ -38,26 +38,29 @@ async function getWebsiteInfo(){
         
     }
 
-    function navigateAndHiddenReload(routeName) {
-    // Check reloadOnce from Pinia store
-    if (reloadStore.reloadOnce === 0) {
-        reloadStore.setReloadOnce(1); // Update the store to prevent further reloads
-        console.log("ReloadOnce updated to:", reloadStore.reloadOnce);
-        // Navigate to the new page
-        window.location.href = route(routeName);
 
-        // Set up a listener for when the page becomes hidden (during reload)
-        document.addEventListener('visibilitychange', function listener() {
-            if (document.visibilityState === 'hidden') {
-                document.removeEventListener('visibilitychange', listener);
-                window.location.reload(true); // Reload the page
-            }
-        });
-    } else {
-        // Just navigate without reloading if `reloadOnce` is already set to 1
-        window.location.href = route(routeName);
+    function navigateAndHiddenReload(routeName) {
+    window.addEventListener('beforeunload', function listener() {
+        window.removeEventListener('beforeunload', listener);
+        localStorage.setItem('reloadAfterNavigation', 'true');
+    });
+    window.location.href = route(routeName);
     }
-}
+
+    // function navigateAndHiddenReload(routeName) {
+
+    //         // Navigate to the new page
+    //         window.location.href = route(routeName);
+
+    //         // Set up a listener for when the page becomes hidden (during reload)
+    //         document.addEventListener('visibilitychange', function listener() {
+    //             if (document.visibilityState === 'hidden') {
+    //                 document.removeEventListener('visibilitychange', listener);
+    //                 window.location.reload(true); // Reload the page
+    //             }
+    //         });
+        
+    // }
 
 
 // Reset the reloadOnce counter when you navigate away or on another condition
