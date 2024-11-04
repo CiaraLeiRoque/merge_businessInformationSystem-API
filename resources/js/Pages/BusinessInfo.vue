@@ -579,16 +579,16 @@ function checkNegative() {
             </div>
 
             <ErrorToast
-                v-if="showErrorToast"
-                :visible="showErrorToast"
-                :message="toastMessage"
-                @close="showErrorToast = false"
-                />
-                <SuccessToast
-                v-if="showSuccessToast"
-                :visible="showSuccessToast"
-                :message="toastMessage"
-                @close="showSuccessToast = false"
+            v-if="showErrorToast"
+            :visible="showErrorToast"
+            :message="toastMessage"
+            @close="showErrorToast = false"
+            />
+            <SuccessToast
+            v-if="showSuccessToast"
+            :visible="showSuccessToast"
+            :message="toastMessage"
+            @close="showSuccessToast = false"
             />
         </AuthenticatedLayout>
     </template>

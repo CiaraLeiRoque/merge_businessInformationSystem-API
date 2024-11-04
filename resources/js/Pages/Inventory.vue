@@ -15,6 +15,83 @@ const imagePreviewUrl = ref(null);
 const editImagePreviewUrl = ref(null);
 
 
+//ERROR TRAPPING
+const priceError = ref('');
+const stockError = ref('');
+const soldError = ref('');
+const onsaleError = ref('');
+
+const UpdatepriceError = ref('');
+const UpdatestockError = ref('');
+const UpdatesoldError = ref('');
+const UpdateonsaleError = ref('');
+
+const validatePrice = () => {
+    if (!/^\d*\.?\d+$/.test(newProduct.value.price)) {
+        priceError.value = "Please input only numbers for the Price field";
+    } else {
+        priceError.value = '';
+    }
+};
+
+const validateStock = () => {
+    if (!/^\d+$/.test(newProduct.value.stock)) {
+        stockError.value = "Please input only positive whole numbers for the Stock field";
+    } else {
+        stockError.value = '';
+    }
+};
+
+const validateSold = () => {
+    if (!/^\d+$/.test(newProduct.value.sold)) {
+        soldError.value = "Please input only positive whole numbers for the Sold field";
+    } else {
+        soldError.value = '';
+    }
+};
+
+const validateOnsaleError = () => {
+    if (!/^\d*\.?\d+$/.test(newProduct.value.on_sale_price)) {
+        onsaleError.value = "Please input only numbers for the On Sale Price field";
+    } else {
+        onsaleError.value = '';
+    }
+};
+
+const validateUpdatePrice = () => {
+    if (!/^\d*\.?\d+$/.test(editProduct.value.price)) {
+        UpdatepriceError.value = "Please input only numbers for the Price field";
+    } else {
+        UpdatepriceError.value = '';
+    }
+};
+
+const validateUpdateStock = () => {
+    if (!/^\d+$/.test(editProduct.value.stock)) {
+        UpdatestockError.value = "Please input only positive whole numbers for the Stock field";
+    } else {
+        UpdatestockError.value = '';
+    }
+};
+
+const validateUpdateSold = () => {
+    if (!/^\d+$/.test(editProduct.value.sold)) {
+        UpdatesoldError.value = "Please input only positive whole numbers for the Sold field";
+    } else {
+        UpdatesoldError.value = '';
+    }
+};
+
+const validateUpdateOnsaleError = () => {
+    if (!/^\d*\.?\d+$/.test(editProduct.value.on_sale_price)) {
+        UpdateonsaleError.value = "Please input only numbers for the On Sale Price field";
+    } else {
+        UpdateonsaleError.value = '';
+    }
+};
+
+
+
 const validationErrors = ref({
     name: '',
     price: '',
@@ -1283,7 +1360,7 @@ function validateInput() {
                 </div>
             </div>
         </transition>
-
+        <!-- For Adding of products -->
         <transition name="modal-fade" >
             <div v-if="showAddProductModal" @click="showAddProductModal = false" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div  @click.stop class="px-5 bg-white p-4 rounded-lg shadow-lg w-full max-w-3xl relative">
@@ -1313,7 +1390,8 @@ function validateInput() {
                                 <!-- Price Field -->
                                 <div>
                                     <label for="price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Price (PHP) <span class="text-red-500">*</span></label>
-                                    <input type="number" step="0.01" id="price" v-model="newProduct.price" class="input-field text-xs p-1" required />
+                                    <input type="number" min="0"  step="0.01" id="price" v-model="newProduct.price" class="input-field text-xs p-1" required @input="validatePrice" />
+                                    <div v-if="priceError" class="text-red-500 text-sm">{{ priceError }}</div>
                                     <span v-if="validationErrors.price" class="text-red-500 text-xs">{{ validationErrors.price }}</span>
                                 </div>
                                 <!-- Category Field -->
@@ -1327,13 +1405,15 @@ function validateInput() {
                                 <!-- Stock Field -->
                                 <div>
                                     <label for="stock" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Stock <span class="text-red-500">*</span></label>
-                                    <input type="number" id="stock" v-model="newProduct.stock" class="input-field text-xs p-1" required />
+                                    <input type="number" min="0"  id="stock" v-model="newProduct.stock" class="input-field text-xs p-1" required @input="validateStock" />
+                                    <div v-if="stockError" class="text-red-500 text-sm">{{ stockError }}</div>
                                 </div>
 
                                 <!-- Sold Field -->
                                 <div>
                                     <label for="sold" style="font-size: 11px;" class=" pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline   text-white">Sold  <span class="text-red-500">*</span></label>
-                                    <input type="number" id="sold" v-model="newProduct.sold" class="input-field text-xs p-1" />
+                                    <input type="number" min="0"  id="sold" v-model="newProduct.sold" class="input-field text-xs p-1" @input="validateSold" />
+                                    <div v-if="soldError" class="text-red-500 text-sm">{{ soldError }}</div>
                                 </div>
                                 <!-- Status Field -->
                                 <div>
@@ -1409,7 +1489,8 @@ function validateInput() {
                             <!-- On Sale Price (Visible only if 'On Sale' is selected) -->
                             <div class="col-span-3" v-if="newProduct.on_sale === 'yes'">
                                 <label for="on_sale_price" class="block text-xs font-medium text-gray-700">On Sale Price (PHP):</label>
-                                <input type="number" step="0.01" id="on_sale_price" v-model="newProduct.on_sale_price" class="input-field text-xs p-1"/>
+                                <input type="number" min="0"  step="0.01" id="on_sale_price" v-model="newProduct.on_sale_price" class="input-field text-xs p-1" @input="validateOnsaleError"/>
+                                <div v-if="onsaleError" class="text-red-500 text-sm">{{ onsaleError }}</div>
                             </div>
                             <!-- Action Buttons -->
                             <div class="col-span-3 flex justify-center mt-3 space-x-2">
@@ -1451,7 +1532,8 @@ function validateInput() {
                             <!-- Price Field -->
                             <div>
                                 <label for="edit_price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Price (PHP) <span class="text-red-500">*</span></label>
-                                <input type="number" step="0.01" id="edit_price" v-model="editProduct.price" class="input-field text-xs p-1" required />
+                                <input type="number" min="0" step="0.01" id="edit_price" v-model="editProduct.price" class="input-field text-xs p-1" required @input="validateUpdatePrice" />
+                                <div v-if="UpdatepriceError" class="text-red-500 text-sm">{{ UpdatepriceError }}</div>
                                 <span v-if="validationErrorsEdit.price" class="text-red-500 text-xs">{{ validationErrorsEdit.price }}</span>
                             </div>
                             <!-- Category Field -->
@@ -1465,13 +1547,15 @@ function validateInput() {
                             <!-- Stock Field -->
                             <div>
                                 <label for="edit_stock" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Stock <span class="text-red-500">*</span></label>
-                                <input type="number" id="edit_stock" v-model="editProduct.stock" class="input-field text-xs p-1" required />
+                                <input type="number" min="0" id="edit_stock" v-model="editProduct.stock" class="input-field text-xs p-1" required @input="validateUpdateStock" />
+                                <div v-if="UpdatestockError" class="text-red-500 text-sm">{{ UpdatestockError }}</div>
                             </div>
 
                             <!-- Sold Field -->
                             <div>
                                 <label for="edit_sold" style="font-size: 11px;" class=" pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline   text-white">Sold  <span class="text-red-500">*</span></label>
-                                <input type="number" id="edit_sold" v-model="editProduct.sold" class="input-field text-xs p-1" />
+                                <input type="number" min="0" id="edit_sold" v-model="editProduct.sold" class="input-field text-xs p-1" @input="validateUpdateSold" />
+                                <div v-if="UpdatesoldError" class="text-red-500 text-sm">{{ UpdatesoldError }}</div>
                             </div>
                             <!-- Status Field -->
                             <div>
@@ -1539,7 +1623,8 @@ function validateInput() {
                                 </label>
                                 <span class="text-xs text-gray-700">{{ editProduct.on_sale === 'yes' ? 'Yes' : 'No' }}</span>
                             </div>
-                            <input step="0.01" v-if="editProduct.on_sale === 'yes'" type="number" id="edit_on_sale_price" v-model="editProduct.on_sale_price" class="input-field mt-2 text-xs p-1" placeholder="On Sale Price (PHP)" />
+                            <input step="0.01" v-if="editProduct.on_sale === 'yes'" type="number" min="0" id="edit_on_sale_price" v-model="editProduct.on_sale_price" class="input-field mt-2 text-xs p-1" placeholder="On Sale Price (PHP)"  @input="validateUpdateOnsaleError"/>
+                            <div v-if="UpdateonsaleError" class="text-red-500 text-sm">{{ UpdateonsaleError }}</div>
                         </div>
                     </div>
                     <div class="col-span-3 flex justify-center mt-3 space-x-2">
