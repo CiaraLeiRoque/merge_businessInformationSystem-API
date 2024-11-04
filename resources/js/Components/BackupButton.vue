@@ -14,25 +14,26 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import axios from 'axios';
 
-export default {
-  methods: {
-    downloadBackup() {
-      axios.get('/api/backup', { responseType: 'blob' })
-        .then(response => {
-          const url = window.URL.createObjectURL(new Blob([response.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', 'backup.sql');
-          document.body.appendChild(link);
-          link.click();
-        })
-        .catch(error => {
-          console.log('Error downloading the backup:', error);
-        });
-    }
-  }
+function downloadBackup() {
+  const today = new Date();
+  const date = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+  const time = `${today.getHours().toString().padStart(2, '0')}-${today.getMinutes().toString().padStart(2, '0')}-${today.getSeconds().toString().padStart(2, '0')}`;
+  const filename = `Backup_${date}_${time}.sql`;
+
+  axios.get('/api/backup', { responseType: 'blob' })
+    .then(response => {
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+    })
+    .catch(error => {
+      console.log('Error downloading the backup:', error);
+    });
 }
 </script>

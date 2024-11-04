@@ -753,8 +753,9 @@ function sortByAmount() {
             <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div @click.stop class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
                     <font-awesome-icon icon="fa-solid fa-trash" size="8x" style="margin-top:2px; color: red;"/>
-                    <h2 class="mt-4 text-xl text-center font-bold mb-2">Confirm Deletion</h2>
-                    <p class="mb-4 text-center">Are you sure you want to delete this finance?</p>
+                    <h2 class="mt-4 text-xl text-center font-bold mb-2">WARNING: Confirming Deletion</h2>
+                    <p class="text-center">Are you sure you want to delete this finance?</p>
+                    <p class="mb-4 text-xs text-center">Note: this finance will be permanently deleted.</p>
                     <div class="flex justify-center space-x-2">
                         <button @click="closeDeleteModal" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             No
