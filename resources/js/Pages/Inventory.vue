@@ -6,8 +6,6 @@ import CategoriesModal from "@/Components/CategoriesModal.vue";
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import { Head } from '@inertiajs/vue3';
 
-import { Head } from '@inertiajs/vue3';
-
 const products = ref([]);
 const showAddProductModal = ref(false);
 const showCategoriesModal = ref(false);
