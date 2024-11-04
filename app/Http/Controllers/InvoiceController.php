@@ -242,28 +242,6 @@ public function show($invoice_id)
 
     }
 
-    
-    
-
-    // public function getInvoiceByDate(Request $request)
-    // {
-    //     \Log::info('Incoming request data FOR FINANCE BY DATE:', $request->all());
-
-    //     if (!$request->has(['start_date', 'end_date'])) {
-    //         return response()->json(['error' => 'Start date and end date are required'], 400);
-    //     }
-
-        
-    //     $startDate = Carbon::parse($request->start_date)->startOfDay();
-    //     $endDate = Carbon::parse($request->end_date)->endOfDay();
-    
-    //     $invoicesByDate = Invoice::whereBetween('date', [$startDate, $endDate])
-    //                     ->orderBy('date')
-    //                     ->get();
-    
-    //     return response()->json($invoicesByDate);
-    // }
-
     public function getInvoiceByDate(Request $request)
     {
         \Log::info('Incoming request data FOR FINANCE BY DATE:', $request->all());

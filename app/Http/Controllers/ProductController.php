@@ -234,43 +234,6 @@ class ProductController extends Controller
         }
     }
 
-
-//     public function importProductsXlsx(Request $request)
-// {
-//     $request->validate([
-//         'file' => 'required|mimes:xlsx,xls,csv|max:10240', // Max file size: 10MB
-//     ]);
-
-//     try {
-//         Excel::import(new ImportProduct, $request->file('file'));
-//         return response()->json(['message' => 'Products imported successfully.']);
-//     } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-//         $failures = $e->failures();
-//         $errors = [];
-
-//         foreach ($failures as $failure) {
-//             $errors[] = "Row {$failure->row()}: {$failure->errors()[0]}";
-//         }
-
-//         return response()->json(['message' => 'Import failed', 'errors' => $errors], 422);
-//     } catch (\Exception $e) {
-//         return response()->json(['message' => 'Import failed: ' . $e->getMessage()], 500);
-//     }
-// }
-
-
-    // public function importProductsXlsx(Request $request)
-    // {
-    //     // Validate that the request contains a file
-    //     $request->validate([
-    //         'file' => 'required|mimes:xlsx,xls,csv',
-    //     ]);
-
-    //     // Handle the import using the ProductsImport class
-    //     Excel::import(new ImportProduct, $request->file('file'));
-
-    //     return response()->json(['message' => 'Products imported successfully.']);
-    // }
     public function featured_products(Request $request){
        
         $featuredProducts = Product::where('business_id', $request->business_id)

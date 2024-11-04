@@ -239,9 +239,6 @@ const fetchListedCategories = async () => {
     }
 };
 
-const handleCategoryAdded = () => {
-    fetchListedCategories();
-};
 
 
 const newProduct = ref({
@@ -487,25 +484,6 @@ const handleEditImageUpload = (event) => {
 
 
 
-const updateDiscountable = async (productId, discountableStatus) => {
-    try {
-        // PUT request para maupdate yung discountable sa front-end
-        await axios.put(`/api/products/${productId}/discountable`, {
-            seniorPWD_discountable: discountableStatus
-        });
-
-        console.log(`Updated product ${productId} with discountable status: ${discountableStatus}`);
-    } catch (error) {
-        console.error("Error updating discountable status:", error);
-
-        // kahit wala, ibabalik lang yung state ng button kapag failed
-        const product = products.value.find(product => product.id === productId);
-        if (product) {
-            product.seniorPWD_discountable = discountableStatus === 'yes' ? 'no' : 'yes'; 
-        }
-    }
-};
-
 
 
 
@@ -514,29 +492,6 @@ const isDateFiltered = ref(false);
 const startDate = ref('');
 const endDate = ref('');
 const productsByDate = ref([]);
-
-const fetchInventoryByDate = async () => {
-    try {
-        const response = await axios.get('/api/products_by_date', {
-            params: {
-                start_date: startDate.value,
-                end_date: endDate.value
-            }
-        });
-        productsByDate.value = response.data;
-        isDateFiltered.value = true; // Set flag to true after fetching by date
-    } catch (error) {
-        console.error("Error fetching invoices by date:", error);
-    }
-};
-
-const clearFetchProductsByDate = async () => {
-
-    startDate.value = '';
-    endDate.value = '';
-    productsByDate.value = '';
-    isDateFiltered.value = false;
-};
 watch([startDate, endDate], async ([newStartDate, newEndDate]) => {
     if (newStartDate && newEndDate) {
         // if(showPrintInvoiceSummaryByDate){

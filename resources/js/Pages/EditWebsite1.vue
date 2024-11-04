@@ -6,12 +6,6 @@ import { onMounted, ref } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 
-// const textAreas = {
-//     businessName: ref('BUSINESS NAME'),
-//     businessDescription: ref('CHEAP AND QUALITY FOOD'),
-//     businessDetails: ref("Our food service system is designed to meet the specific needs of our customers. We ensure to avail you the cheapest high quality product in the market."),
-//     homePageImage: ref('https://picsum.photos/200')
-// }
 const textAreas = {
     businessImage: ref(''),
     businessName: ref(''),

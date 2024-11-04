@@ -19,35 +19,6 @@ const showFinanceCategoriesModal = ref(false);
 const showEditFinanceModal = ref(false);
 const searchQuery = ref('');
 
-// const props = defineProps({
-//   content: {
-//     type: String,
-//     required: true
-//   },
-//   // Add any other props that your component needs here
-//   filteredFinances: {
-//     type: Array,
-//     required: true
-//   },
-//   // ... any other props
-// });
-
-
-// defineProps({
-//   filteredFinances: {
-//     type: Array,
-//     default: () => [],
-//   },
-// });
-
-// const props = defineProps({
-//   content: String,
-//   filteredFinances: {
-//     type: Array,
-//     default: () => [],
-//   },
-// });
-
 const newFinance = ref({
     id: null,
     description: '',
@@ -65,12 +36,6 @@ const editFinance = ref({
 
 });
 
-// watch(() => editFinance.value.on_sale, (newValue) => {
-//     if (newValue === 'no') {
-//         editFinance.value.on_sale_price = 0;
-//     }
-// });
-
 const fetchFinances = async () => {
     try {
         const response = await axios.get('/api/finance');
@@ -80,16 +45,6 @@ const fetchFinances = async () => {
         console.error("Error fetching finance and finance Categories:", error);
     }
 };
-
-// const fetchFinanceCategories = async () => {
-//     try {
-//         const response = await axios.get('/api/finance');
-//         finances.value = response.data;
-//         financeListedCategories.value = response.data;
-//     } catch (error) {
-//         console.error("Error fetching finance and finance Categories:", error);
-//     }
-// };
 
 const handleFinanceCategoryAdded = () => {
     fetchFinances();
@@ -129,13 +84,6 @@ const showSuccessEditModal = ref(false);
 const updateFinance = async () => {
     try {
         const formData = new FormData();
-
-        
-        // for (const key in editFinance.value) {
-        //     if (editFinance.value[key] !== null) {
-        //         formData.append(key, editFinance.value[key]);
-        //     }
-        // }
 
         for (const key in editFinance.value) {
             if (editFinance.value[key] !== null) {
