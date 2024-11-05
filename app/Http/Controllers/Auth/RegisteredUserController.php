@@ -58,17 +58,14 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'address' => $request->address,
             'contact_number' => $request->contact_number,
-             'user_type'=> $user_type
+            'user_type'=> $user_type
         ]);
         Log::info('User created: ', ['user' => $user]);
-
 
         event(new Registered($user));
 
         Auth::login($user);
-
-
-        return redirect(route('homepage', absolute: false));
+        return redirect()->route('verification.notice');
     }catch (Exception $e) {
             Log::error('Registration Error: ', ['error' => $e->getMessage()]);
             return back()->withErrors('Registration failed, please try again.');

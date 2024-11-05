@@ -14,6 +14,11 @@ defineProps({
     status: {
         type: String,
     },
+    // Added to capture unverified email messages
+    unverified: {
+        type: String,
+        default: '',
+    },
 });
 
 const form = useForm({
@@ -32,6 +37,11 @@ const submit = () => {
 <template>
     <GuestLayout>
         <Head title="Log in" />
+
+        <!-- Display the unverified email message if it exists -->
+        <div v-if="unverified" class="mb-4 font-medium text-sm text-red-600 bg-red-100 p-3 rounded-lg">
+            {{ unverified }}
+        </div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}
