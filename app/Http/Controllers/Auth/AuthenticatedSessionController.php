@@ -10,10 +10,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
-
-use function Pest\Laravel\json;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -34,22 +30,35 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
         $user = Auth::user();
-        if($user->user_type === 'owner'){
+
+        // Check if the user is verified
+        if (!$user->hasVerifiedEmail()) {
+            Auth::logout(); // Log out the user immediately
+            return back()->withErrors([
+                'email' => 'Your email address is not verified. Please check your inbox for the verification link.',
+            ]);
+        }
+
+        // Redirect based on user type
+        if ($user->user_type === 'owner') {
             return redirect()->intended(route('home', absolute: false));
-        }else if($user->user_type === 'customer'){
+        } else if ($user->user_type === 'customer') {
             return redirect()->intended(route('homepage', absolute: false));
         }
 
         return back()->withErrors('Login failed. Please try again.');
     }
 
-    public function show(Request $request){
-        $user = Auth::user();
-        return $user;
+
+    /**
+     * Show the authenticated user.
+     */
+    public function show(Request $request)
+    {
+        return Auth::user();
     }
 
     /**
@@ -64,11 +73,10 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         $button = $request->input('button');
-        if($button=='register'){
+        if ($button == 'register') {
             return redirect('/register');
         }
+
         return redirect('/');
     }
-
-
 }

@@ -10,6 +10,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Controllers\BotmanController;
 use Inertia\Inertia;
 use BotMan\BotMan\BotMan;
@@ -62,11 +64,16 @@ Route::get('/products_page', function () {
 Route::get('/aboutUs_page', function () {
     return Inertia::render('Customer/AboutUs');
 })->name('aboutUs_page');
-// //Pwede idelete
-// Route::get('data', function(){
-//     $analyticsData = Analytics::fetchVisitorsAndPageViews(Period::days(7));
-//     dd($analyticsData);
-// });
+
+
+Route::get('/email/verify', function () {
+    return Inertia::render('VerifyEmail');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect()->route('login')->with('status', 'Your email has been verified. You can now log in.');
+})->middleware(['auth', 'signed'])->name('verification.verify');
 
 Route::get('/api/analytics', [AnalyticsController::class, 'fetchData']);
 Route::get('/server-time', function () {
