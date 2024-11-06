@@ -26,7 +26,6 @@ class SendBusinessNameChangeNotification
         $emailBody .= "<div style='padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: auto; background-color: #f9f9f9;'>";
 
         $emailBody .= "<div style='display: flex; align-items: center; margin-bottom: 20px;'>";
-        $emailBody .= "<img src='{$businessLogoUrl}' alt='Business Logo' style='width: 80px; height: 80px; border-radius: 50%; margin-right: 20px; object-fit: cover; aspect-ratio: 1 / 1;'>";
         $emailBody .= "<h2 style='color: #0056b3;'>{$event->newName} Information Updated</h2>";
         $emailBody .= "</div>";
 
