@@ -89,6 +89,8 @@ function account(){
 
 onMounted(()=>{
     getWebsiteInfo();
+    
+  window.addEventListener('scroll', handleScroll);
 })
 
 async function getWebsiteInfo(){
@@ -202,55 +204,43 @@ const formatUrl = (url) => {
     }
     return url;
 };
+
+const isVisible = ref(false);
+const aboutSection = ref(null);
+
+const handleScroll = () => {
+  if (aboutSection.value) {
+    const rect = aboutSection.value.getBoundingClientRect();
+    if (rect.top <= window.innerHeight - 100) {
+      isVisible.value = true;
+      window.removeEventListener('scroll', handleScroll);
+    }
+  }
+};
+
 </script>
 
 <template>
-            <!-- header -->
-            <div class=" bg-business-website-header flex items-center p-5">
+    <Head title="Home" />
+        <!-- header -->
+        <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">
                 <img :src='businessInfo.businessImage.value' class="w-full h-full object-cover rounded-full"/>
             </div>
                 <div class="ml-auto flex items-center space-x-[40px] mr-[40px]">
-                    <a class="text-black text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
-                    <p>|</p>
-                    <div class="flex flex-col">
-                        <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
-                        
-                            <a
-                            v-if="$page.props.auth.user && user_type==='owner'"
-                            :href="route('dashboard')"
-                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                        >
-                            Dashboard
-                        </a>
-                            <a
-                            v-else-if="$page.props.auth.user && user_type==='customer'"
-                            :href="route('homepage')"
-                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                        >
-                            Log In
-                    </a>
-
-                        <template v-else-if="!$page.props.auth.user">
-                            <Link
-                                :href="route('login')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                            >
-                                Log in
-                            </Link>
-                            <Link
-                                v-if="canRegister"
-                                :href="route('register')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                            >
-                                Register
-                            </Link>
-                        </template>
-                    </nav>
-                    </div> 
+                    <a class="text-black rounded-3xl bg-white px-4 py-2 text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
+                    <p class="text-white">|</p>
+                    <div v-if="userLogIn" class="flex flex-col">
+                        <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
+                        <a @click="account" class=" cursor-pointer text-white text-[14px] underline">Account</a>
+                    </div>
+                    <div v-else>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In &nbsp; &nbsp;</a>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('register')">Register</a>
+                    </div>
                     <div class="w-[50px] h-[50px]">
                         <img v-if="isLoading" src='/storage/user_profile/default-profile.png'/>
                         <img v-else-if="profilePicture" :src='profilePicture' alt="Logo" class="h-full object-cover rounded-full" />
@@ -262,91 +252,93 @@ const formatUrl = (url) => {
 
         <!-- section 1/EditWebsite1 -->
         <section>
-        <div class="bg-website-main flex min-h-screen">
+        <div style="background-color: ghostwhite" class=" flex min-h-screen">
 
-            <div class="mt-[150px] ml-[80px] flex-col h-1/2">
+            <div class="mt-[230px] ml-[80px] flex-col h-1/2">
                 <div>
-                    <p class="text-white text-[40px] tracking-[5px]">{{businessInfo.businessName.value}}</p>
+                    <h1 class="font-black text-black text-[60px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
                 </div>
-                <div class="mt-[30px]">
+                <div class="mt-[10px]">
                     <div class="max-w-[550px]">
-                    <p class="font-extrabold text-[25px] text-white">{{ businessInfo.businessDescription.value }}</p>
+                    <p class="font-extrabold text-[25px] text-black">{{ businessInfo.businessDescription.value }}</p>
                     </div>
                 </div>
                 <div class="mt-[30px]" >
                     <div class="max-w-[550px]">
-                        <p id="business-details" class="text-[19px] text-white">{{ businessInfo.businessDetails.value }} </p>
+                        <p id="business-details" class="text-[19px] text-black">{{ businessInfo.businessDetails.value }} </p>
                     </div>
                 </div>
 
                 <div class="mt-[90px] flex flex-row">
-                    <button @click="logout('register')" class="mr-[20px] cursor-pointer bg-white border border-white rounded-sm py-[8px] px-[70px]">Register</button>
-                    <p class="text-white text-xl">|</p>
-                    <a class="ml-[35px] justify-center text-white text-[18px]" :href="route('products_page')">See All Products</a>
+                    <button @click="logout('register')"  class="transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mt-[-5px] mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">Register</button>
+                    <p class="text-black text-xl">|</p>
+                    <a class="ml-[35px] justify-center text-black text-[18px]" :href="route('products_page')">See All Products</a>
                 </div>
             </div>
 
 
             <!-- image -->
-            <div class="mr-[8px] mt-[130px] ml-auto flex-grow-0 w-1/2 max-w-xl">
+            <div class=" mt-[50px] ml-auto flex-grow-0 w-1/2 max-w-4xl">
                 
-                <img :src='businessInfo.homePageImage.value' class ="mt-8 w-full h-[390px] object-cover rounded-tl-[30px]"/>
+                <img :src='businessInfo.homePageImage.value' class ="mt-8 w-full h-[690px] object-cover rounded-tl-[125px]"/>
             </div>
         </div>
         </section>
 
         <!-- section 2/EditWebsite2 -->
-<section>
-        
-<div class=" bg-website-main1 flex min-h-screen relative">
-        <div class="flex items-center p-3 absolute top-[5px] left-0 right-0 bottom-[500px] m-auto">
-        <p class="mt-[10px] text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
+        <section 
+  ref="aboutSection" 
+  class="-mt-[100px] bg-website-main1 border-t border-b border-gray-200 flex h-[800px] relative transition-transform duration-500"
+  :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
+>
+    <div class="-mt-[250px] flex items-center p-3 absolute top-[5px] left-0 right-0 bottom-[250px] m-auto">
+      <p class=" text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
     </div>
 
-<!-- edit business info wag to iedit kasi business name ito-->
-<div class=" mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[250px]">
-    
-    <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
+    <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[200px]">
+      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
         <div class="flex justify-center w-full">
-            <a class="icon-color border border-transparent rounded-[30px] p-12 flex inline-flex items-center justify-center">
-                <i class="fa fa-check-circle text-white text-[50px]"></i></a>
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-check-circle text-gray-800 text-[50px]"></i>
+          </a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-white text-[19px] text-center break-words">{{textAreas.about_us1}}</p>
+          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us1 }}</p>
         </div>
-    </div>
+      </div>
 
-    <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
+      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
         <div class="flex justify-center w-full">
-            <a class="icon-color border border-transparent rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-tag text-white text-[50px]"></i></a>
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-tag text-gray-800 text-[50px]"></i>
+          </a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-white text-[19px] text-center break-words">{{textAreas.about_us2}}</p>
+          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us2 }}</p>
         </div>
-    </div>
+      </div>
 
-    <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
+      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
         <div class="flex justify-center w-full">
-            <a class="icon-color border border-transparent rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-phone text-white text-[40px]"></i></a>
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-phone text-gray-800 text-[40px]"></i>
+          </a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-white text-[19px] text-center break-words">{{textAreas.about_us3}}</p>
+          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us3 }}</p>
         </div>
+      </div>
     </div>
-</div>
-</div>
-</section>
+  </section>
 
     <!-- section 3/EditWebsite3 -->
     
     <section v-if="feature_toggle==='true'">
-        <div class=" bg-website-main flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
+        <div class=" bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
 
 <div class="flex flex-col items-center p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
-    <p class="mt-[30px] text-[40px]  text-white font-bold  text-center">Featured Products</p>
-    <p class="mt-[10px] text-[20px]  text-white  text-center">
+    <p class="mt-[30px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
+    <p class="mt-[10px] text-[20px]  text-black  text-center">
         A list of the most popular products loved by customers. 
         Best prices guaranteed everyday.
     </p>
@@ -357,42 +349,48 @@ const formatUrl = (url) => {
     
     <div class="block flex flex-row gap-5">
     <!-- card 1 -->
-        <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-            <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-4/5 object-cover"/>
-            <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card1.value}}</p>
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+<div class="w-full bg-gray-800 h-[35px]"></div>
+            <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
+            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
         </div>
 
      <!-- card 2 -->
-     <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-            <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-4/5 object-cover"/>
-            <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card2.value}}</p>
+     <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+        <div class="w-full bg-gray-800 h-[35px]"></div>    
+        <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
+            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
         </div>
     
 
     <!-- card 3 -->
-    <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-            <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-4/5 object-cover"/>
-            <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card3.value}}</p>
+    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+<div class="w-full bg-gray-800 h-[35px]"></div>
+        <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
+            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
         </div>
     </div>
 
     <div class="block flex flex-row gap-5">
     <!-- card 4 -->
-    <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-            <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-4/5 object-cover"/>
-            <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card4.value}}</p>
+    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+<div class="w-full bg-gray-800 h-[35px]"></div>
+        <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
+            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
         </div>
 
     <!-- card 5 -->
-    <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-            <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-4/5 object-cover"/>
-            <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card5.value}}</p>
+    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+<div class="w-full bg-gray-800 h-[35px]"></div>
+        <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
+            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
         </div>
 
     <!-- card 6 -->
-    <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-            <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-4/5 object-cover"/>
-            <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card6.value}}</p>
+    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+<div class="w-full bg-gray-800 h-[35px]"></div>
+        <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
+            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
         </div> 
     </div>
 </div>
@@ -400,29 +398,29 @@ const formatUrl = (url) => {
     </section>
 
     <!-- section 4/Chat Section -->
-<section>
-    <div class="bg-website-main h-[10px] w-full"></div>
-        <div class="bg-website-main1 flex flex-col min-h-screen">
+<section class="border-t border-gray-200 shadow-sm">
+        <div style="background-color: ghostwhite" class="flex flex-col min-h-screen">
 
         
     <div class="flex w-full justify-center items-center p-3">
-        <p class="mt-[20px] text-[45px] tracking-[3px] text-white font-bold flex-grow text-center">Connect with Us!</p>
+        <p class="mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
     </div>
 
 <div class="flex flex-row items-center">
             <!-- image -->
-    <div class="ml-[50px] mt-[100px] mr-auto w-1/2 max-w-xl">
-        <img src="/storage/images/chat_img_homepage.jpeg" class ="mt-6 w-full h-[390px] object-cover rounded-[20px]"/>
-    </div>
+    <div class="ml-[150px] mt-[15px] mr-auto w-1/2 max-w-xl">
+        <img src="/storage/images/chat_img_homepage.jpg" class ="mt-6 h-[600px] w-[800px] object-cover rounded-[20px]"/>
+    </div>  
 
-    <div class=" w-1/2 ml-auto flex-col h-1/2">
-            <p class="text-white text-[30px] text-center mr-[50px]">
-            Chat us using this website. Inquiries and feedback are accepted
-             and to further reach us please refer to our contact information.
+    <div class="-mt-[30px] flex items-center justify-center mr-[70px] w-1/2 ml-auto flex-col h-1/2">
+            <p class="text-black text-[30px] text-center mr-[50px]">
+            Using our chatbot, you can inquire about our business information,             
+            and to further reach us please refer to our contact information.
             </p>
-            <img src="/storage/images/chat_icon.png" 
+            <button @click="goTochatPage"  class="mt-8 transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">See Chatbot!</button>
+            <!-- <img src="/storage/images/chat_icon.png" 
             class =" mx-auto mt-[90px] w-[88px] h-[120px] object-cover cursor-pointer"
-            @click="goTochatPage"/>
+            @click="goTochatPage"/> -->
             
     </div>
 </div>
@@ -431,8 +429,11 @@ const formatUrl = (url) => {
     </section>
 
     <section>
-        <div class="bg-website-main flex flex-col min-h-screen" style="min-height: calc(70vh);">
+        <div class="bg-website-main1 flex flex-col min-h-screen" style="min-height: calc(70vh);">
 
+            <div class="w-full">
+                <hr class="border-white mx-auto w-11/12">
+            </div>
 <div class="flex flex-row justify-between mt-[5px] ml-8 mr-8 w-full">
 <!-- FootNote -->
 <div class="mr-auto mt-40 ml-8 flex flex-col h-1/2 w-1/2 max-w-md">
@@ -443,10 +444,10 @@ const formatUrl = (url) => {
     <div class="mt-5">
         <p class=" text-xl text-white">{{ textAreas.website_footNote }}</p>
         <div class="mt-[20px]">
-        <a :href="formatUrl(businessInfo.business_Facebook.value)" class="w-[30px] h-[40px] bg-white rounded-xl mr-[5px] p-2 cursor-pointer"><i class="fa-brands fa-facebook-f"></i></a>
-        <a :href="formatUrl(businessInfo.business_X.value)" class="w-[30px] h-[40px] bg-white rounded-xl mr-[5px] p-2 cursor-pointer"><i class="fa fa-twitter"></i></a>
-        <a :href="formatUrl(businessInfo.business_Instagram.value)" class="w-[30px] h-[40px] bg-white rounded-xl mr-[5px] p-2 cursor-pointer"><i class="fa-brands fa-instagram"></i></a>
-        <a :href="formatUrl(businessInfo.business_Tiktok.value)" class="w-[30px] h-[40px] bg-white rounded-xl mr-[5px] p-2 cursor-pointer"><i class="fa-brands fa-tiktok"></i></a>
+        <a :href="formatUrl(businessInfo.business_Facebook.value)" class="w-[30px] h-[40px] bg-white rounded-full mr-[5px] px-3 py-2 cursor-pointer"><i class="fa-brands fa-facebook-f"></i></a>
+        <a :href="formatUrl(businessInfo.business_X.value)" class="w-[30px] h-[40px] bg-white rounded-full mr-[5px] px-3 py-2 cursor-pointer"><i class="fa fa-twitter"></i></a>
+        <a :href="formatUrl(businessInfo.business_Instagram.value)" class="w-[30px] h-[40px] bg-white rounded-full mr-[5px] px-3 py-2 cursor-pointer"><i class="fa-brands fa-instagram"></i></a>
+        <a :href="formatUrl(businessInfo.business_Tiktok.value)" class="w-[30px] h-[40px] bg-white rounded-full mr-[5px] px-3 py-2 cursor-pointer"><i class="fa-brands fa-tiktok"></i></a>
         </div>
     </div>
 
@@ -461,6 +462,7 @@ const formatUrl = (url) => {
         <p class="text-white">Address: {{ businessInfo.business_Address }} </p>
         <p class="text-white">{{ businessInfo.business_Province }}, 
             {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}  </p>
+        <p class="text-white">Telephone No.: {{ businessInfo.business_Telephone_Number }} </p>
     </div>
 </div>
 </div>
@@ -473,10 +475,20 @@ const formatUrl = (url) => {
     <p class="text-[17px] text-white mt-2"><i class="fa fa-copyright"></i> {{ textAreas.businessName }} All rights reserved</p>
 </div>
 </div>
+
 <Chatbot />
-    </section>
+
+</section>
 </template>
 <style scoped>
+.translate-custom {
+  transform: translateY(50px);
+  opacity: 0;
+}
+.translate-active {
+  transform: translateY(0);
+  opacity: 1;
+}
 body, html {
   overflow-x: hidden;
   width: 100%;
@@ -496,5 +508,17 @@ section {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+}
+
+
+.icon-color {
+    background-color: ghostwhite; /* Replace with your desired color */
+}
+.fa.fa-twitter{
+	font-family:sans-serif;
+}
+.fa.fa-twitter::before{
+	content:"𝕏";
+	font-size:1.2em;
 }
 </style>

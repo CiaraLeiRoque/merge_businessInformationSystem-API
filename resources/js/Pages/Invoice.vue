@@ -129,7 +129,7 @@ const UpdatestatusError = ref('');
 const UpdateptypeError = ref('');
 const UpdatetermsError = ref('');
 const UpdateCnameError = ref('');
-const UpdateBstyleError= ref('');
+
 const UpdateCashierError= ref('');
 
 const checkInvoiceIdExists = (invoiceId, currentInvoiceId = null) => {
@@ -190,13 +190,6 @@ const validateUpdateCname = () => {
     }
 };
 
-const validateUpdateBstyle = () => {
-    if (!editInvoice.value.customer_Business_Style) {
-        UpdateBstyleError.value = "This field cannot be empty";
-    } else {
-        UpdateBstyleError.value = '';
-    }
-};
 
 const validateUpdateCashier = () => {
     if (!editInvoice.value.authorized_Representative) {
@@ -260,14 +253,6 @@ const validateCname = () => {
     }
 };
 
-const validateBstyle = () => {
-    if (!newInvoice.value.customer_Business_Style) {
-        BstyleError.value = "This field cannot be empty";
-    } else {
-        BstyleError.value = '';
-    }
-};
-
 const validateCashier = () => {
     if (!newInvoice.value.authorized_Representative) {
         CashierError.value = "This field cannot be empty";
@@ -285,7 +270,6 @@ watch(showAddInvoiceModal, (newVal) => {
         validatePtype();
         validateTerms();
         validateCname();
-        validateBstyle();
         validateCashier();
     }
 });
@@ -297,7 +281,6 @@ watch(showEditInvoiceModal, (newVal) => {
         validateUpdatePtype();
         validateUpdateTerms();
         validateUpdateCname();
-        validateUpdateBstyle();
         validateUpdateCashier();
     }
 });
@@ -364,11 +347,10 @@ const addInvoice = async () => {
     validatePtype();
     validateTerms();
     validateCname();
-    validateBstyle();
     validateCashier();
 
     // Check for validation errors before proceeding
-    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value || CnameError.value || BstyleError.value || CashierError.value) {
+    if (invoiceIDError.value || dateError.value || statusError.value || ptypeError.value || termsError.value || CnameError.value || CashierError.value) {
         showToast("Please correct the errors before adding an invoice", "error");
         return;
     }
@@ -1117,10 +1099,9 @@ const updateInvoice = async () => {
     validateUpdatePtype();
     validateUpdateTerms();
     validateUpdateCname();
-    validateUpdateBstyle();
     validateUpdateCashier();
 
-    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value || UpdateCnameError.value || UpdateBstyleError.value || UpdateCashierError.value) {
+    if (UpdateinvoiceIDError.value || UpdatedateError.value || UpdatestatusError.value || UpdateptypeError.value || UpdatetermsError.value || UpdateCnameError.value || UpdateCashierError.value) {
         showToast("Please correct the errors before updating the invoice.", "error");
         return;
     }
@@ -2484,7 +2465,7 @@ function validateKeyPress(event) {
                                     </div>
                                     <div>
                                         <label for="customer_Business_Style" class="w-56 pl-4 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline-block text-sm font-medium text-white">Customer Business Style</label>
-                                        <input type="text" id="customer_Business_Style" v-model="editInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. Juan Dela Cruz" />
+                                        <input type="text" id="customer_Business_Style" v-model="editInvoice.customer_Business_Style" class="block w-full border-gray-300 rounded-bl-md rounded-r-md shadow-sm" placeholder="e.g. IT Solutions" />
                                     </div>
                                 
                                 </div>
@@ -2535,12 +2516,33 @@ function validateKeyPress(event) {
                                                     <div class="ml-4">
                                                         <input  class="w-44" @input="field.isSearching = true" type="text" v-model="field.product_name" placeholder="Search for a Product" />
                                                     </div>
-                                                    <ul v-if="field.product_name && field.isSearching" class="absolute z-10 w-52 bg-white shadow-lg rounded-lg mt-1 max-h-60 overflow-y-auto">
-                                                    <li @click="selectUpdateProduct(product, index)" v-for="product in filteredUpdateProducts(field.product_name)" :key="product.id">
-                                                        <img :src="'/storage/' + product.image" alt="Product Image" class="w-5 h-5 object-cover" />
-                                                        {{ product.name }} {{product.price}}
-                                                    </li>
-                                                </ul>
+
+                                                    <div class="relative z-10 ">
+                                                        <!-- Assuming you have an input field above this list -->
+                                                        <ul
+                                                        v-if="field.product_name && field.isSearching"
+                                                        class="ml-10 w-80 bg-white shadow-xl rounded-lg mt-2 max-h-80 overflow-y-auto border border-gray-200"
+                                                        >
+                                                        <li
+                                                            v-for="product in filteredUpdateProducts(field.product_name)"
+                                                            :key="product.id"
+                                                            @click="selectUpdateProduct(product, index)"
+                                                            class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                                                        >
+                                                            <div class="flex-shrink-0">
+                                                            <img
+                                                                :src="'/storage/' + product.image"
+                                                                :alt="product.name"
+                                                                class="w-12 h-12 object-cover rounded-md"
+                                                            />
+                                                            </div>
+                                                            <div class="ml-4 flex-grow">
+                                                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                                                            <p class="text-sm text-gray-500">{{ product.price }}</p>
+                                                            </div>
+                                                        </li>
+                                                        </ul>
+                                                    </div>
 
                                                 </div>
                                                 
@@ -2913,26 +2915,46 @@ function validateKeyPress(event) {
                                     <tbody>
                                         <tr v-for="(field, index) in textItemFields" :key="index" :class="index % 2 === 0 ? 'bg-blue-900 bg-opacity-5' : 'bg-white'" class="items-center text-center">
                                             <td class="px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
-                                                <div class="flex items-center justify-center">
-                                                    <div class="flex flex-shrink-0 items-center">
-                                                        <div v-if="field.image">
-                                                            <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" />
-                                                        </div>
-                                                        <div v-else>
-                                                            <font-awesome-icon :icon="['fas', 'image']" class="w-5 h-5 object-cover" size="sm" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="ml-4">
-                                                        <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
-                                                    </div>
-                                                </div>
-                                                <ul v-if="field.searchProductQuery && field.isSearching" class="absolute z-10 w-52 bg-white shadow-lg rounded-lg mt-1 max-h-60 overflow-y-auto">
-                                                    <li @click="selectProduct(product, index)" v-for="product in filteredProducts(field.searchProductQuery)" :key="product.id">
-                                                        <img :src="'/storage/' + product.image" alt="Product Image" class="w-5 h-5 object-cover" />
-                                                         {{ product.name }} {{ product.price }}
-                                                    </li>
-                                                </ul>
-                                            </td>
+        <div class="flex items-center justify-center relative">
+            <div class="flex flex-shrink-0 items-center">
+                <div v-if="field.image">
+                    <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" />
+                </div>
+                <div v-else>
+                    <font-awesome-icon :icon="['fas', 'image']" class="w-5 h-5 object-cover" size="sm" />
+                </div>
+            </div>
+            <div class="ml-4 relative"> <!-- Added relative class here -->
+                <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
+                
+                <!-- The searchProductQuery dropdown -->
+                <ul
+                    v-if="field.searchProductQuery && field.isSearching"
+                    class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
+                    style="z-index: 15;"
+                >
+                    <li
+                        v-for="product in filteredProducts(field.searchProductQuery)"
+                        :key="product.id"
+                        @click="selectProduct(product, index)"
+                        class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                    >
+                        <div class="flex-shrink-0">
+                            <img
+                                :src="'/storage/' + product.image"
+                                :alt="product.name"
+                                class="w-12 h-12 object-cover rounded-md"
+                            />
+                        </div>
+                        <div class="ml-4 flex-grow">
+                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                            <p class="text-sm text-gray-500">{{ product.price }}</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </td>
 
                                             <td class=" pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
                                                 <div class="flex items-center justify-center">
@@ -2942,7 +2964,7 @@ function validateKeyPress(event) {
                                                             {{ field.on_sale === 'yes' ? 'Sale' : 'On Sale' }}
                                                         </span>
                                                         <label class="switch px-3">
-                                                            <input :disabled="!field.areFieldsEnabled" type="checkbox" v-model="field.on_sale" true-value="yes" false-value="no" />
+                                                            <input disabled :disabled="!field.areFieldsEnabled" type="checkbox" v-model="field.on_sale" true-value="yes" false-value="no" />
                                                             <span class="slider round"></span>
                                                         </label>
                                                     </div>

@@ -26,9 +26,10 @@ async function getWebsiteInfo() {
 
 <template>
     <div class="min-h-screen flex flex-col md:flex-row items-stretch overflow-hidden relative"
-         style="background: linear-gradient(90deg, rgba(15,44,74,1) 0%, rgba(32,75,120,1) 50%, rgba(13,76,89,1) 100%); color: #0F2C4A;">
+    style="background: linear-gradient(90deg, rgba(30, 45, 60, 1) 0%, rgba(50, 70, 90, 1) 50%, rgba(20, 60, 80, 1) 100%); color: #1a202c;"
+    >
       
-      <div style="background-color: #0F2C4A;" class="absolute top-0 left-0 right-0 h-8 z-10"></div>
+      <div style="background-color: #1a202c;" class="absolute top-0 left-0 right-0 h-8 z-10"></div>
       
       <div class="flex-1 flex flex-col justify-center items-center ml-32 p-8">
         <a href="/" class="max-w-lg h-auto flex flex-col items-center">
@@ -81,7 +82,7 @@ async function getWebsiteInfo() {
         </a>
       </div>
       
-      <div style="background-color: #0F2C4A;" class="absolute bottom-0 left-0 right-0 h-8 z-10"></div>
+      <div style="background-color: #1a202c;" class="absolute bottom-0 left-0 right-0 h-8 z-10"></div>
 
       <div class="flex-1 flex justify-center items-center mr-32 p-8">
         <div class="w-full max-w-md px-6 py-12 bg-white shadow-2xl shadow-slate-950 overflow-hidden rounded-3xl"
