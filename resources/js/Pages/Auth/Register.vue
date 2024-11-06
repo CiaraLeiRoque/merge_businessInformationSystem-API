@@ -19,7 +19,6 @@ const form = useForm({
 const submit = () => {
     form.post(route('register'), {
         onSuccess: () => {
-            // Redirect to the email verification route on successful registration
             window.location.href = route('verification.notice');
         },
         onFinish: () => form.reset('password', 'password_confirmation'),
@@ -43,7 +42,8 @@ const submit = () => {
             <div class="mt-2">
                 <InputLabel for="email" value="Email" />
                 <TextInput id="email" type="email" class="mt-1 block w-full" v-model="form.email" required autocomplete="username" />
-                <InputError class="mt-2" :message="form.errors.email" />
+                <!-- Show specific error for duplicate email below the email field -->
+                <InputError class="mt-2 text-red-500" :message="form.errors.email" />
             </div>
 
             <div class="mt-2">
@@ -58,14 +58,12 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
             </div>
 
-            <!-- New Address Field -->
             <div class="mt-2">
                 <InputLabel for="address" value="Address" />
                 <TextInput id="address" type="text" class="mt-1 block w-full" v-model="form.address" required />
                 <InputError class="mt-2" :message="form.errors.address" />
             </div>
 
-            <!-- New Contact Number Field -->
             <div class="mt-2">
                 <InputLabel for="contact_number" value="Contact Number" />
                 <TextInput id="contact_number" type="text" class="mt-1 block w-full" v-model="form.contact_number" required />

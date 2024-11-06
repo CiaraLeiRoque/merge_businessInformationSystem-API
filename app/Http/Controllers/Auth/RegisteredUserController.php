@@ -31,44 +31,45 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
+    // In RegisteredUserController.php
     public function store(Request $request): RedirectResponse
     {
-        try{
+        try {
             Log::info('Store method is being called.');
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'address' => 'nullable|string|max:255',
-            'contact_number' => 'nullable|string|max:255',
-            'user_type'=> 'nullable|in:customer,owner'
-        ]);
-        Log::info('Validation passed.');
-        $user_type = null;
-        if($request->user_type==null){
-            $user_type = 'customer';
-        }else{
-            $user_type = 'owner';
-        }
-        $user = User::create([
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                'address' => 'nullable|string|max:255',
+                'contact_number' => 'nullable|string|max:255',
+                'user_type'=> 'nullable|in:customer,owner'
+            ], [
+                'email.unique' => 'This email address is already registered.'
+            ]);
+
+            Log::info('Validation passed.');
             
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'address' => $request->address,
-            'contact_number' => $request->contact_number,
-            'user_type'=> $user_type
-        ]);
-        Log::info('User created: ', ['user' => $user]);
+            $user_type = $request->user_type ?? 'customer';
 
-        event(new Registered($user));
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'address' => $request->address,
+                'contact_number' => $request->contact_number,
+                'user_type' => $user_type
+            ]);
 
-        Auth::login($user);
-        return redirect()->route('verification.notice');
-    }catch (Exception $e) {
+            Log::info('User created: ', ['user' => $user]);
+
+            event(new Registered($user));
+            Auth::login($user);
+            
+            return redirect()->route('verification.notice');
+        } catch (Exception $e) {
             Log::error('Registration Error: ', ['error' => $e->getMessage()]);
-            return back()->withErrors('Registration failed, please try again.');
+            return back()->withErrors(['email' => 'This email address is already registered.']);
         }
     }
 }
