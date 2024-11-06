@@ -151,7 +151,7 @@ function goToEditWebsite2(){
                 <img :src='textAreas.businessImage.value' class="w-full h-full object-cover rounded-full"/>
             </div>
                 <div class="ml-auto flex items-center space-x-4 ">
-                    <a>Home</a>
+                    <a class="text-white">Home</a>
                     <a class="text-white">Chat with Us</a>
                     <a class="text-white">Products & Services</a>
                     <a class="text-white">About Us</a>
@@ -168,7 +168,7 @@ function goToEditWebsite2(){
             <div class="mt-[90px] ml-8 flex-col h-1/2">
                 <div>
                     <button @click="edit('businessName')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
-                    <p class="mt-[10px] text-white text-[29px] font-bold tracking-[3px]">{{textAreas.businessName.value}}</p>
+                    <p class="mt-[10px] text-black text-[29px] font-bold tracking-[3px]">{{textAreas.businessName.value}}</p>
                 <div v-if="editButton==='businessName'">
                     <textarea v-model="textAreas.businessName.value" class="rows-2 cols-50 border boder-black"></textarea>
                     <button @click="save" class="bg-white rounded-xl p-1">Save</button>
@@ -180,7 +180,7 @@ function goToEditWebsite2(){
                         <button @click="edit('businessDescription')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
                     </div>
                     <div class="max-w-[550px]">
-                    <p class="mt-[10px] font-bold text-xl text-white">{{ textAreas.businessDescription.value }}</p>
+                    <p class="mt-[10px] font-bold text-xl text-black">{{ textAreas.businessDescription.value }}</p>
                     </div>
                     <div v-if="editButton==='businessDescription'">
                         <textarea v-model="textAreas.businessDescription.value" class="w-full h-[100px] border boder-black"></textarea>
@@ -192,7 +192,7 @@ function goToEditWebsite2(){
                         <button @click="edit('businessDetails')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
                     </div>
                     <div class="max-w-[520px]">
-                        <p id="business-details" class="mt-[10px] text-white">{{ textAreas.businessDetails.value }} </p>
+                        <p id="business-details" class="mt-[10px] text-black">{{ textAreas.businessDetails.value }} </p>
                     </div>
                     <div v-if="editButton==='businessDetails'">
                         <textarea v-model="textAreas.businessDetails.value" class="w-full h-[130px] border boder-black"></textarea>
@@ -200,8 +200,8 @@ function goToEditWebsite2(){
                     </div>
                     <div class="mt-[30px] flex flex-row">
                     <button class="mr-[20px] cursor-pointer bg-white border border-white rounded-sm py-[8px] px-[50px]">Register</button>
-                    <p class="text-white text-xl">|</p>
-                    <a class="ml-[35px] justify-center text-white text-[18px]">See All Products</a>
+                    <p class="text-black text-xl">|</p>
+                    <a class="ml-[35px] justify-center text-black text-[18px]">See All Products</a>
                 </div>
                 </div>
             

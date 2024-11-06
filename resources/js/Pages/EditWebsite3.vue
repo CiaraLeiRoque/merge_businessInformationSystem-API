@@ -164,8 +164,8 @@ function goToEditWebsite4(){
             </div>
 
             <div class="flex flex-col items-center p-3 relative top-[10px] left-0 right-0 bottom-[300px] m-auto">
-                <p class="mt-[10px] text-[40px]  text-white font-bold  text-center">Featured Products</p>
-                <p class="mt-[10px] text-[20px]  text-white  text-center">
+                <p class="mt-[10px] text-[40px]  text-black font-bold  text-center">Featured Products</p>
+                <p class="mt-[10px] text-[20px]  text-black  text-center">
                     A list of the most popular products loved by customers. 
                     Best prices guaranteed everyday.
                 </p>
@@ -183,42 +183,48 @@ function goToEditWebsite4(){
                 
                 <div class="block flex flex-row gap-5">
                 <!-- card 1 -->
-                    <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-                        <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-4/5 object-cover"/>
-                        <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card1.value}}</p>
+                    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+                    <div class="w-full bg-gray-800 h-[35px]"></div>
+                        <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
+                        <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
                     </div>
 
                  <!-- card 2 -->
-                 <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-                        <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-4/5 object-cover"/>
-                        <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card2.value}}</p>
+                 <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+                 <div class="w-full bg-gray-800 h-[35px]"></div>
+                    <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
+                        <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
                     </div>
                 
 
                 <!-- card 3 -->
-                <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-                        <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-4/5 object-cover"/>
-                        <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card3.value}}</p>
+                <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+                <div class="w-full bg-gray-800 h-[35px]"></div>
+                    <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
+                        <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
                     </div>
                 </div>
 
                 <div class="block flex flex-row gap-5">
                 <!-- card 4 -->
-                <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-                        <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-4/5 object-cover"/>
-                        <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card4.value}}</p>
+                <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+                <div class="w-full bg-gray-800 h-[35px]"></div>
+                    <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
+                        <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
                     </div>
 
                 <!-- card 5 -->
-                <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-                        <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-4/5 object-cover"/>
-                        <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card5.value}}</p>
+                <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+                <div class="w-full bg-gray-800 h-[35px]"></div>
+                    <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
+                        <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
                     </div>
 
                 <!-- card 6 -->
-                <div class="flex flex-col bg-white w-[220px] h-[240px] p-4 rounded-lg shadow-lg border border-gray-200">
-                        <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-4/5 object-cover"/>
-                        <p class="text-black text-[18px] h-1/5 mt-[20px] text-center">{{textAreas.card6.value}}</p>
+                <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+                <div class="w-full bg-gray-800 h-[35px]"></div>
+                    <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
+                        <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
                     </div> 
                 </div>
             </div>

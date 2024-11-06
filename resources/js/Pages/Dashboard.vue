@@ -3,7 +3,7 @@
     <AuthenticatedLayout>
         <div class="flex flex-row">
             <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
-                <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #0F2C4A;">
+                <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #1F2937;">
                     <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
                         <div class="flex flex-row justify-center"><div class="flex flex-col text-center mr-20"><div style="font-size: 18px;"><b>Total Income (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalIncome }}</div></div>
                         <div class="flex flex-col text-center"><div style="font-size: 18px;"><b>Total Expenses (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalExpenses }}</div></div></div>
@@ -60,7 +60,7 @@
 
             <!-- Right-side Content -->
             <div class="flex flex-col">
-                <vue-cal hide-view-selector :time="false" active-view="month" xsmall class="p-6 max-h-[400px]" style="background-color: #0F2C4A; margin-right: 30px; margin-top: 25px; color: white; font-weight: bold; border-radius: 1rem;">
+                <vue-cal hide-view-selector :time="false" active-view="month" xsmall class="p-6 max-h-[400px]" style="background-color: #1F2937; margin-right: 30px; margin-top: 25px; color: white; font-weight: bold; border-radius: 1rem;">
                     <template #arrow-prev>
                         <i class="fa-solid fa-arrow-left"></i>
                     </template>

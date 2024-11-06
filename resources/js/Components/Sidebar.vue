@@ -72,7 +72,7 @@ function resetReloadOnce() {
 </script>
 
 <template>
-    <div class="sidebar dark:bg-gray-800 fixed sm:relative sm:translate-x-0 -translate-x-full">
+    <div style="background-color: #1a202c;" class="sidebar fixed sm:relative sm:translate-x-0 -translate-x-full">
         <div class="logo text-white">
             <div class="items-center flex flex-col text-center pt-5 px-10" v-if="state.isLoading">
                 <img :src="'/storage/business_logos/' + state.businessImage" :alt="state.businessName">

@@ -63,10 +63,10 @@ public function show($invoice_id)
                 //FOR CUSTOMER INFO IN INVOICE
                     'customer_Name' => 'required|string|max:255',
                     'customer_Address' => 'nullable|string|max:255',
-                    'customer_TIN' => 'required|integer',
-                    'customer_Business_Style' => 'required|string|max:255',
-                    'customer_PO_No' => 'required|integer',
-                    'customer_OSCA_PWD_ID_No' => 'required|integer',
+                    'customer_TIN' => 'nullable|integer',
+                    'customer_Business_Style' => 'nullable|string|max:255',
+                    'customer_PO_No' => 'nullable|integer',
+                    'customer_OSCA_PWD_ID_No' => 'nullable|integer',
         
                 ]);
                 
