@@ -168,10 +168,10 @@ async function fetchProducts() {
                 <img :src='businessInfo.businessImage.value' class="w-full h-full object-cover rounded-full"/>
             </div>
                 <div class="ml-auto flex items-center space-x-[40px] mr-[40px]">
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
-                    <a class="text-black text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
+                    <a class="text-black rounded-3xl bg-white px-4 py-2 text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p>|</p>
                     <div v-if="userLogIn===true" class="flex flex-col">
                         <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
@@ -198,21 +198,27 @@ async function fetchProducts() {
         <div class=" bg-website-main flex min-h-screen relative" style="min-height: calc(100vh + 800px);">
 
 <div class="flex flex-col items-center p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
-    <p class="mt-[30px] text-[40px]  text-white font-bold  text-center">SALE Products</p>
+    <p class="mt-[30px] text-[60px]  text-black font-bold  text-center">SALE Products</p>
 </div>
 
-<div class="mt-[30px] mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt-[10px] px-4 pt-[200px]">
-    <div v-for="(row, rowIndex) in chunkArray(textAreas.products, 3)" :key="rowIndex" class="flex justify-between gap-4">            
-        <div v-for="(product, index) in row" :key="index" class="flex flex-col bg-white w-[340px] h-[360px] p-4 rounded-lg shadow-lg border border-gray-200">
-                    <img :src="`/storage/products/${product.img}`" class="w-full h-4/5 object-cover" />
-                    <p class="text-black text-[18px] mt-[10px] text-center">{{ product.name }}</p>
-                    <p class="text-black text-[18px] mt-[10px] text-center">Price: <i class="fa-solid fa-peso-sign"></i>{{ product.price }}</p>
-                    <p class="text-black text-[14px] text-center">{{ product.desc }}</p>
-                </div>
+<div class="mt-[30px] mx-auto my-auto flex flex-wrap justify-center gap-6 w-full max-w-screen-lg mt px-4 pt-[200px]">
+    <div v-for="(row, rowIndex) in chunkArray(textAreas.products, 3)" :key="rowIndex" class="flex justify-between gap-6">
+        <div v-for="(product, index) in row" :key="index" class="flex flex-col w-[340px] h-[420px] rounded-xl shadow-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+            <div class="relative h-5/6">
+                <img :src="`/storage/products/${product.img}`" class="w-full h-full object-cover" alt="Product image" />
+                <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
+                    <h3 class="text-white text-lg font-semibold bg-black bg-opacity-50 px-2 py-1 rounded">{{ product.name }}</h3>
+                    <span class="text-white text-lg font-bold bg-black bg-opacity-50 px-2 py-1 rounded">{{ product.price }}</span>
+            </div>
+            </div class="relative h-1/6">
+                    <div class="flex flex-col justify-between flex-grow p-4">
+                    <p class="text-gray-300 text-sm line-clamp-3">{{ product.desc }}</p>
+            </div>
+        </div>
     </div>
-    <div class="block mx-auto">
+
+    <div>
         <button v-if="buttonVisible===true" @click="showMore" class="cursor-pointer bg-white border border-white rounded-sm py-6 px-9">Show More</button>
-        
     </div>
 </div>
 
@@ -220,7 +226,7 @@ async function fetchProducts() {
     </section>
 
     <section>
-        <div class="bg-website-main flex flex-col min-h-screen" style="min-height: calc(70vh);">
+        <div class="bg-website-main1 flex flex-col min-h-screen" style="min-height: calc(70vh);">
             <div class="mt-[50px] w-full">
                 <hr class="border-white mx-auto w-11/12">
             </div>

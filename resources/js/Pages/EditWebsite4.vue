@@ -134,7 +134,7 @@ const formatUrl = (url) => {
 
         <!-- header of business editable template-->
 
-        <div class="ml-1 bg-website-main flex flex-col min-h-screen">
+        <div class="ml-1 bg-website-main1 flex flex-col min-h-screen">
             <transition name="modal-fade" >
             <div v-if="showSuccessAddModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
                 <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">

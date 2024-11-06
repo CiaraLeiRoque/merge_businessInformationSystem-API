@@ -266,7 +266,8 @@ class ProductController extends Controller
             $productsArray[]=[
                 'product_name' => $product->name,
                 'product_img' => $product->image,
-                'product_desc' => $product->description
+                'product_desc' => $product->description,
+                'product_price' => $product->price
             ];
         }
         return response()->json($productsArray);

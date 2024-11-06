@@ -918,7 +918,7 @@ function sortByExpDate() {
                 >
                   <div
                     v-if="isOpen"
-                    class="origin-top-right absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-10"
+                    class="origin-top-right absolute right-0 mt-2 w-[265px] rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-10"
                   >
                                                 <div class="px-4 flex items-center justify-center py-3">
                                                     <p class="mt-3 items-center justify-center text-md font-bold text-gray-900">Notify me about:</p>
@@ -926,7 +926,7 @@ function sortByExpDate() {
                                                 <div class="py-2">
                                                     <!-- Stocks Option -->
                                                     <div class="px-4 py-2 flex justify-between items-center">
-                                                        <label for="stocks" class="text-sm text-gray-700">Stocks if it has <span class="mr-1"></span></label>
+                                                        <label for="stocks" class="items-center flex text-sm text-gray-700">Stocks if it has &nbsp;</label>
                                                         <div class="flex items-center">
                                                             <input
                                                                 type="number"

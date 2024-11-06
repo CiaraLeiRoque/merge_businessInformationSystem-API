@@ -5,10 +5,10 @@
                 <img :src='businessImage' class="w-full h-full object-cover rounded-full"/>
             </div>
                 <div class="ml-auto flex items-center space-x-[40px] mr-[40px]">
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
-                    <a class="text-black text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
+                    <a class="text-black rounded-3xl bg-white px-4 py-2 text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p>|</p>
                     <div v-if="userLogIn===true" class="flex flex-col">
                         <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
@@ -69,7 +69,7 @@
       </div>
       </div>
       <section>
-        <div class="bg-website-main flex flex-col min-h-screen" style="min-height: calc(70vh);">
+        <div class="bg-website-main1 flex flex-col min-h-screen" style="min-height: calc(70vh);">
 
             <!-- Footnote -->
             <div class="w-full">

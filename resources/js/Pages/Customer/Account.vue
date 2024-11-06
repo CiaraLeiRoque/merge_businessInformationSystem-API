@@ -296,7 +296,7 @@ try {
     </div>
 
     <section>
-        <div class="bg-website-main flex flex-col min-h-screen" style="min-height: calc(70vh);">
+        <div class="bg-website-main1 flex flex-col min-h-screen" style="min-height: calc(70vh);">
 
             <div class="w-full">
                 <hr class="border-white mx-auto w-11/12">

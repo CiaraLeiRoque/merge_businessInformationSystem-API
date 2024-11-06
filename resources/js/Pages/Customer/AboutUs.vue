@@ -122,10 +122,10 @@ async function getWebsiteInfo(){
                 <img :src='businessInfo.businessImage.value' class="w-full h-full object-cover rounded-full"/>
             </div>
                 <div class="ml-auto flex items-center space-x-[40px] mr-[40px]">
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
-                    <a class="text-white text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
-                    <a class="text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
+                    <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
+                    <a class="text-black rounded-3xl bg-white px-4 py-2 text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p>|</p>
                     <div v-if="userLogIn===true" class="flex flex-col">
                         <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
@@ -149,7 +149,7 @@ async function getWebsiteInfo(){
         
 <div class=" bg-website-main flex min-h-screen relative">
         <div class="flex items-center p-3 absolute top-[5px] left-0 right-0 bottom-[500px] m-auto">
-        <p class="mt-[10px] text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
+        <p class="mt-[10px] text-[70px] tracking-[3px] text-black font-bold flex-grow text-center">About Us</p>
     </div>
 
 <!-- edit business info wag to iedit kasi business name ito-->
@@ -157,31 +157,31 @@ async function getWebsiteInfo(){
     
     <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
         <div class="flex justify-center w-full">
-            <a class="icon-color border border-transparent rounded-[30px] p-12 flex inline-flex items-center justify-center">
-                <i class="fa fa-check-circle text-white text-[50px]"></i></a>
+            <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-check-circle text-black text-[50px]"></i></a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-white text-[19px] text-center break-words">{{textAreas.about_us1}}</p>
+            <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us1}}</p>
         </div>
     </div>
 
     <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
         <div class="flex justify-center w-full">
-            <a class="icon-color border border-transparent rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-tag text-white text-[50px]"></i></a>
+            <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-tag text-black text-[50px]"></i></a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-white text-[19px] text-center break-words">{{textAreas.about_us2}}</p>
+            <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us2}}</p>
         </div>
     </div>
 
     <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
         <div class="flex justify-center w-full">
-            <a class="icon-color border border-transparent rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-phone text-white text-[40px]"></i></a>
+            <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-phone text-black text-[40px]"></i></a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-white text-[19px] text-center break-words">{{textAreas.about_us3}}</p>
+            <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us3}}</p>
         </div>
     </div>
 </div>
@@ -189,7 +189,7 @@ async function getWebsiteInfo(){
 </section>
 
 <section>
-        <div class="bg-website-main flex flex-col min-h-screen" style="min-height: calc(70vh);">
+        <div class="bg-website-main1 flex flex-col min-h-screen" style="min-height: calc(70vh);">
             <div class="w-full">
                 <hr class="border-white mx-auto w-11/12">
             </div>
@@ -260,7 +260,7 @@ section {
 }
 
 .icon-color {
-    background-color: #306091; 
+    background-color: ghostwhite; 
 }
 .fa.fa-twitter{
 	font-family:sans-serif;

@@ -117,12 +117,12 @@ function goToEditWebsite3(){
             </div>
             </transition>
             <!-- edit business info wag to iedit kasi business name ito-->
-            <div class="ml-[120px] flex flex-row items-center justify-between w-full max-w-screen-lg mt-[200px]">
+            <div class="ml-[280px] flex flex-row items-center justify-between w-full max-w-screen-lg mt-[200px]">
                 
                 <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
                     <div class="flex justify-center w-full">
                         <a class="icon-color border border-transparent rounded-[30px] p-8 flex inline-flex items-center justify-center">
-                            <i class="fa fa-check-circle text-white text-[35px]"></i></a>
+                            <i class="fa fa-check-circle text-black text-[35px]"></i></a>
                     </div>
                     <div class="max-w-[100px]">
                         <button @click="edit('about_us1')" class="bg-white border border-white rounded-xl p-1 mb-[10px]">Edit Text</button>
@@ -139,7 +139,7 @@ function goToEditWebsite3(){
                 <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
                     <div class="flex justify-center w-full">
                         <a class="icon-color border border-transparent rounded-[30px] p-8 flex inline-flex items-center justify-center">
-                            <i class="fa fa-tag text-white text-[35px]"></i></a>
+                            <i class="fa fa-tag text-black text-[35px]"></i></a>
                     </div>
                     <div class="max-w-[100px] ">
                         <button @click="edit('about_us2')" class="bg-white border border-white rounded-xl p-1 mb-[10px]">Edit Text</button>
@@ -156,7 +156,7 @@ function goToEditWebsite3(){
                 <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
                     <div class="flex justify-center w-full">
                         <a class="icon-color border border-transparent rounded-[30px] p-8 flex inline-flex items-center justify-center">
-                            <i class="fa fa-phone text-white text-[30px]"></i></a>
+                            <i class="fa fa-phone text-black text-[30px]"></i></a>
                     </div>
                     <div class="max-w-[100px] ">
                         <button @click="edit('about_us3')" class="bg-white border border-white rounded-xl p-1 mb-[10px]">Edit Text</button>
@@ -191,7 +191,7 @@ function goToEditWebsite3(){
 </template>
 <style>
 .icon-color {
-    background-color: #306091; /* Replace with your desired color */
+    background-color: ghostwhite; /* Replace with your desired color */
 }
 .modal-fade-enter-active,
 .modal-fade-leave-active {
