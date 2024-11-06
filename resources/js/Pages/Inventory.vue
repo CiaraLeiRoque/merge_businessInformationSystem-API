@@ -941,7 +941,7 @@ function sortByExpDate() {
                                                     <!-- Expiry Date Option -->
                                                     <div class="px-4 py-2 flex justify-between items-center">
                                                         <label for="expiry" class="text-sm text-gray-700">Expiry Date if near</label>
-                                                        <div class="flex items-center">
+                                                        <div class="flex items-center"> 
                                                             <input
                                                                 type="number"
                                                                 id="expiry"

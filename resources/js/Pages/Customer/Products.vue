@@ -249,6 +249,7 @@ function goTochatPage(){
 </div>
 </div>
 
+<<<<<<< Updated upstream
 <div class="mt-[30px] mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt-[10px] px-4 pt-[200px]">
     <div v-for="(row, rowIndex) in chunkArray(textAreas.products, 3)" :key="rowIndex" class="flex justify-between gap-4">            
         <div v-for="(product, index) in row" :key="index" class="flex flex-col bg-white w-[340px] h-[360px] p-4 rounded-lg shadow-lg border border-gray-200">
@@ -256,6 +257,22 @@ function goTochatPage(){
                     <p class="text-black text-[18px] mt-[10px] text-center">{{ product.name }}</p>
                     <p class="text-black text-[14px] text-center">{{ product.desc }}</p>
                 </div>
+=======
+<div class="mt-[30px] mx-auto my-auto flex flex-wrap justify-center gap-6 w-full max-w-screen-lg mt px-4 pt-[200px]">
+    <div v-for="(row, rowIndex) in chunkArray(textAreas.products, 3)" :key="rowIndex" class="flex justify-between gap-6">
+        <div v-for="(product, index) in row" :key="index" class="flex flex-col w-[340px] h-[420px] rounded-xl shadow-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+            <div class="relative h-5/6">
+                <img :src="`/storage/products/${product.img}`" class="w-full h-full object-cover" alt="Product image" />
+                <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
+                    <h3 class="text-white text-lg font-semibold bg-black bg-opacity-50 px-2 py-1 rounded">{{ product.name }}</h3>
+                    <span class="text-white text-lg font-bold bg-black bg-opacity-50 px-2 py-1 rounded">{{ product.price }}</span>
+            </div>
+            </div class="relative h-1/6">
+                    <div class="text-center flex flex-col justify-between flex-grow p-4">
+                    <p class="text-center text-gray-300 text-sm line-clamp-3">{{ product.desc }}</p>
+            </div>
+        </div>
+>>>>>>> Stashed changes
     </div>
     <div class="block mx-auto">
         <button v-if="buttonVisible===true" @click="showMore" class="cursor-pointer bg-white border border-white rounded-sm py-6 px-9">Show More</button>
