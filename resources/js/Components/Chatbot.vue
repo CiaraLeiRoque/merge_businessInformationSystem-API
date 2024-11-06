@@ -216,8 +216,8 @@ export default {
                 { id: 13, text: "Region 4A" },
                 { id: 14, text: "Region 4B" },
                 { id: 15, text: "Region 5" },
-                { id: 16, text: "Region CAR" },
-                { id: 17, text: "Region NCR" }
+                { id: 16, text: "Region NCR" },
+                { id: 17, text: "Region CAR" }
               ]
             });
 
@@ -268,7 +268,7 @@ export default {
           case 6:
           this.messages.push({
               id: new Date().getTime(),
-              text: `${this.productDescription}  `,
+              text: `We sell ${this.productDescription}  `,
               sender: 'bot',
             });
             setTimeout(() => {
