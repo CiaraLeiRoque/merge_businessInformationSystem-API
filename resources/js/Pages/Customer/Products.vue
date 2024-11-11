@@ -197,8 +197,8 @@ async function fetchProducts() {
         }
 }
 
-function goTochatPage(){
-    //none pa
+const formatDescription = (description) => {
+  return description.replace(/\n/g, '<br>');
 }
 </script>
 
@@ -212,7 +212,7 @@ function goTochatPage(){
                 <div class="ml-auto flex items-center space-x-[40px] mr-[40px]">
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('homepage')">Home</a>
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('chat_with_us')">Chat with Us</a>
-                    <a class="text-black rounded-3xl bg-white px-4 py-2 text-[18px] cursor-pointer" :href="route('products_page')">Products & Services</a>
+                    <a class="text-black rounded-3xl bg-white px-4 py-2 text-[18px] cursor-pointer" :href="route('products_page')">Products</a>
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p>|</p>
                     <div v-if="userLogIn===true" class="flex flex-col">
@@ -251,17 +251,16 @@ function goTochatPage(){
 </div>
 
 <div class="mt-[30px] mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt px-4 pt-[200px]">
-    <div v-for="(row, rowIndex) in chunkArray(textAreas.products, 3)" :key="rowIndex" class="flex justify-between gap-6">
-        <div v-for="(product, index) in row" :key="index" class="flex flex-col w-[340px] h-[420px] rounded-xl shadow-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-            <div class="relative h-5/6">
-                <img :src="`/storage/products/${product.img}`" class="w-full h-full object-cover" alt="Product image" />
+    <div v-for="(row, rowIndex) in chunkArray(textAreas.products, 3)" :key="rowIndex" class="flex justify-between gap-6 items-start justify-center ">
+        <div v-for="(product, index) in row" :key="index" class="flex flex-col w-[340px] h-auto min-h-[400px] flex-shrink-0 rounded-xl flex-shrink-0 rounded-xl shadow-lg overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+            <div class="relative">
+                <img :src="`/storage/products/${product.img}`" class="w-full h-[320px] object-cover" alt="Product image" />
                 <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
                     <h3 class="text-white text-lg font-semibold bg-black bg-opacity-50 px-2 py-1 rounded">{{ product.name }}</h3>
                     <span class="text-white text-lg font-bold bg-black bg-opacity-50 px-2 py-1 rounded">{{ product.price }}</span>
             </div>
-            </div class="relative h-1/6">
-                    <div class="text-center flex flex-col justify-between flex-grow p-4">
-                    <p class="text-center text-gray-300 text-sm line-clamp-3">{{ product.desc }}</p>
+                <div class="p-4 text-center flex-grow">
+                    <p class="text-center text-gray-300 text-sm" v-html="formatDescription(product.desc)"></p>
             </div>
         </div>
 
@@ -274,6 +273,7 @@ function goTochatPage(){
 </div>
 
 
+        </div>
         </div>
     </section>
 
@@ -329,12 +329,6 @@ function goTochatPage(){
 </section>
 </template>
 <style scoped>
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
 body, html {
   overflow-x: hidden;
