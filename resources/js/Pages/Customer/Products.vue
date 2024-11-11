@@ -28,7 +28,7 @@ const profilePicture = ref(null);
 const formatUrl = (url) => {
     // Check if the URL starts with http:// or https://
     if (!/^https?:\/\//i.test(url)) {
-        // Prepend https:// if it doesn't
+        // Attach https:// if it doesn't
         return `https://${url}`;
     }
     return url;
@@ -43,36 +43,6 @@ let currentPage = ref(0);
 
 const PRODUCTS_PER_PAGE = 9;
 
-// const textAreas = reactive({
-//     card1: '',
-//     card1_img: '',
-//     card1_desc: '',
-//     card2: '',
-//     card2_img: '',
-//     card2_desc: '',
-//     card3: '',
-//     card3_img: '',
-//     card3_desc: '',
-//     card4: '',
-//     card4_img: '',
-//     card4_desc: '',
-//     card5: '',
-//     card5_img: '',
-//     card5_desc: '',
-//     card6: '',
-//     card6_img: '',
-//     card6_desc: '',
-//     card7: '',
-//     card7_img: '',
-//     card7_desc: '',
-//     card8: '',
-//     card8_img: '',
-//     card8_desc: '',
-//     card9: '',
-//     card9_img: '',
-//     card9_desc: '',
-//     website_footNote: ''
-// });
 const onSale_toggle=ref('');
 let next = ref(false);
 const lengthArray = ref(null);
