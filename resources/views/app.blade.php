@@ -4,6 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <link href="https://cdn.fontsource.com/gt-super/1.0.0/css/gt-super.css" rel="stylesheet">
+
  
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>

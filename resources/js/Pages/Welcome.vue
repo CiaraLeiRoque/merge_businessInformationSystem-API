@@ -3,6 +3,10 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 import { onMounted, ref } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
+import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper and SwiperSlide as named imports
+import 'swiper/css';  // Import Swiper styles
+import 'swiper/css/navigation';  // Navigation styles
+import 'swiper/css/pagination'; 
 
 const{props} = usePage();
 defineProps({
@@ -89,23 +93,13 @@ function account(){
 
 onMounted(()=>{
     getWebsiteInfo();
+    startSlideshow();
     
   window.addEventListener('scroll', handleScroll);
 })
 
 async function getWebsiteInfo(){
     try{
-
-        // const response = await axios.get('/showUser');
-        // if (response.data) {
-        //     profilePicture.value = response.data.profile_img 
-        // ? `/storage/user_profile/${response.data.profile_img}` 
-        // : '/storage/user_profile/default-profile.png';
-        //     isLoading.value=false;
-        // }
-        // profilePicture.value = response.data.profile_img 
-        // ? `/storage/user_profile/${response.data.profile_img}` 
-        // : '/storage/user_profile/default-profile.png';
 
         const getBusinessInfo = await axios.get('/api/business_info', {
             params: {user_id: 1}
@@ -218,6 +212,39 @@ const handleScroll = () => {
   }
 };
 
+const images = [
+  '/storage/images/first_section_bg.jpg',
+  '/storage/images/chat_img_homepage.jpeg'
+];
+
+const currentImage = ref(images[0]);
+let currentIndex = 0;
+const slideShowClick = ref(null);
+
+const startSlideshow = () => {
+    if (slideShowClick.value === null) {
+  slideShowClick.value=setInterval(() => {
+    currentIndex = (currentIndex + 1) % images.length;
+    currentImage.value = images[currentIndex];
+  }, 1000); 
+}
+};
+
+const stopSlideshow = () => {
+  if (slideShowClick.value) {
+    clearInterval(slideShowClick.value);
+  }
+};
+
+const moveSlideShow=(direction)=>{
+    stopSlideshow();
+    if(direction=='right'){
+        currentIndex = (currentIndex + 1) % images.length;
+    }else if(direction=='left'){
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+    }
+    currentImage.value = images[currentIndex];
+}
 </script>
 
 <template>
@@ -233,13 +260,8 @@ const handleScroll = () => {
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products</a>
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p class="text-white">|</p>
-                    <div v-if="userLogIn" class="flex flex-col">
-                        <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
-                        <a @click="account" class=" cursor-pointer text-white text-[14px] underline">Account</a>
-                    </div>
-                    <div v-else>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In &nbsp; &nbsp;</a>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('register')">Register</a>
+                    <div>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In</a>
                     </div>
                     <div class="w-[50px] h-[50px]">
                         <img v-if="isLoading" src='/storage/user_profile/default-profile.png'/>
@@ -252,36 +274,59 @@ const handleScroll = () => {
 
         <!-- section 1/EditWebsite1 -->
         <section>
-        <div style="background-color: ghostwhite" class=" flex min-h-screen">
-
-            <div class="mt-[230px] ml-[80px] flex-col h-1/2">
+        <div :style="{ backgroundImage: `url(${businessInfo.homePageImage.value})` }" class="bg-no-repeat bg-cover min-h-screen">
+            <div class="flex flex-row ">
+            <div class="h-auto flex-grow-0 flex-shrink-0">
+                <!-- content div -->
+                <!-- bg-black bg-opacity-50 border border-white-->
+            <div class="max-w-[880px] mt-[120px] ml-[85px] flex flex-col h-auto flex-shrink-0 rounded-lg p-4">
                 <div>
-                    <h1 class="font-black text-black text-[60px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
+                    <h1 class="font-poppins font-bold text-white text-[80px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
                 </div>
                 <div class="mt-[10px]">
                     <div class="max-w-[550px]">
-                    <p class="font-extrabold text-[25px] text-black">{{ businessInfo.businessDescription.value }}</p>
+                    <p class=" font-poppins font-extrabold text-[35px] text-white">{{ businessInfo.businessDescription.value }}</p>
                     </div>
                 </div>
                 <div class="mt-[30px]" >
-                    <div class="max-w-[550px]">
-                        <p id="business-details" class="text-[19px] text-black">{{ businessInfo.businessDetails.value }} </p>
+                    <div class="max-w-[600px]">
+                        <p id=" font-poppins business-details" class="text-[29px] text-white">{{ businessInfo.businessDetails.value }} </p>
                     </div>
                 </div>
 
-                <div class="mt-[90px] flex flex-row">
-                    <button @click="logout('register')"  class="transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mt-[-5px] mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">Register</button>
-                    <p class="text-black text-xl">|</p>
-                    <a class="ml-[35px] justify-center text-black text-[18px]" :href="route('products_page')">See All Products</a>
+                <div class="mt-[50px] flex flex-row ">
+                    <a class="text-center rounded-lg p-4 w-[380px] bg-white text-black text-[18px]" :href="route('products_page')">See All Products</a>
                 </div>
             </div>
-
-
-            <!-- image -->
-            <div class=" mt-[50px] ml-auto flex-grow-0 w-1/2 max-w-4xl">
-                
-                <img :src='businessInfo.homePageImage.value' class ="mt-8 w-full h-[690px] object-cover rounded-tl-[125px]"/>
+            
+            <!-- lower div -->
+            <!-- <div class="mt-[70px] ml-auto flex flex-col gap-6 h-auto flex-shrink-0 bg-black bg-opacity-50 rounded-lg p-6 border border-white">
+                <div class="flex flex-col">
+                    <p class="text-white text-[21px] font-bold max-w-[20px]">CCTV</p>
+                    <p class="text-white text-[17px] max-w-[180px]">We offer varieties of CCTV.</p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-white text-[21px] font-bold max-w-[20px]">Security</p>
+                    <p class="text-white text-[17px] max-w-[180px]">We construct your place's security.</p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-white text-[21px] font-bold max-w-[20px]">Network</p>
+                    <p class="text-white text-[17px] max-w-[180px]">We install great connection.</p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-white text-[21px] font-bold max-w-[20px]">Support</p>
+                    <p class="text-white text-[17px] max-w-[180px]">Our team is here to assist you 24/7.</p>
+                </div>
+            </div> -->
             </div>
+            
+
+            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-4xl">
+                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
+                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
+                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
+            </div>
+        </div>
         </div>
         </section>
 
@@ -303,7 +348,7 @@ const handleScroll = () => {
           </a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us1 }}</p>
+          <p class="text-white text-[20px] text-center break-words">{{ textAreas.about_us1 }}</p>
         </div>
       </div>
 
@@ -314,7 +359,7 @@ const handleScroll = () => {
           </a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us2 }}</p>
+          <p class="text-white text-[20px] text-center break-words">{{ textAreas.about_us2 }}</p>
         </div>
       </div>
 
@@ -325,7 +370,7 @@ const handleScroll = () => {
           </a>
         </div>
         <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us3 }}</p>
+          <p class="text-white text-[20px] text-center break-words">{{ textAreas.about_us3 }}</p>
         </div>
       </div>
     </div>
@@ -509,7 +554,9 @@ section {
   max-width: 100vw;
   overflow-x: hidden;
 }
-
+.bg-cover {
+  transition: background-image 1s ease-in-out;
+}
 
 .icon-color {
     background-color: ghostwhite; /* Replace with your desired color */
