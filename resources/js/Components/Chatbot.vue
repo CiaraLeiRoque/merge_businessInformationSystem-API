@@ -102,7 +102,7 @@ export default {
           this.businessCity = businessData.business_City || 'Unknown City';
           this.businessBarangay = businessData.business_Barangay || 'Unknown Barangay';
           this.businessAddress = businessData.business_Address || 'Unknown Address';
-          this.businessPhoneNumber = businessData.business_Contact_Number || 'Unknown Phone Number';
+          this.businessPhoneNumber = businessData.business_Phone_Number || 'Unknown Phone Number';
           this.businessTelephoneNumber = businessData.business_Telephone_Number || 'Unknown Phone Number';
           this.businessFacebook = businessData.business_Facebook || 'Unknown Facebook';
           this.businessX = businessData.business_X || 'Unknown X';
