@@ -126,7 +126,7 @@ async function getWebsiteInfo(){
 
         businessInfo.businessName.value = getBusinessInfo.data.business_Name;
         businessInfo.business_Email.value = getBusinessInfo.data.business_Email;
-        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Contact_Number;
+        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Phone_Number;
         businessInfo.business_Address.value = getBusinessInfo.data.business_Address;
 
         businessInfo.business_Province.value = getBusinessInfo.data.business_Province;
