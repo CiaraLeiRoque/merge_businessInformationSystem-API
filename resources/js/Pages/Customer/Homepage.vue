@@ -1,48 +1,15 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
-import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper and SwiperSlide as named imports
-import 'swiper/css';  // Import Swiper styles
-import 'swiper/css/navigation';  // Navigation styles
-import 'swiper/css/pagination'; 
-
-const{props} = usePage();
-defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
-});
-
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
-}
-
-function goTochatPage(){
-    Inertia.visit(route('chat_with_us'));
-}
-
+import { Head } from '@inertiajs/vue3';
 
 const businessInfo = {
     businessImage: ref(''),
     businessName: ref(''),
     business_Email: ref(''),
     business_Contact_Number: ref(''),
+    business_Telephone_Number: ref(''),
     business_Address: ref(''),
     business_Facebook: ref(''),
     business_X: ref(''),
@@ -57,6 +24,7 @@ const businessInfo = {
 }
 
 let isLoading = ref(true);
+
 
 const textAreas = {
     about_us1: ref(''),
@@ -77,11 +45,11 @@ const textAreas = {
     website_footNote: ref('')
 }
 
-let user_type=ref('');
 const feature_toggle=ref('');
 const onSale_toggle=ref('');
 let profile_img = ref('');
 const profilePicture = ref(null);
+let userLogIn = ref(false);
 
 function logout(button){
     Inertia.post(route('logout'), {button});
@@ -91,30 +59,32 @@ function account(){
     Inertia.visit(route('account_settings'));
 }
 
+function goTochatPage(){
+    Inertia.visit(route('chat_with_us'));
+}
+
+
 onMounted(()=>{
     loadMap();
     getWebsiteInfo();
-    startSlideshow();
-    getImages();
-    
   window.addEventListener('scroll', handleScroll);
 })
 
 async function getWebsiteInfo(){
     try{
+  
+        const response = await axios.get('/showUser');
+        if (response.data) {
+            profilePicture.value = response.data.profile_img 
+        ? `/storage/user_profile/${response.data.profile_img}` 
+        : '/storage/user_profile/default-profile.png';
+            isLoading.value=false;
+            userLogIn.value=true;
+        }
 
         const getBusinessInfo = await axios.get('/api/business_info', {
             params: {user_id: 1}
         });
-
-        if(props.auth.user){
-        const getUserInfo = await axios.get('/auth_user', {
-            
-        });
-         user_type.value=getUserInfo.data.user_type;
-         console.log("user type", user_type.value);
-    }
-
         
         const getWebsiteInfo1 = await axios.get('/api/website', {
             params: {business_id: 1}
@@ -128,7 +98,8 @@ async function getWebsiteInfo(){
 
         businessInfo.businessName.value = getBusinessInfo.data.business_Name;
         businessInfo.business_Email.value = getBusinessInfo.data.business_Email;
-        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Phone_Number;
+        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Contact_Number;
+        businessInfo.business_Telephone_Number.value = getBusinessInfo.data.business_Telephone_Number;
         businessInfo.business_Address.value = getBusinessInfo.data.business_Address;
 
         businessInfo.business_Province.value = getBusinessInfo.data.business_Province;
@@ -201,6 +172,7 @@ const formatUrl = (url) => {
     return url;
 };
 
+
 const isVisible = ref(false);
 const aboutSection = ref(null);
 
@@ -214,71 +186,6 @@ const handleScroll = () => {
   }
 };
 
-const images = ref([]);
-const currentImage = ref(null);
-let currentIndex = 0;
-const slideShowClick = ref(null);
-
-const getImages = async () => {
-    try {
-        const response = await axios.get('/api/images', {
-            params: { business_id: 1 }
-        });
-        
-        console.log("Response data: ", response.data);
-
-        if (response.data) {
-            // Loop over the image keys and add valid images to images.value
-            for (let i = 1; i <= 5; i++) {
-                const imageKey = `image${i}`;
-                const imagePath = response.data[imageKey];
-
-                if (imagePath && imagePath !== null) {
-                    images.value.push(imagePath);
-                }
-            }
-        }
-
-        console.log("Updated images.value: ", images.value);
-
-        // If there are images, set the first one as the current image
-        if (images.value.length > 0) {
-            currentImage.value = images.value[0];  
-        }
-    } catch (error) {
-        console.error("Error fetching images:", error);
-    }
-};
-
-watch(images, () => {
-    if (images.value.length > 0) {
-        currentImage.value = images.value[0];  
-    }
-});
-const startSlideshow = () => {
-    if (slideShowClick.value === null) {
-  slideShowClick.value=setInterval(() => {
-    currentIndex = (currentIndex + 1) % images.value.length;
-    currentImage.value = images.value[currentIndex];
-  }, 1000); 
-}
-};
-
-const stopSlideshow = () => {
-  if (slideShowClick.value) {
-    clearInterval(slideShowClick.value);
-  }
-};
-
-const moveSlideShow=(direction)=>{
-    stopSlideshow();
-    if(direction=='right'){
-        currentIndex = (currentIndex + 1) % images.value.length;
-    }else if(direction=='left'){
-        currentIndex = (currentIndex - 1 + images.value.length) % images.value.length;
-    }
-    currentImage.value = images.value[currentIndex];
-}
 
 
 function loadMap() {
@@ -297,6 +204,7 @@ function loadMap() {
   });
 }
 
+
 </script>
 
 <template>
@@ -312,8 +220,13 @@ function loadMap() {
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products</a>
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p class="text-white">|</p>
-                    <div>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In</a>
+                    <div v-if="userLogIn" class="flex flex-col">
+                        <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
+                        <a @click="account" class=" cursor-pointer text-white text-[14px] underline">Account</a>
+                    </div>
+                    <div v-else>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In &nbsp; &nbsp;</a>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('register')">Register</a>
                     </div>
                     <div class="w-[50px] h-[50px]">
                         <img v-if="isLoading" src='/storage/user_profile/default-profile.png'/>
@@ -324,96 +237,101 @@ function loadMap() {
                 </div>
         </div>
 
-        <!-- section 1 -->
+        <!-- section 1/EditWebsite1 -->
         <section>
-        <div :style="{ backgroundImage: `url(${businessInfo.homePageImage.value})` }" class="bg-no-repeat bg-cover min-h-screen">
-            <div class="flex flex-row ">
-            <div class="h-auto flex-grow-0 flex-shrink-0">
-            <div class="max-w-[980px] mt-[100px] ml-[105px] flex flex-col h-auto flex-shrink-0 rounded-lg p-4">
+        <div style="background-color: ghostwhite" class=" flex min-h-screen">
+
+            <div class="mt-[230px] ml-[80px] flex-col h-1/2">
                 <div>
-                    <h1 class="font-poppins font-bold text-white text-[80px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
+                    <h1 class="font-black text-black text-[60px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
                 </div>
-                <div class="mt-[20px]">
+                <div class="mt-[10px]">
                     <div class="max-w-[550px]">
-                    <p class=" font-poppins font-extrabold text-[35px] text-white">{{ businessInfo.businessDescription.value }}</p>
+                    <p class="font-extrabold text-[25px] text-black">{{ businessInfo.businessDescription.value }}</p>
                     </div>
                 </div>
                 <div class="mt-[30px]" >
-                    <div class="max-w-[690px]">
-                        <p id=" font-poppins business-details" class="text-[29px] text-white">{{ businessInfo.businessDetails.value }} </p>
+                    <div class="max-w-[550px]">
+                        <p id="business-details" class="text-[19px] text-black">{{ businessInfo.businessDetails.value }} </p>
                     </div>
                 </div>
 
-                <div class="mt-[50px] flex flex-row ">
-                    <a class="font-poppins  text-center rounded-lg p-4 w-[380px] bg-white text-black text-[21px]" :href="route('products_page')">See All Products</a>
+                <div class="mt-[90px] flex flex-row">
+                    <button @click="logout('register')"  class="transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mt-[-5px] mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">Register</button>
+                    <p class="text-black text-xl">|</p>
+                    <a class="ml-[35px] justify-center text-black text-[18px]" :href="route('products_page')">See All Products</a>
                 </div>
             </div>
-            </div>
-            
 
-            <div class="mr-[85px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
-                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
-                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
-                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
+
+            <!-- image -->
+            <div class=" mt-[50px] ml-auto flex-grow-0 w-1/2 max-w-4xl">
+                
+                <img :src='businessInfo.homePageImage.value' class ="mt-8 w-full h-[690px] object-cover rounded-tl-[125px]"/>
             </div>
         </div>
-        </div>
-
         </section>
 
-        <!-- section 2 -->
+        <!-- section 2/EditWebsite2 -->
         <section 
         ref="aboutSection" 
         class="-mt-[100px] bg-website-main1 border-t border-b border-gray-200 flex flex-col h-auto relative transition-transform duration-500"
         :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
         >
         <div class="mt-[50px] text-center">
-            <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
+            <p class="text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
         </div>
 
-    <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[180px] pb-[110px]">
-      <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-check-circle text-gray-800 text-[70px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us1 }}</p>
-        </div>
-      </div>
-
-      <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-tag text-gray-800 text-[70px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us2 }}</p>
-        </div>
-      </div>
-
-            <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3">
+        <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[100px]">
+            <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
             <div class="flex justify-center w-full">
                 <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-                <i class="fa fa-phone text-gray-800 text-[70px]"></i>
+                <i class="fa fa-check-circle text-gray-800 text-[50px]"></i>
                 </a>
             </div>
             <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-                <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us3 }}</p>
+                <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us1 }}</p>
+            </div>
+            </div>
+
+            <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
+            <div class="flex justify-center w-full">
+                <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-tag text-gray-800 text-[50px]"></i>
+                </a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+                <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us2 }}</p>
+            </div>
+            </div>
+
+            <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
+            <div class="flex justify-center w-full">
+                <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-phone text-gray-800 text-[40px]"></i>
+                </a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+                <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us3 }}</p>
             </div>
             </div>
         </div>
+
+        <!-- Map Section -->
+        <div class="map-section h-[500px] w-full mb-10">
+            <div id="map" class="h-full w-full"></div>
+        </div>
         </section>
 
-    <!-- section 3-->
+
+
+    <!-- section 3/EditWebsite3 -->
     
     <section v-if="feature_toggle==='true'">
-        <div class="mt-20 bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
+        <div class=" bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
 
 <div class="flex flex-col items-center p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
-    <p class="font-poppins mt-[10px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
+    <p class="mt-[30px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
     <p class="mt-[10px] text-[20px]  text-black  text-center">
         A list of the most popular products loved by customers. 
         Best prices guaranteed everyday.
@@ -473,29 +391,13 @@ function loadMap() {
         </div>
     </section>
 
-    <section>
-        <div class="bg-website-main1" >
-            <!-- Map Section -->
-        <div class="mt-[50px] text-center mb-20 mx-auto flex flex-col">
-            <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">Visit Us</p>
-            <p class="text-[20px] mt-[10px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
-            <p class="text-[20px] text-white">{{ businessInfo.business_Province }}, 
-                {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}  </p>
-        </div>
-        <div class="map-section h-[500px] w-full mb-[100px]">
-            <div id="map" class="h-full w-full"></div>
-        </div>
-        </div>
-    </section>
-
-
-    <!-- section /Chat Section -->
+    <!-- section 4/Chat Section -->
 <section class="border-t border-gray-200 shadow-sm">
         <div style="background-color: ghostwhite" class="flex flex-col min-h-screen">
 
         
     <div class="flex w-full justify-center items-center p-3">
-        <p class="font-poppins mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
+        <p class="mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
     </div>
 
 <div class="flex flex-row items-center">
@@ -601,9 +503,7 @@ section {
   max-width: 100vw;
   overflow-x: hidden;
 }
-.bg-cover {
-  transition: background-image 1s ease-in-out;
-}
+
 
 .icon-color {
     background-color: ghostwhite; /* Replace with your desired color */

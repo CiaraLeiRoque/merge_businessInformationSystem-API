@@ -107,9 +107,11 @@ async function save(){
             const imgFormData = new FormData();
             imgFormData.append('business_id', businessId);
 
-            uploadedFiles.forEach((file, index) => {
+            uploadedFiles.value.forEach((file, index) => {
                 imgFormData.append(`image${index + 1}`, file); 
             });
+
+             console.log('Uploaded Files:', JSON.stringify(uploadedFiles.value, null, 2))
 
             try {
                 const response = await axios.post('/api/images-update', imgFormData, {
@@ -150,14 +152,15 @@ async function imageUpload(event){
                 textAreas.homePageImage.value = e.target.result;
             };
             reader.readAsDataURL(file);
+
         }
         }else if(editButton.value==='slideshow'){
             const files = event.target.files;
-            for(let i=0;i<file.length;i++){
-                file = files[i];
+            for(let i=0;i<files.length;i++){
+                const file = files[i];
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    uploadedFiles.value.push(e.target.result)
+                    uploadedFiles.value.push(file)
                 };
                 reader.readAsDataURL(file);
 
@@ -170,7 +173,6 @@ function goToEditWebsite2(){
 }
 
 const images = ref([]);
-
 const currentImage = ref(null);
 let currentIndex = 0;
 const slideShowClick = ref(null);
@@ -183,14 +185,13 @@ const getImages = async () => {
         
         console.log("Response data: ", response.data);
 
-        // Ensure response.data is an object with expected keys
         if (response.data) {
             // Loop over the image keys and add valid images to images.value
             for (let i = 1; i <= 5; i++) {
                 const imageKey = `image${i}`;
                 const imagePath = response.data[imageKey];
+                console.log("Response data imageKey: ", response.data);
 
-                // Only add non-null image paths
                 if (imagePath && imagePath !== null) {
                     images.value.push(imagePath);
                 }
@@ -207,8 +208,6 @@ const getImages = async () => {
         console.error("Error fetching images:", error);
     }
 };
-
-
 
 watch(images, () => {
     if (images.value.length > 0) {
@@ -303,13 +302,8 @@ const moveSlideShow=(direction)=>{
             </div>
             </div>
             
-
-            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
-                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
-                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
-                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
-            </div>
-            <div class="flex-grow-0 max-w-[260px] z-30">
+            
+            <div class="flex-grow-0 max-w-[260px] mt-[50px] mr-[10px]">
                     <div class="mt-2 flex flex-col">
                         <button @click="edit('slideshow')" class="bg-black text-white text-[19px] border border-white rounded-xl p-2">Edit Slideshow Image</button>
                             <div v-if="editButton==='slideshow'" class="flex flex-col items-center">
@@ -317,10 +311,16 @@ const moveSlideShow=(direction)=>{
                                 <button @click="save" class="mt-5 bg-gray-300 rounded-xl p-1 w-25">Save</button>
                             </div>
 
-                            <div class="mt-3 grid grid-cols-3 gap-2">
+                            <div v-if="editButton==='slideshow'" class="mt-3 grid grid-cols-3 gap-2">
                                 <img v-for="(image, index) in uploadedFiles" :key="index" :src="image" class="w-24 h-24 object-cover rounded-md" />
                             </div>
                     </div>
+            </div>
+
+            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
+                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
+                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
+                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
             </div>
         </div>
         </div>

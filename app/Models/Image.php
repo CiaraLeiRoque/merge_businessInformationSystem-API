@@ -8,6 +8,7 @@ class Image extends Model
 {
     public $incrementing = true; 
     protected $keyType = 'int';
+    protected $primaryKey = 'images_ID';
     protected $fillable = [
         'image1',
         'image2',

@@ -20,6 +20,9 @@
         gtag('config', 'G-8T9T4572YV');
         </script>
 
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDdIJCZtE_Fe5SvNGZ8rpfRKvDv-Jj90NI"></script>
+
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
