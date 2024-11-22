@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, reactive } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper and SwiperSlide as named imports
 import 'swiper/css';  // Import Swiper styles
@@ -214,7 +214,7 @@ const handleScroll = () => {
   }
 };
 
-const images = ref([]);
+const images = reactive({ value: [] });
 const currentImage = ref(null);
 let currentIndex = 0;
 const slideShowClick = ref(null);
@@ -228,18 +228,21 @@ const getImages = async () => {
         console.log("Response data: ", response.data);
 
         if (response.data) {
-            // Loop over the image keys and add valid images to images.value
             for (let i = 1; i <= 5; i++) {
                 const imageKey = `image${i}`;
-                const imagePath = response.data[imageKey];
+                if(response.data[imageKey]){
+                const imagePath = `/storage/${response.data[imageKey]}`;
+                console.log("Response data imageKey: ", imagePath);
 
                 if (imagePath && imagePath !== null) {
+
                     images.value.push(imagePath);
                 }
             }
+            }
         }
 
-        console.log("Updated images.value: ", images.value);
+        console.log("Updated images.value: ", JSON.stringify(images.value));
 
         // If there are images, set the first one as the current image
         if (images.value.length > 0) {
@@ -250,7 +253,7 @@ const getImages = async () => {
     }
 };
 
-watch(images, () => {
+watch(() => images.value,  () => {
     if (images.value.length > 0) {
         currentImage.value = images.value[0];  
     }
@@ -351,7 +354,7 @@ function loadMap() {
             </div>
             
 
-            <div class="mr-[85px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
+            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
                 <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
                 <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
                 <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>

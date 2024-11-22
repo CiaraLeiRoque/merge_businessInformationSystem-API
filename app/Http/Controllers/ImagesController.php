@@ -40,7 +40,7 @@ class ImagesController extends Controller
             'image5'=>'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $images = Image::first(); 
+        $images = Image::where('images_ID', 1)->first();
 
         foreach (['image1', 'image2', 'image3', 'image4', 'image5'] as $field) {
             if ($request->hasFile($field)) {
@@ -57,8 +57,7 @@ class ImagesController extends Controller
     }
 
     public function info(Request $request){
-        $business_id = $request->query('business_id');
-        $images = Image::where('business_id', $business_id)->first();
+        $images = Image::first(); 
         return response()->json($images);
     }
 }

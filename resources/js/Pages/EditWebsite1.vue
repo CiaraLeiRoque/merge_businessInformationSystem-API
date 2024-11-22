@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { App } from '@inertiajs/inertia-vue3';
 import { Head } from '@inertiajs/vue3';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, reactive  } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 
@@ -60,7 +60,7 @@ async function getWebsiteInfo(){
         textAreas.businessDescription.value = getWebsiteInfo.data.website_description;
         textAreas.businessDetails.value = getWebsiteInfo.data.website_details;
         let imgUrl = `/storage/${getWebsiteInfo.data.website_image}`;
-        // storage/app/public//app/public/images
+        
         textAreas.homePageImage.value=imgUrl;
     }
     catch(error){
@@ -68,6 +68,16 @@ async function getWebsiteInfo(){
     }
 }
 
+function base64ToBlob(base64) {
+    const [prefix, data] = base64.split(',');
+    const mimeType = prefix.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const array = [];
+    for (let i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+    }
+    return new Blob([new Uint8Array(array)], { type: mimeType });
+}
 
 const editButton=ref(null);
 function edit(area){
@@ -105,10 +115,12 @@ async function save(){
 
         if (uploadedFiles.value.length>0) {
             const imgFormData = new FormData();
-            imgFormData.append('business_id', businessId);
 
-            uploadedFiles.value.forEach((file, index) => {
-                imgFormData.append(`image${index + 1}`, file); 
+            uploadedFiles.value.forEach((base64File, index) => {
+                // Convert base64 string to Blob
+                const blob = base64ToBlob(base64File);
+                const fileName = `image${index + 1}.png`; // You can set a custom file name
+                imgFormData.append(`image${index + 1}`, blob, fileName);
             });
 
              console.log('Uploaded Files:', JSON.stringify(uploadedFiles.value, null, 2))
@@ -124,6 +136,8 @@ async function save(){
                 console.error('Error uploading images:', error);
             }
 
+            showSuccessAddModal.value = true;
+
             uploadedFiles.value = [];
         }
 
@@ -133,10 +147,7 @@ async function save(){
         }
     });
     console.log('Save response:', saveBusinessDesc.data);
-    showSuccessAddModal.value = true;
-    setTimeout(() => {
-        showSuccessAddModal.value = false;
-        }, 1000) 
+
     
 }
 
@@ -160,10 +171,10 @@ async function imageUpload(event){
                 const file = files[i];
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    uploadedFiles.value.push(file)
+                    uploadedFiles.value.push(e.target.result);
+                    images.value.push(e.target.result); 
                 };
                 reader.readAsDataURL(file);
-
             }
         }
 }
@@ -172,7 +183,7 @@ function goToEditWebsite2(){
     Inertia.visit(route('editWebsite2'));
 }
 
-const images = ref([]);
+const images = reactive({ value: [] });
 const currentImage = ref(null);
 let currentIndex = 0;
 const slideShowClick = ref(null);
@@ -186,15 +197,17 @@ const getImages = async () => {
         console.log("Response data: ", response.data);
 
         if (response.data) {
-            // Loop over the image keys and add valid images to images.value
             for (let i = 1; i <= 5; i++) {
                 const imageKey = `image${i}`;
-                const imagePath = response.data[imageKey];
-                console.log("Response data imageKey: ", response.data);
+                if(response.data[imageKey]){
+                const imagePath = `/storage/${response.data[imageKey]}`;
+                console.log("Response data imageKey: ", imagePath);
 
                 if (imagePath && imagePath !== null) {
+
                     images.value.push(imagePath);
                 }
+            }
             }
         }
 
@@ -209,7 +222,7 @@ const getImages = async () => {
     }
 };
 
-watch(images, () => {
+watch(() => images.value,  () => {
     if (images.value.length > 0) {
         currentImage.value = images.value[0];  
     }
@@ -330,7 +343,7 @@ const moveSlideShow=(direction)=>{
                 <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
                     <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
                     <h2 class="text-xl font-bold mb-4">Success!</h2>
-                    <p class="mb-4">The Business Information has been successfully Changed!.</p>
+                    <p class="mb-4">The Slideshow is updated! Please Refresh the Page.</p>
                 </div>
             </div>
             </transition>
