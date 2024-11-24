@@ -1,12 +1,31 @@
 <template>
-    <Head title="Home" />
+    <Head title="Dashboard" />
     <AuthenticatedLayout>
         <div class="flex flex-row">
-            <div class="w-full sm:px-6 lg:px-8 pb-6 flex flex-col" style="width: 60vw;">
+            <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
                 <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #1F2937;">
-                    <div class="h-36 p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
-                        <div class="flex flex-row justify-center"><div class="flex flex-col text-center mr-20"><div style="font-size: 18px;"><b>Total Income (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalIncome }}</div></div>
-                        <div class="flex flex-col text-center"><div style="font-size: 18px;"><b>Total Expenses (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalExpenses }}</div></div></div>
+                    <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
+                        <div class="flex flex-row items-center justify-evenly content-evenly gap-8">
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Total Income (30 Days)</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ totalIncome }}</div>
+                            </div>
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Total Expenses (30 Days)</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ totalExpenses }}</div>
+                            </div>
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Other Finances (30 Days)</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ totalOthers }}</div>
+                            </div>
+                        </div>
+
                         <div class="flex flex-row justify-center">
                             <button style="background-color: #FFFFFF; border-radius: 14px;">
                                 <ResponsiveNavLink :href="route('finance')" :active="route().current('finance')" style="color: #0F2C4A; font-size: 12px;">View Finance</ResponsiveNavLink>
@@ -34,7 +53,7 @@
                                 <th>Stock</th>
                             </tr>
                             <tr v-for="product in filteredProducts.slice(0, 3)" :key="product.id">
-                                <td >{{ product.name }}</td>
+                                <td>{{ product.name }}</td>
                                 <td>{{ product.category }}</td>
                                 <td>{{ product.price }}</td>
                                 <td>{{ product.sold }}</td>
@@ -44,11 +63,7 @@
                     </div>
                     </div>
                 </div>                
-                    
-                
-                
-                
-                <!-- Visitors & Views and Retention Rate Charts side by side -->
+                    <!-- Visitors & Views and Retention Rate Charts side by side -->
                     <div class="flex flex-row justify-center px-8 space-x-6 mt-2"> 
                         <!-- Visitors & Views Chart -->
                         <div class="custom-chart-width p-4 border border-black rounded-lg w-full" style="height: 275px;"> 
@@ -64,14 +79,28 @@
 
             <!-- Right-side Content -->
             <div class="flex flex-col">
-                <vue-cal hide-view-selector :time="false" active-view="month" xsmall class="p-6 max-h-[400px]" style="background-color: #1F2937; margin-right: 30px; margin-top: 25px; color: white; font-weight: bold; border-radius: 1rem;">
-                    <template #arrow-prev>
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </template>
-                    <template #arrow-next>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </template>
-                </vue-cal>
+                <div class="py-8 px-4 rounded-lg mx-10" style="background-color: rgb(31, 41, 55); max-height: 450px; max-width: 90%; min-width: 90%; min-height: 450px; ">
+                    <div class="text-xl font-semibold text-white mb-4 bg-red-500 rounded-lg flex flex-row justify-center p-2"><h2>Critical Stock Items</h2></div>
+                    <div 
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto" 
+                        style=" max-height: 500px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
+                        <div 
+                            v-for="product in filteredProducts.filter(product => product.stock < 11)" 
+                            :key="product.id" 
+                            class="bg-white shadow-md rounded-lg p-4 flex flex-row md:flex-col justify-between">
+                            <div class="flex flex-row md:flex-col">
+                                <div class="relative w-full aspect-square mb-4">
+                                    <img 
+                                        :src="'/storage/' + product.image" 
+                                        :alt="product.name" 
+                                        class="absolute inset-0 w-full h-full object-cover rounded-lg">
+                                </div>
+                                <div class="text-md font-semibold">{{ product.name }}</div>
+                                <div class="text-md font-medium">Remaining Stock: <span class="text-red-500 font-semibold">{{ product.stock }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="flex flex-col items-center mt-4 text-white">
                     <h3 style="color: black"><b>Social Media</b></h3>
                     <div class="flex flex-row">
@@ -111,9 +140,6 @@ import { ref, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
-import DoughnutChart from '@/Components/DoughnutChart.vue';
-import VueCal from 'vue-cal';
-import 'vue-cal/dist/vuecal.css';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Chart, registerables } from 'chart.js';
 import { Head } from '@inertiajs/vue3';
@@ -339,6 +365,7 @@ const endDate = ref('');
 const financesByDate = ref([]);
 const totalExpenses = ref(0);
 const totalIncome = ref(0);
+const totalOthers = ref(0);
 const roundToTwoDecimals = (num) => Math.round(num * 100) / 100;
 
 const formatDate = (date) => {
@@ -376,6 +403,9 @@ const fetchFinancesByDate = async () => {
             }
             if (finance.category === 'expense') {
                 totalExpenses.value += roundToTwoDecimals(finance.amount);
+            }
+            if (finance.category !== 'income' && finance.category !== 'expense') {
+                totalOthers.value += roundToTwoDecimals(finance.amount);
             }
         }
 
