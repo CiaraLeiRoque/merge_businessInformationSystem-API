@@ -91,7 +91,7 @@ class SubscriberController extends Controller
             'verification_token' => null,
         ]);
 
-        return response('Email verified successfully.', 200);
+        return redirect('/email-verified');
     }
 
 

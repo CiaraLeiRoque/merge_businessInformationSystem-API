@@ -7,6 +7,8 @@ import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper an
 import 'swiper/css';  // Import Swiper styles
 import 'swiper/css/navigation';  // Navigation styles
 import 'swiper/css/pagination'; 
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
 
 const{props} = usePage();
 defineProps({
@@ -37,6 +39,37 @@ function goTochatPage(){
     Inertia.visit(route('chat_with_us'));
 }
 
+//subscribers   
+const email = ref('');
+
+const subscribe = async () => {
+    if (!email.value) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+
+    try {
+        const response = await axios.post('/api/subscribe', { email: email.value });
+        showToast("Email verification link sent", "success");
+        email.value = ''; // Reset the input field
+    } catch (error) {
+        alert(error.response?.data?.message || 'Subscription failed. Please try again.');
+    }
+};
+
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
 
 const businessInfo = {
     businessImage: ref(''),
@@ -304,6 +337,18 @@ function loadMap() {
 
 <template>
     <Head title="Home" />
+            <ErrorToast
+                v-if="showErrorToast"
+                :visible="showErrorToast"
+                :message="toastMessage"
+                @close="showErrorToast = false"
+            />
+            <SuccessToast
+                v-if="showSuccessToast"
+                :visible="showSuccessToast"
+                :message="toastMessage"
+                @close="showSuccessToast = false"
+            />
         <!-- header -->
         <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">
@@ -548,6 +593,25 @@ function loadMap() {
 
 </div>
 
+<div class="mr-auto mt-40 ml-8 flex flex-col max-w-md">
+    <p class="text-[17px] text-white mt-2"> Subscribe to Us!</p>
+
+    <div class="flex items-center space-x-4 mt-4">
+        <input 
+            v-model="email" 
+            type="email" 
+            placeholder="Enter your email" 
+            class="px-3 py-2 rounded-lg text-black focus:outline-none"
+        />
+        <button 
+            @click="subscribe" 
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        >
+            Subscribe
+        </button>
+    </div>
+</div>
+
 <!-- Contact Us -->
 <div class="mt-[100px] ml-auto flex flex-grow-0 w-1/2 max-w-md w-1/2 max-w-md">
     <div class="mt-2 flex flex-col ">
@@ -572,6 +636,8 @@ function loadMap() {
 </div>
 
 <Chatbot />
+
+
 
 </section>
 </template>

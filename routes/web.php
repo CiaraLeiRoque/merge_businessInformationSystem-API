@@ -181,6 +181,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/auth.php';
 
 Route::get('/verify-subscription', [SubscriberController::class, 'verify'])->name('verify-subscription');
+Route::get('/email-verified', function () {
+    return view('email-verified');
+});
 
 /*Route::get('/api/products', [ProductController::class, 'index']);
 Route::post('/api/products', [ProductController::class, 'store']);*/

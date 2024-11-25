@@ -3,6 +3,8 @@ import { Inertia } from '@inertiajs/inertia';
 import { onMounted, ref } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
 import { Head } from '@inertiajs/vue3';
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
 
 //subscribers   
 const email = ref('');
@@ -15,12 +17,27 @@ const subscribe = async () => {
 
     try {
         const response = await axios.post('/api/subscribe', { email: email.value });
-        alert(response.data.message); // Success message
+        showToast("Email verification link sent", "success");
         email.value = ''; // Reset the input field
     } catch (error) {
         alert(error.response?.data?.message || 'Subscription failed. Please try again.');
     }
 };
+
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
+
 
 const businessInfo = {
     businessImage: ref(''),
@@ -227,6 +244,19 @@ function loadMap() {
 
 <template>
     <Head title="Home" />
+
+            <ErrorToast
+                v-if="showErrorToast"
+                :visible="showErrorToast"
+                :message="toastMessage"
+                @close="showErrorToast = false"
+            />
+            <SuccessToast
+                v-if="showSuccessToast"
+                :visible="showSuccessToast"
+                :message="toastMessage"
+                @close="showSuccessToast = false"
+            />
         <!-- header -->
         <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">
