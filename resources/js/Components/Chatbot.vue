@@ -466,7 +466,7 @@ export default {
         setTimeout(() => {
           this.showBubble = false;
         }, 2000); 
-      }, 5000); // Repeat every 15 seconds
+      }, 15000); 
     },
   },
 };
