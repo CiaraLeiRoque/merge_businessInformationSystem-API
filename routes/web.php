@@ -15,6 +15,7 @@ use Inertia\Inertia;
 use BotMan\BotMan\BotMan;
 use BotMan\BotMan\Drivers\DriverManager;
 use BotMan\BotMan\Messages\Incoming\Answer;
+use App\Http\Controllers\SubscriberController;
 
 
 DriverManager::loadDriver(\BotMan\Drivers\Web\WebDriver::class);
@@ -173,13 +174,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    
 
    
 });
 
 require __DIR__.'/auth.php';
 
+Route::get('/verify-subscription', [SubscriberController::class, 'verify'])->name('verify-subscription');
 
 /*Route::get('/api/products', [ProductController::class, 'index']);
 Route::post('/api/products', [ProductController::class, 'store']);*/

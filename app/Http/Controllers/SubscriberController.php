@@ -28,19 +28,24 @@ class SubscriberController extends Controller
             'email' => 'required|email|unique:subscriber,email',
         ]);
 
+        // Generate verification token
+        $verificationToken = Str::random(60);
+
         // Create the subscriber
         $subscriber = Subscribers::create([
             'email' => $request->email,
+            'verification_token' => $verificationToken,
         ]);
 
-        // Generate verification token
-        $verificationUrl = url("/verify-subscription?token=" . Str::random(60) . "&email={$subscriber->email}");
+        // Generate verification URL
+        $verificationUrl = url("/verify-subscription?token={$verificationToken}&email={$subscriber->email}");
 
         // Send email
         Mail::to($subscriber->email)->send(new VerifySubscriptionMail($verificationUrl));
 
         return response()->json(['message' => 'Subscription successful! Please check your email for verification.'], 201);
-    }   
+    }
+
 
     /**
      * Display the specified resource.
@@ -65,4 +70,29 @@ class SubscriberController extends Controller
     {
         //
     }
+
+    public function verify(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'token' => 'required',
+        ]);
+
+        $subscriber = Subscribers::where('email', $request->email)
+            ->where('verification_token', $request->token)
+            ->first();
+
+        if (!$subscriber) {
+            return response('Invalid verification link or token.', 400);
+        }
+
+        $subscriber->update([
+            'email_verified_at' => now(),
+            'verification_token' => null,
+        ]);
+
+        return response('Email verified successfully.', 200);
+    }
+
+
 }

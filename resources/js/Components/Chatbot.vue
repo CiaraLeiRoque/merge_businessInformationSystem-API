@@ -122,7 +122,6 @@ export default {
         const chatbotResponse = await axios.get('/api/chatbot-response'); // Example endpoint
         if (chatbotResponse.data && chatbotResponse.data.length > 0) {
           const firstResponse = chatbotResponse.data[0]; // Get the first chatbot response
-
           this.workingHours = firstResponse?.chabot_BWHours || 'Unavailable';
           this.productDescription = firstResponse?.chabot_BPDescription || 'description unavailable';
           this.lazada = firstResponse?.chabot_Lazada || 'Lazada Link unavailable';

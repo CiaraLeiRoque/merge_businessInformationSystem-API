@@ -85,6 +85,7 @@ Route::put('/chatbot-response/{id}', [ChatbotController::class, 'update']);
 Route::delete('/chatbot-response/{id}', [ChatbotController::class, 'destroy']);
 
 Route::post('/subscribe', [SubscriberController::class, 'store']);
+Route::get('/verify-subscription', [SubscriberController::class, 'verify'])->name('verify-subscription');
 
 
 Route::get('/featured-products', [ProductController::class, 'featured_products'])->name('featured_products');

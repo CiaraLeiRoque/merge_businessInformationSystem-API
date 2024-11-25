@@ -14,10 +14,12 @@ return new class extends Migration
         Schema::create('subscriber', function (Blueprint $table) {
             $table->id();
             $table->string('email')->unique();
+            $table->string('verification_token')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });
     }
+    
 
     /**
      * Reverse the migrations.
