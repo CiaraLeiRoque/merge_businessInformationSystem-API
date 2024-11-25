@@ -4,6 +4,24 @@ import { onMounted, ref } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
 import { Head } from '@inertiajs/vue3';
 
+//subscribers   
+const email = ref('');
+
+const subscribe = async () => {
+    if (!email.value) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+
+    try {
+        const response = await axios.post('/api/subscribe', { email: email.value });
+        alert(response.data.message); // Success message
+        email.value = ''; // Reset the input field
+    } catch (error) {
+        alert(error.response?.data?.message || 'Subscription failed. Please try again.');
+    }
+};
+
 const businessInfo = {
     businessImage: ref(''),
     businessName: ref(''),
@@ -410,6 +428,7 @@ function loadMap() {
             <p class="text-black text-[30px] text-center mr-[50px]">
             Using our chatbot, you can inquire about our business information,             
             and to further reach us please refer to our contact information.
+            Check for changes
             </p>
             <button @click="goTochatPage"  class="mt-8 transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">See Chatbot!</button>
             <!-- <img src="/storage/images/chat_icon.png" 
@@ -446,6 +465,26 @@ function loadMap() {
     </div>
 
 </div>
+
+<div class="mr-auto mt-40 ml-8 flex flex-col max-w-md">
+    <p class="text-[17px] text-white mt-2"> Subscribe to Us!</p>
+
+    <div class="flex items-center space-x-4 mt-4">
+        <input 
+            v-model="email" 
+            type="email" 
+            placeholder="Enter your email" 
+            class="px-3 py-2 rounded-lg text-black focus:outline-none"
+        />
+        <button 
+            @click="subscribe" 
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        >
+            Subscribe
+        </button>
+    </div>
+</div>
+
 
 <!-- Contact Us -->
 <div class="mt-[100px] ml-auto flex flex-grow-0 w-1/2 max-w-md w-1/2 max-w-md">
