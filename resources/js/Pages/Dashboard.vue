@@ -34,7 +34,7 @@
                                 <th>Stock</th>
                             </tr>
                             <tr v-for="product in filteredProducts.slice(0, 3)" :key="product.id">
-                                <td >{{ product.name }}</td>
+                                <td>{{ product.name }}</td>
                                 <td>{{ product.category }}</td>
                                 <td>{{ product.price }}</td>
                                 <td>{{ product.sold }}</td>
@@ -60,14 +60,15 @@
 
             <!-- Right-side Content -->
             <div class="flex flex-col">
-                <vue-cal hide-view-selector :time="false" active-view="month" xsmall class="p-6 max-h-[400px]" style="background-color: #1F2937; margin-right: 30px; margin-top: 25px; color: white; font-weight: bold; border-radius: 1rem;">
-                    <template #arrow-prev>
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </template>
-                    <template #arrow-next>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </template>
-                </vue-cal>
+                <table>
+                    <div>
+                        <div v-for="product in filteredProducts" :key="product.id">
+                            <div class="flex flex-row justify-between px-4 py-2">
+                                <div style="font-size: 23px;"><b>{{ product.name }}</b></div>
+                            </div>
+                        </div>
+                    </div>
+                </table>
                 <div class="flex flex-col items-center mt-4 text-white">
                     <h3 style="color: black"><b>Social Media</b></h3>
                     <div class="flex flex-row">
@@ -107,9 +108,6 @@ import { ref, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
-import DoughnutChart from '@/Components/DoughnutChart.vue';
-import VueCal from 'vue-cal';
-import 'vue-cal/dist/vuecal.css';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Chart, registerables } from 'chart.js';
 import { Head } from '@inertiajs/vue3';
