@@ -12,7 +12,7 @@ class Website extends Model
     protected $primaryKey = 'website_ID';
 
     // If the primary key is not an incrementing integer
-    public $incrementing = true; // Set to false if your primary key is not incrementing
+    public $incrementing = true; 
     protected $keyType = 'int';
     protected $fillable = [
         'business_id',

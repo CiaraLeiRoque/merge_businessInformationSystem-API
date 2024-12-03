@@ -21,6 +21,7 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\GetIdController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\ImagesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatbotController;
@@ -59,6 +60,10 @@ Route::get('/business_info', [BusinessController::class, 'showBusiness']);
 Route::post('/website', [WebsiteController::class, 'store']);
 Route::get('/website', [WebsiteController::class, 'info']);
 Route::post('/website-update', [WebsiteController::class, 'update']);
+
+Route::get('/images', [ImagesController::class, 'info']);
+Route::post('/images', [ImagesController::class, 'store']);
+Route::post('/images-update', [ImagesController::class, 'update']);
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::post('/products', [ProductController::class, 'store']);

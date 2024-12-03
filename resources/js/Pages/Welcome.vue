@@ -1,8 +1,12 @@
 <script setup>
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch, reactive } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
+import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper and SwiperSlide as named imports
+import 'swiper/css';  // Import Swiper styles
+import 'swiper/css/navigation';  // Navigation styles
+import 'swiper/css/pagination'; 
 
 const{props} = usePage();
 defineProps({
@@ -88,24 +92,16 @@ function account(){
 }
 
 onMounted(()=>{
+    loadMap();
     getWebsiteInfo();
+    startSlideshow();
+    getImages();
     
   window.addEventListener('scroll', handleScroll);
 })
 
 async function getWebsiteInfo(){
     try{
-
-        // const response = await axios.get('/showUser');
-        // if (response.data) {
-        //     profilePicture.value = response.data.profile_img 
-        // ? `/storage/user_profile/${response.data.profile_img}` 
-        // : '/storage/user_profile/default-profile.png';
-        //     isLoading.value=false;
-        // }
-        // profilePicture.value = response.data.profile_img 
-        // ? `/storage/user_profile/${response.data.profile_img}` 
-        // : '/storage/user_profile/default-profile.png';
 
         const getBusinessInfo = await axios.get('/api/business_info', {
             params: {user_id: 1}
@@ -132,7 +128,7 @@ async function getWebsiteInfo(){
 
         businessInfo.businessName.value = getBusinessInfo.data.business_Name;
         businessInfo.business_Email.value = getBusinessInfo.data.business_Email;
-        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Contact_Number;
+        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Phone_Number;
         businessInfo.business_Address.value = getBusinessInfo.data.business_Address;
 
         businessInfo.business_Province.value = getBusinessInfo.data.business_Province;
@@ -218,6 +214,92 @@ const handleScroll = () => {
   }
 };
 
+const images = reactive({ value: [] });
+const currentImage = ref(null);
+let currentIndex = 0;
+const slideShowClick = ref(null);
+
+const getImages = async () => {
+    try {
+        const response = await axios.get('/api/images', {
+            params: { business_id: 1 }
+        });
+        
+        console.log("Response data: ", response.data);
+
+        if (response.data) {
+            for (let i = 1; i <= 5; i++) {
+                const imageKey = `image${i}`;
+                if(response.data[imageKey]){
+                const imagePath = `/storage/${response.data[imageKey]}`;
+                console.log("Response data imageKey: ", imagePath);
+
+                if (imagePath && imagePath !== null) {
+
+                    images.value.push(imagePath);
+                }
+            }
+            }
+        }
+
+        console.log("Updated images.value: ", JSON.stringify(images.value));
+
+        // If there are images, set the first one as the current image
+        if (images.value.length > 0) {
+            currentImage.value = images.value[0];  
+        }
+    } catch (error) {
+        console.error("Error fetching images:", error);
+    }
+};
+
+watch(() => images.value,  () => {
+    if (images.value.length > 0) {
+        currentImage.value = images.value[0];  
+    }
+});
+const startSlideshow = () => {
+    if (slideShowClick.value === null) {
+  slideShowClick.value=setInterval(() => {
+    currentIndex = (currentIndex + 1) % images.value.length;
+    currentImage.value = images.value[currentIndex];
+  }, 1000); 
+}
+};
+
+const stopSlideshow = () => {
+  if (slideShowClick.value) {
+    clearInterval(slideShowClick.value);
+  }
+};
+
+const moveSlideShow=(direction)=>{
+    stopSlideshow();
+    if(direction=='right'){
+        currentIndex = (currentIndex + 1) % images.value.length;
+    }else if(direction=='left'){
+        currentIndex = (currentIndex - 1 + images.value.length) % images.value.length;
+    }
+    currentImage.value = images.value[currentIndex];
+}
+
+
+function loadMap() {
+  const mapOptions = {
+    center: { lat: 14.862140, lng: 120.817826}, 
+    zoom: 15,
+  };
+
+  const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+  // Optional: Add a marker
+  new google.maps.Marker({
+    position: { lat: 14.862140, lng: 120.817826 }, 
+    map: map,
+    title: "Limesen Network Solutions Inc.",
+  });
+}
+
 </script>
 
 <template>
@@ -233,13 +315,8 @@ const handleScroll = () => {
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products</a>
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p class="text-white">|</p>
-                    <div v-if="userLogIn" class="flex flex-col">
-                        <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
-                        <a @click="account" class=" cursor-pointer text-white text-[14px] underline">Account</a>
-                    </div>
-                    <div v-else>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In &nbsp; &nbsp;</a>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('register')">Register</a>
+                    <div>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In</a>
                     </div>
                     <div class="w-[50px] h-[50px]">
                         <img v-if="isLoading" src='/storage/user_profile/default-profile.png'/>
@@ -250,94 +327,96 @@ const handleScroll = () => {
                 </div>
         </div>
 
-        <!-- section 1/EditWebsite1 -->
+        <!-- section 1 -->
         <section>
-        <div style="background-color: ghostwhite" class=" flex min-h-screen">
-
-            <div class="mt-[230px] ml-[80px] flex-col h-1/2">
+        <div :style="{ backgroundImage: `url(${businessInfo.homePageImage.value})` }" class="bg-no-repeat bg-cover min-h-screen">
+            <div class="flex flex-row ">
+            <div class="h-auto flex-grow-0 flex-shrink-0">
+            <div class="max-w-[980px] mt-[100px] ml-[105px] flex flex-col h-auto flex-shrink-0 rounded-lg p-4">
                 <div>
-                    <h1 class="font-black text-black text-[60px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
+                    <h1 class="font-poppins font-bold text-white text-[80px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
                 </div>
-                <div class="mt-[10px]">
+                <div class="mt-[20px]">
                     <div class="max-w-[550px]">
-                    <p class="font-extrabold text-[25px] text-black">{{ businessInfo.businessDescription.value }}</p>
+                    <p class=" font-poppins font-extrabold text-[35px] text-white">{{ businessInfo.businessDescription.value }}</p>
                     </div>
                 </div>
                 <div class="mt-[30px]" >
-                    <div class="max-w-[550px]">
-                        <p id="business-details" class="text-[19px] text-black">{{ businessInfo.businessDetails.value }} </p>
+                    <div class="max-w-[690px]">
+                        <p id=" font-poppins business-details" class="text-[29px] text-white">{{ businessInfo.businessDetails.value }} </p>
                     </div>
                 </div>
 
-                <div class="mt-[90px] flex flex-row">
-                    <button @click="logout('register')"  class="transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mt-[-5px] mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">Register</button>
-                    <p class="text-black text-xl">|</p>
-                    <a class="ml-[35px] justify-center text-black text-[18px]" :href="route('products_page')">See All Products</a>
+                <div class="mt-[50px] flex flex-row ">
+                    <a class="font-poppins  text-center rounded-lg p-4 w-[380px] bg-white text-black text-[21px]" :href="route('products_page')">See All Products</a>
                 </div>
             </div>
+            </div>
+            
 
+            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
+                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
+                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
+                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
+            </div>
+        </div>
+        </div>
 
-            <!-- image -->
-            <div class=" mt-[50px] ml-auto flex-grow-0 w-1/2 max-w-4xl">
-                
-                <img :src='businessInfo.homePageImage.value' class ="mt-8 w-full h-[690px] object-cover rounded-tl-[125px]"/>
+        </section>
+
+        <!-- section 2 -->
+        <section 
+        ref="aboutSection" 
+        class="-mt-[100px] bg-website-main1 border-t border-b border-gray-200 flex flex-col h-auto relative transition-transform duration-500"
+        :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
+        >
+        <div class="mt-[50px] text-center">
+            <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
+        </div>
+
+    <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[180px] pb-[110px]">
+      <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3">
+        <div class="flex justify-center w-full">
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-check-circle text-gray-800 text-[70px]"></i>
+          </a>
+        </div>
+        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+          <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us1 }}</p>
+        </div>
+      </div>
+
+      <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
+        <div class="flex justify-center w-full">
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-tag text-gray-800 text-[70px]"></i>
+          </a>
+        </div>
+        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+          <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us2 }}</p>
+        </div>
+      </div>
+
+            <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3">
+            <div class="flex justify-center w-full">
+                <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-phone text-gray-800 text-[70px]"></i>
+                </a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+                <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us3 }}</p>
+            </div>
             </div>
         </div>
         </section>
 
-        <!-- section 2/EditWebsite2 -->
-        <section 
-  ref="aboutSection" 
-  class="-mt-[100px] bg-website-main1 border-t border-b border-gray-200 flex h-[800px] relative transition-transform duration-500"
-  :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
->
-    <div class="-mt-[250px] flex items-center p-3 absolute top-[5px] left-0 right-0 bottom-[250px] m-auto">
-      <p class=" text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
-    </div>
-
-    <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[200px]">
-      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-check-circle text-gray-800 text-[50px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us1 }}</p>
-        </div>
-      </div>
-
-      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-tag text-gray-800 text-[50px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us2 }}</p>
-        </div>
-      </div>
-
-      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-phone text-gray-800 text-[40px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us3 }}</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-    <!-- section 3/EditWebsite3 -->
+    <!-- section 3-->
     
     <section v-if="feature_toggle==='true'">
-        <div class=" bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
+        <div class="mt-20 bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
 
 <div class="flex flex-col items-center p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
-    <p class="mt-[30px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
+    <p class="font-poppins mt-[10px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
     <p class="mt-[10px] text-[20px]  text-black  text-center">
         A list of the most popular products loved by customers. 
         Best prices guaranteed everyday.
@@ -397,13 +476,29 @@ const handleScroll = () => {
         </div>
     </section>
 
-    <!-- section 4/Chat Section -->
+    <section>
+        <div class="bg-website-main1" >
+            <!-- Map Section -->
+        <div class="mt-[50px] text-center mb-20 mx-auto flex flex-col">
+            <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">Visit Us</p>
+            <p class="text-[20px] mt-[10px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
+            <p class="text-[20px] text-white">{{ businessInfo.business_Province }}, 
+                {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}  </p>
+        </div>
+        <div class="map-section h-[500px] w-full mb-[100px]">
+            <div id="map" class="h-full w-full"></div>
+        </div>
+        </div>
+    </section>
+
+
+    <!-- section /Chat Section -->
 <section class="border-t border-gray-200 shadow-sm">
         <div style="background-color: ghostwhite" class="flex flex-col min-h-screen">
 
         
     <div class="flex w-full justify-center items-center p-3">
-        <p class="mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
+        <p class="font-poppins mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
     </div>
 
 <div class="flex flex-row items-center">
@@ -509,7 +604,9 @@ section {
   max-width: 100vw;
   overflow-x: hidden;
 }
-
+.bg-cover {
+  transition: background-image 1s ease-in-out;
+}
 
 .icon-color {
     background-color: ghostwhite; /* Replace with your desired color */
@@ -520,5 +617,13 @@ section {
 .fa.fa-twitter::before{
 	content:"𝕏";
 	font-size:1.2em;
+}
+
+#map {
+  margin: 0 auto;
+  padding: 0;
+  width: 80%;
+  height: 500px;
+  border: 1px solid #ccc;
 }
 </style>
