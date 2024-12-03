@@ -89,12 +89,12 @@ function resetReloadOnce() {
             <ul>
                 <li class="flex items-center mb-4"><Link :href="route('home')" :class="{ active: route().current('home') }">
                     <HomeIcon class="size-6"/>
-                    <span class="ml-3">Home</span>
+                    <span class="ml-3">Dashboard</span>
                 </Link></li>
 
                 <li class="flex items-center mb-4"><Link :href="route('website')" :class="{ active: route().current('website') }">
                     <GlobeAltIcon class="size-6"/>
-                    <span class="ml-3">Website</span>
+                    <span class="ml-3">Website Analytics</span>
                 </Link></li>
 
                 <li class="flex items-center mb-4"><Link :href="route('chats')" :class="{ active: route().current('chats') }">
@@ -116,7 +116,7 @@ function resetReloadOnce() {
 
                 <li class="flex items-center mb-4"><Link :href="route('finance')" :class="{ active: route().current('finance') }">
                     <BuildingLibraryIcon class="size-6"/>
-                    <span class="ml-3">Finance</span>
+                    <span class="ml-3">Expenses</span>
                 </Link></li>
 
                 <!-- <li class="flex items-center mb-4">
