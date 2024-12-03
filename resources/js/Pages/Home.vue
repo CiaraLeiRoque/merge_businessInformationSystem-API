@@ -1,12 +1,40 @@
 <template>
-    <Head title="Home" />
+    <Head title="Dashboard" />
     <AuthenticatedLayout>
         <div class="flex flex-row">
-            <div class="w-full sm:px-6 lg:px-8 pb-6 flex flex-col" style="width: 60vw;">
+            <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
                 <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #1F2937;">
-                    <div class="h-36 p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
-                        <div class="flex flex-row justify-center"><div class="flex flex-col text-center mr-20"><div style="font-size: 18px;"><b>Total Income (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalIncome }}</div></div>
-                        <div class="flex flex-col text-center"><div style="font-size: 18px;"><b>Total Expenses (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalExpenses }}</div></div></div>
+                    <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col ">
+                        <div class="flex flex-row content-evenly gap-8">
+                            <div class="flex flex-row text-center justify-center">
+                                <label for="filterType" style="font-size: 18px; margin-right: 10px">Filter By:</label>
+                                <select id="filterType" style="font-size: 12px; max-height: 30px; background-color: #1F2937; color: #FFFFFF" class="rounded-md border-white text-center" v-model="filterType" @change="applyDateFilter">
+                                    <option value="day">Day</option>
+                                    <option value="month">Month</option>
+                                    <option value="year">Year</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-row items-center justify-evenly content-evenly gap-8">
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Total Income ({{ filterLabel }})</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ totalIncome }}</div>
+                            </div>
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Total Expenses ({{ filterLabel }})</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ totalExpenses }}</div>
+                            </div>
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Other Finances ({{ filterLabel }})</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ totalOthers }}</div>
+                            </div>
+                        </div>
                         <div class="flex flex-row justify-center">
                             <button style="background-color: #FFFFFF; border-radius: 14px;">
                                 <ResponsiveNavLink :href="route('finance')" :active="route().current('finance')" style="color: #0F2C4A; font-size: 12px;">View Finance</ResponsiveNavLink>
@@ -34,7 +62,7 @@
                                 <th>Stock</th>
                             </tr>
                             <tr v-for="product in filteredProducts.slice(0, 3)" :key="product.id">
-                                <td >{{ product.name }}</td>
+                                <td>{{ product.name }}</td>
                                 <td>{{ product.category }}</td>
                                 <td>{{ product.price }}</td>
                                 <td>{{ product.sold }}</td>
@@ -44,11 +72,7 @@
                     </div>
                     </div>
                 </div>                
-                    
-                
-                
-                
-                <!-- Visitors & Views and Retention Rate Charts side by side -->
+                    <!-- Visitors & Views and Retention Rate Charts side by side -->
                     <div class="flex flex-row justify-center px-8 space-x-6 mt-2"> 
                         <!-- Visitors & Views Chart -->
                         <div class="custom-chart-width p-4 border border-black rounded-lg w-full" style="height: 275px;"> 
@@ -64,14 +88,36 @@
 
             <!-- Right-side Content -->
             <div class="flex flex-col">
-                <vue-cal hide-view-selector :time="false" active-view="month" xsmall class="p-6 max-h-[400px]" style="background-color: #1F2937; margin-right: 30px; margin-top: 25px; color: white; font-weight: bold; border-radius: 1rem;">
-                    <template #arrow-prev>
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </template>
-                    <template #arrow-next>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </template>
-                </vue-cal>
+                <div class="py-8 px-4 rounded-lg mx-10" style="background-color: rgb(31, 41, 55); max-height: 500px; max-width: 90%; min-width: 90%; min-height: 500px; ">
+                    <div class="text-xl font-semibold text-white mb-4 bg-red-500 rounded-lg flex flex-row justify-center p-2"><h2>Critical Stock Items</h2></div>
+                    <div 
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto pb-7" 
+                        style=" max-height: 500px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
+                        <div 
+                            v-for="product in filteredProducts.filter(product => product.stock < 11)" 
+                            :key="product.id" 
+                            class="bg-white shadow-md rounded-lg p-4 flex flex-row md:flex-col justify-between">
+                            <div class="flex flex-row md:flex-col">
+                                <div class="relative w-full aspect-square mb-4">
+                                    <img 
+                                        :src="'/storage/' + product.image" 
+                                        :alt="product.name" 
+                                        class="absolute inset-0 w-full h-full object-cover rounded-lg">
+                                </div>
+                                <div class="text-md font-semibold">{{ product.name }}</div>
+                                <div class="text-md font-medium">Remaining Stock: <span class="text-red-500 font-semibold">{{ product.stock }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="border-white mx-auto w-11/12 pt-6">
+                    <div class="pb-2">
+                        <div class="flex flex-row justify-between text-white px-4">
+                            <div class="text-center"><b>Total Products:</b><br>{{ filteredProducts.length }}</div>
+                            <div class="text-center"><b>Total Critical:</b><br>{{ filteredProducts.filter(product => product.stock < 11).length }}</div>
+                            <div class="text-center"><b>Total Sold:</b><br>{{ filteredProducts.reduce((total, product) => total + product.sold, 0) }}</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="flex flex-col items-center mt-4 text-white">
                     <h3 style="color: black"><b>Social Media</b></h3>
                     <div class="flex flex-row">
@@ -111,9 +157,6 @@ import { ref, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CategoriesModal from "@/Components/CategoriesModal.vue";
-import DoughnutChart from '@/Components/DoughnutChart.vue';
-import VueCal from 'vue-cal';
-import 'vue-cal/dist/vuecal.css';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Chart, registerables } from 'chart.js';
 import { Head } from '@inertiajs/vue3';
@@ -332,14 +375,28 @@ const soldProductsByMonth = computed(() => {
 
     return monthlySales;
 });
-
+onMounted(() => {
+    const filterType = ref('month'); // Default to month
+    applyDateFilter(); // Automatically load the default filter (e.g., last 30 days)
+});
 const isDateFiltered = ref(false);
 const startDate = ref('');
 const endDate = ref('');
 const financesByDate = ref([]);
 const totalExpenses = ref(0);
 const totalIncome = ref(0);
+const totalOthers = ref(0);
 const roundToTwoDecimals = (num) => Math.round(num * 100) / 100;
+const filterType = ref('month'); // Default to month
+
+const filterLabel = computed(() => {
+    switch (filterType.value) {
+        case 'day': return '1 Day';
+        case 'month': return '30 Days';
+        case 'year': return '1 Year';
+        default: return 'Custom Range';
+    }
+});
 
 const formatDate = (date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
@@ -348,17 +405,28 @@ const formatDate = (date) => {
     return `${month}/${day}/${year}`;
 };
 
-const setDateRange = () => {
+const applyDateFilter = () => {
     const currentDate = new Date();
-    const pastDate = new Date();
-    pastDate.setDate(currentDate.getDate() - 30);
+    let pastDate = new Date();
+
+    if (filterType.value === 'day') {
+        pastDate.setDate(currentDate.getDate() - 1);
+    } else if (filterType.value === 'month') {
+        pastDate.setDate(currentDate.getDate() - 30);
+    } else if (filterType.value === 'year') {
+        pastDate.setFullYear(currentDate.getFullYear() - 1);
+    }
 
     startDate.value = formatDate(pastDate);
     endDate.value = formatDate(currentDate);
+    fetchFinancesByDate(); // Trigger data fetch for the selected range
 };
 
+// Reset totals and fetch new data
 const fetchFinancesByDate = async () => {
-    setDateRange(); // Set the start and end dates before fetching
+    totalIncome.value = 0;
+    totalExpenses.value = 0;
+    totalOthers.value = 0;
 
     try {
         const response = await axios.get('/api/finance_by_date', {
@@ -368,17 +436,16 @@ const fetchFinancesByDate = async () => {
             }
         });
         financesByDate.value = response.data;
-        isDateFiltered.value = true; // Set flag to true after fetching by date
 
         for (const finance of financesByDate.value) {
             if (finance.category === 'income') {
                 totalIncome.value += roundToTwoDecimals(finance.amount);
-            }
-            if (finance.category === 'expense') {
+            } else if (finance.category === 'expense') {
                 totalExpenses.value += roundToTwoDecimals(finance.amount);
+            } else {
+                totalOthers.value += roundToTwoDecimals(finance.amount);
             }
         }
-
         console.log("Finances by date:", financesByDate);
         console.log("Total Income:", totalIncome.value);
         console.log("Total Expenses:", totalExpenses.value);
@@ -387,6 +454,7 @@ const fetchFinancesByDate = async () => {
         console.error("Error fetching finances by date:", error);
     }
 };
+
         const business_Facebook = ref('');
         const business_X = ref('');
         const business_Instagram = ref('');
@@ -449,6 +517,13 @@ function validateAndFormatUrl(url, baseUrl) {
     console.warn("Invalid URL format provided:", url);
     return '';
 }
+const totalProducts = computed(() => {
+    return products.value.length;
+}); 
+
+const totalSold = computed(() => {
+    return products.value.reduce((sum, product) => sum + product.sold, 0);
+});
 
 fetchsocialmediaLinks();
 fetchFinancesByDate();
