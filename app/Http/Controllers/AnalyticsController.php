@@ -78,6 +78,7 @@ class AnalyticsController extends Controller
                 new Metric(['name' => 'screenPageViews']), 
                 new Metric(['name' => 'totalUsers']), 
                 new Metric(['name' => 'engagementRate']),
+                new Metric(['name' => 'bounceRate']),
             ],
             'dimensions' => $dimensions,
         ]);
@@ -92,6 +93,7 @@ class AnalyticsController extends Controller
                 'views' => 0,
                 'visitors' => 0,
                 'engagementRate' => 0,
+                'bounceRate' => 0,
             ];
         }
 
@@ -103,16 +105,46 @@ class AnalyticsController extends Controller
                 'views' => $row->getMetricValues()[0]->getValue(),
                 'visitors' => $row->getMetricValues()[1]->getValue(),
                 'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
+                'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
             ];
         }
 
         // Convert to an array to pass to the frontend
         $dailyData = array_values($dateRangeArray);
 
+        // Request 3: Breakdown of returning vs. new users
+        $userTypeResponse = $this->analyticsDataClient->runReport([
+            'property' => 'properties/' . $propertyId,
+            'dateRanges' => [$dateRange],
+            'dimensions' => [
+                new Dimension(['name' => 'newVsReturning']),
+            ],
+            'metrics' => [
+                new Metric(['name' => 'totalUsers']),
+            ],
+        ]);
+
+        $userTypes = [
+            'new' => 0,
+            'returning' => 0,
+        ];
+
+        foreach ($userTypeResponse->getRows() as $row) {
+            $userType = $row->getDimensionValues()[0]->getValue();
+            $userCount = $row->getMetricValues()[0]->getValue();
+
+            if ($userType === 'new') {
+                $userTypes['new'] = $userCount;
+            } elseif ($userType === 'returning') {
+                $userTypes['returning'] = $userCount;
+            }
+        }
+
         // Include both total metrics and daily data in the response
         return response()->json([
             'metricsData' => $metricsData,
             'dailyData' => $dailyData,
+            'userTypes' => $userTypes,
         ]);
     }
 }
