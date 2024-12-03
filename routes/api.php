@@ -8,6 +8,9 @@ use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoiceAdditionalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductNotificationSettingsController;
+use App\Http\Controllers\ProductColumnTableVisibilityController;
+use App\Http\Controllers\ProductPackageController;
+use App\Http\Controllers\ProductPackageNameController;
 use App\Models\InvoiceAdditional;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -44,6 +47,25 @@ Route::get('/all-invoices', function(){
 });
 
 
+
+Route::get('productPackageName', [ProductPackageNameController::class, 'show']);  
+Route::post('productPackageName', [ProductPackageNameController::class, 'savePackageName']);  
+
+
+Route::delete('productPackageName/{id}', [ProductPackageNameController::class, 'deletePackage']);  
+Route::post('productPackageName/{id}', [ProductPackageNameController::class, 'updatePackageName']);  
+Route::get('productPackageName/{id}', [ProductPackageNameController::class, 'showPackageName']);  
+
+Route::get('productPackage', [ProductPackageController::class, 'show']);  
+Route::post('productPackage', [ProductPackageController::class, 'savePackage']);  
+
+Route::get('productPackage/{id}', [ProductPackageController::class, 'showProductPackage']);  
+Route::delete('productPackage/{id}', [ProductPackageController::class, 'deleteProductPackage']);  
+Route::post('productPackage/{id}', [ProductPackageController::class, 'updateProductPackage']);  
+
+
+Route::get('productVis', [ProductColumnTableVisibilityController::class, 'show']);  
+Route::put('productVis', [ProductColumnTableVisibilityController::class, 'updateVisibility']);
 
 Route::get('/productNotif', [ProductNotificationSettingsController::class, 'show']);
 Route::put('/productNotif', [ProductNotificationSettingsController::class, 'updateCounts']);
@@ -174,4 +196,6 @@ Route::get('products/print/pdf', [FinanceController::class, 'printProductsPdf'])
 Route::post('products/import/xlsx', [ProductController::class, 'importProductsXlsx']);
 
 Route::get('products/print/export/xlsx', [ProductController::class, 'exportProductsXslx']);
+
+Route::get('products/print/export/template_xslx', [ProductController::class, 'downloadTemplate']);
 
