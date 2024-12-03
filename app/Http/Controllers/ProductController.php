@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\ExportProduct;
 use App\Imports\ImportProduct;
+use App\Exports\ExportProductTemplate;
 use App\Models\Product;
 use App\Exports\ProductsExport;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class ProductController extends Controller
         // Find the product by its ID and select only the stock field
         $product = Product::find($id);
 
-        // Check if the product exists
+        // Check if the     product exists
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
@@ -209,6 +210,10 @@ class ProductController extends Controller
         return Excel::download(new ExportProduct, 'products.xlsx');
     }
 
+    public function downloadTemplate(Request $request)
+    {
+        return Excel::download(new ExportProductTemplate, 'products_template.xlsx');
+    }
 
 
     public function importProductsXlsx(Request $request)
