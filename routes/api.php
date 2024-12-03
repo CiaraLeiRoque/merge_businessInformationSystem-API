@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatbotController;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\SubscriberController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -83,6 +84,8 @@ Route::post('/chatbot-response', [ChatbotController::class, 'store']);
 Route::put('/chatbot-response/{id}', [ChatbotController::class, 'update']);
 Route::delete('/chatbot-response/{id}', [ChatbotController::class, 'destroy']);
 
+Route::post('/subscribe', [SubscriberController::class, 'store']);
+Route::get('/verify-subscription', [SubscriberController::class, 'verify'])->name('verify-subscription');
 
 
 Route::get('/featured-products', [ProductController::class, 'featured_products'])->name('featured_products');

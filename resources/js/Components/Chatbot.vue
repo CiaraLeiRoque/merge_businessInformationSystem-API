@@ -1,17 +1,13 @@
 <template>
   <div id="chatbot">
-    <!-- The chat circle - only display when chatbotImageUrl is loaded and chat is not expanded -->
-    <div 
-      v-if="chatbotImageUrl && !chatExpanded" 
-      @click="expandChat" 
-      class="chat-circle"
-    >
-      <!-- Dynamically bind the image source -->
-      <img 
-        :src="chatbotImageUrl" 
-        alt="Chat" 
-        class="chat-icon"
-      />  
+    <!-- The chat circle and "Chat with us!" bubble -->
+    <div v-if="chatbotImageUrl && !chatExpanded" class="chat-container">
+      <div @click="expandChat" class="chat-circle">
+        <img :src="chatbotImageUrl" alt="Chat" class="chat-icon" />
+      </div>
+      <transition name="fade">
+        <div v-if="showBubble" class="chat-bubble">Chat with us!</div>
+      </transition>
     </div>
 
     <!-- Expanded chat window -->
@@ -24,18 +20,16 @@
       <div class="chat-body">
         <div ref="messages" class="messages">
           <transition-group name="message" tag="div">
-            <div 
-              v-for="message in messages" 
-              :key="message.id" 
+            <div
+              v-for="message in messages"
+              :key="message.id"
               :class="['message', message.sender]"
             >
-              <!-- Use v-html here to render HTML in the message -->
               <div v-html="message.text"></div>
-
               <div v-if="message.buttons && message.sender === 'bot'" class="chat-buttons">
-                <button 
-                  v-for="button in message.buttons" 
-                  :key="button.id" 
+                <button
+                  v-for="button in message.buttons"
+                  :key="button.id"
                   @click="handleButtonClick(button)"
                   :disabled="buttonsDisabled"
                 >
@@ -68,12 +62,17 @@ export default {
       businessName: '',
       chatInitialized: false,
       chatbotImageUrl: '',
-      buttonsDisabled: false, // New property to disable buttons
+      buttonsDisabled: false, 
+      showBubble: true, 
+      bubbleTimer: null, 
     };
   },
   mounted() {
-    // Preload the business data and image when the component is mounted
     this.preloadBusinessData();
+    this.startBubbleAnimation();
+  },
+  beforeUnmount() {
+    clearInterval(this.bubbleTimer);
   },
     methods: {
     expandChat() {
@@ -122,7 +121,6 @@ export default {
         const chatbotResponse = await axios.get('/api/chatbot-response'); // Example endpoint
         if (chatbotResponse.data && chatbotResponse.data.length > 0) {
           const firstResponse = chatbotResponse.data[0]; // Get the first chatbot response
-
           this.workingHours = firstResponse?.chabot_BWHours || 'Unavailable';
           this.productDescription = firstResponse?.chabot_BPDescription || 'description unavailable';
           this.lazada = firstResponse?.chabot_Lazada || 'Lazada Link unavailable';
@@ -145,6 +143,15 @@ export default {
       } catch (error) {
         console.error("Error fetching business or chatbot response data:", error);
       }
+    },
+    startBubbleAnimation() {
+      // Show bubble for 3 seconds, hide for 15 seconds, and repeat
+      this.bubbleTimer = setInterval(() => {
+        this.showBubble = true;
+        setTimeout(() => {
+          this.showBubble = false;
+        }, 3000); // Hide after 3 seconds
+      }, 18000); // 3 seconds bubble + 15 seconds delay
     },
     async initializeChat() {
       if (!this.chatbotImageUrl) {
@@ -450,10 +457,20 @@ export default {
     },
     formatMessage(messageText) {
     return messageText.replace(/\n/g, '<br>'); 
-  }
+  },
 
-  } 
+  startBubbleAnimation() {
+      // Show bubble for 3 seconds, hide it for 15 seconds, and repeat
+      this.bubbleTimer = setInterval(() => {
+        this.showBubble = true;
+        setTimeout(() => {
+          this.showBubble = false;
+        }, 2000); 
+      }, 15000); 
+    },
+  },
 };
+
 </script>
 
 <style scoped>
@@ -474,6 +491,35 @@ export default {
   justify-content: center;
   cursor: pointer;
   overflow: hidden; 
+}
+/* Chat bubble */
+.chat-container {
+  position: relative;
+}
+
+.chat-bubble {
+  position: absolute;
+  left: -120px;
+  top: 30%;
+  background-color: #20242c;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .chat-icon {
@@ -496,7 +542,7 @@ export default {
 }
 
 .chat-header {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
   padding: 5px 10px; 
   display: flex;
@@ -518,7 +564,7 @@ export default {
 }
 
 .chat-header button:hover {
-  color: #ccc; /* Add hover effect if desired */
+  color: white; /* Add hover effect if desired */
 }
 
 
@@ -553,12 +599,13 @@ export default {
 }
 
 .message.bot {
-  background-color: #f1f1f1;
+  background-color: hsl(0, 100%, 100%);
+  border: 1px solid #20242c;
   text-align: left;
 }
 
 .message.user {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
   text-align: right;
 }
@@ -573,8 +620,8 @@ export default {
 .chat-button {
   padding: 10px 20px; 
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: #20242c;
+  border: 1px solid #20242c;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
@@ -585,15 +632,15 @@ export default {
 }
 
 .chat-button:hover {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
 }
 
 .chat-buttons button {
   padding: 10px 20px; 
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: #20242c;
+  border: 1px solid #20242c;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
@@ -603,7 +650,7 @@ export default {
 
 
 .chat-buttons button:hover {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
 }
 
@@ -615,7 +662,7 @@ export default {
 .dot {
   width: 6px;
   height: 6px;
-  background-color: #007bff;
+  background-color: #20242c;
   border-radius: 50%;
   animation: blink 1s infinite alternate;
 }
