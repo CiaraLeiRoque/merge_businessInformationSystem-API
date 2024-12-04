@@ -1102,13 +1102,14 @@ const updateTotalProductAmount = (index) => {
   newInvoiceComputation.value.Less_SC_PWD_Discount_Percent = 0;
 };
 
-const newPackage = reactive({
+const newPackage = ref({
     product_package_id: '',
     product_package_name: '',
+    product_package_description: ''
 });
 
 watch(
-      () => newPackage.product_package_name, // Getter function for the watched property
+      () => newPackage.value.product_package_name, // Getter function for the watched property
       (newValue, oldValue) => {
         console.log('New Value:', newValue);
         console.log('Old Value:', oldValue);
@@ -1120,15 +1121,17 @@ let responsePackageId = ref(0);
 const addProductPackage = async () => {
     try {
         
-        if(newPackage.product_package_name && textItemFields){
+        if(newPackage.value.product_package_name && textItemFields){
             console.log('IT WILL ADD THE PACKAGE TITE TITE TITE');
 
             try {
                 const formData = new FormData();
-                formData.append('product_package_name', newPackage.product_package_name);
+                formData.append('image', newPackage.value.image);
+                formData.append('product_package_name', newPackage.value.product_package_name);
+                formData.append('product_package_description', newPackage.value.product_package_description)
 
                 console.log([...formData.entries()]); 
-                console.log('NEW PACKAGE PRODUCT NAME: ', newPackage.product_package_name);
+                console.log('NEW PACKAGE PRODUCT NAME: ', newPackage.value.product_package_name);
 
                 // Make the POST request
                 const response = await axios.post('/api/productPackageName', formData, {
@@ -1244,6 +1247,7 @@ const fetchPackageData = async () => {
 
 const groupedPackages = computed(() => {
   const grouped = {}
+  console.log('UNGROUPED PACKAGES: ', packageData.value)
   packageData.value.forEach(item => {
     const packageName = item.package_name?.product_package_name || 'No Package Name'
     if (!grouped[packageName]) {
@@ -1266,6 +1270,7 @@ const showDeletePackageModal = ref(false)
 const openDeletePackageModal = (id) => {
   financeToDelete= id
   showDeletePackageModal.value = true
+  console.log('PACKAGE ID TO DELETE: ', financeToDelete)
 }
 
 const closeDeletePackageModal = () => {
@@ -1311,12 +1316,19 @@ watch(
 const editPackage = async (packageItem) => {
     try {
         // Assuming `invoice_id` is passed when calling this method
-        const response = await axios.get(`/api/productPackageName/${packageItem.package_name.id}`);
+        const response = await axios.get(`/api/productPackageName/${packageItem.product_package_id}`);
         updatePackage.value = response.data;
         showEditPackageModal.value = true;
 
+        console.log('PACKAGE IMAGE: ', updatePackage.value.image)
+                
+        editImagePreviewUrlPackage.value = updatePackage.value.image ? `/storage/${updatePackage.value.image}` : null;
+            const fileInput = document.getElementById('edit_image_package');
+                if (fileInput) {
+                    fileInput.value = ''; 
+                }
 
-        const responseItems = await axios.get(`api/productPackage/${packageItem.package_name.id}`);
+        const responseItems = await axios.get(`api/productPackage/${packageItem.product_package_id}`);
         const responseProducts = await axios.get(`api/products`);
         
         console.log('UPDATING PACKAGE: ', responseItems.data)
@@ -1346,8 +1358,13 @@ const updateProductPackage = async () => {
 
     try {
         // Create a FormData object and append the necessary fields
+        
         const formData = new FormData();
             formData.append('product_package_name', updatePackage.value.product_package_name);
+            formData.append('product_package_description', updatePackage.value.product_package_description);
+            if (updatePackage.value.image instanceof File) {
+            formData.append('image', updatePackage.value.image);
+            }
         // Use the invoice_system_id from editInvoice for the request URL
         const response = await axios.post(`/api/productPackageName/${updatePackage.value.id}`, formData, {
             headers: {
@@ -1537,6 +1554,62 @@ watch(
 );
 
 
+
+const imagePreviewUrlPackage = ref(null); 
+const editImagePreviewUrlPackage = ref(null);
+
+const handleImageUploadPackage = (event) => {
+    const file = event.target.files[0];
+    const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file) {
+        // Check file type
+        if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+            alert('Accepted file format is jpeg, jpg, or png.');
+            event.target.value = ''; // Clear the file input
+            newPackage.value.image = null; // Reset the image value
+            return;
+        }
+
+        // Check file size
+        if (file.size > maxFileSize) {
+            alert('The maximum file size for image is 5MB.');
+            event.target.value = ''; // Clear the file input
+            newPackage.value.image = null; // Reset the image value
+            return;
+        }
+
+        // If valid, set the image
+        newPackage.value.image = file;
+        imagePreviewUrlPackage.value = URL.createObjectURL(file);
+        console.log('NEWPACKAGE IMAGE FILE: ', newPackage.value.image);
+    }
+};
+
+const handleEditImageUploadPackage = (event) => {
+    const file = event.target.files[0];
+    const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file) {
+        // Check file type
+        if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
+            alert('Accepted file format is jpeg, jpg, or png.');
+            event.target.value = ''; // Clear the file input
+            updatePackage.value.image = null; // Reset the image value
+            return;
+        }
+
+        // Check file size
+        if (file.size > maxFileSize) {
+            alert('The maximum file size for image is 5MB.');
+            event.target.value = ''; // Clear the file input
+            updatePackage.value.image = null; // Reset the image value
+            return;
+        }
+
+        // If valid, set the image
+        updatePackage.value.image = file;
+        editImagePreviewUrlPackage.value = URL.createObjectURL(file);
+    }
+};
 
 
 </script>
@@ -1783,6 +1856,7 @@ watch(
 
 
                                         <!-- THIS IS FOR PRODUCT PACKAGES VISIBILITY -->
+                                        <th v-if="isPackageTableShowing" class="sticky top-0 px-6 py-3 text-white bg-gray-700">Image</th>
                                         <th v-if="isPackageTableShowing" class="sticky top-0 px-6 py-3 text-white bg-gray-700">Package Name</th>
                                         <th v-if="isPackageTableShowing" class="sticky top-0 px-6 py-3 text-white bg-gray-700">Products</th>
                                         <th v-if="isPackageTableShowing" class="sticky top-0 px-6 py-3 text-white bg-gray-700">Actions</th>
@@ -1793,31 +1867,36 @@ watch(
 
 
                                         <tr v-for="(packageItems, packageName) in groupedPackages" :key="packageName" v-if="isPackageTableShowing" class="border-y-2 border-slate-400 text-center align-middle justify-center items-center">
-                                            <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                                            {{ packageName }}
+                                            <td class="px-6 py-4 border-b flex items-center justify-center border-gray-200 dark:border-gray-700">
+                                                <img :src="'/storage/' + packageItems[0]?.package_name?.image" alt="" class="w-20 h-20 object-cover rounded"/>
+                                            </td>
+                                            <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700  ">
+                                                {{ packageName }}
                                             </td>
                                             <td class="overflow-auto h-20 px-6 py-4 border-b text-left border-gray-200 dark:border-gray-700">
-                                            <div v-for="(item, index) in packageItems" :key="item.id">
-                                                
-                                                <div class="flex">
-                                                    <div class="flex pl-32 text-left w-1/2">
-                                                        {{ item.product_name }} 
+                                                <div v-for="(item, index) in packageItems" :key="item.id" class="flex justify-center items-center">
+                                                    <div class="w-5/6 text-center">
+                                                        <div class="pl-44 flex items-center justify-center gap-8">
+                                                            <div class="flex items-end justify-end text-right w-1/2">
+                                                                {{ item.product_name }} 
+                                                            </div>
+                                                            
+                                                            <div class="flex items-start justify-start text-left w-1/2">
+                                                                x {{ item.product_quantity }}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    
-                                                    <div class="flex items-center justify-center text-center w-1/2">
-                                                        x {{ item.product_quantity }}
-                                                    </div>
+
+
+
+                                                    <hr v-if="index < packageItems.length - 1" class="my-2 border-gray-200 dark:border-gray-700">
                                                 </div>
-
-
-                                                <hr v-if="index < packageItems.length - 1" class="my-2 border-gray-200 dark:border-gray-700">
-                                            </div>
                                             </td>
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                                                 <button @click="editPackage(packageItems[0])" class="hover:bg-yellow-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-yellow-500 text-white px-2 py-1 rounded-full">
                                                     <font-awesome-icon icon="fa-solid fa-pen" size="sm"/>
                                                 </button>
-                                                <button @click="openDeletePackageModal(packageItems[0].id)" class="hover:bg-red-600 transition hover:scale-105 ease-in-out duration-150 bg-red-500 text-white px-2 py-1 rounded-full">
+                                                <button @click="openDeletePackageModal(packageItems[0].product_package_id)" class="hover:bg-red-600 transition hover:scale-105 ease-in-out duration-150 bg-red-500 text-white px-2 py-1 rounded-full">
                                                     <font-awesome-icon :icon="['fas', 'trash-can']" size="sm" />
                                                 </button>
                                             </td>
@@ -2049,16 +2128,15 @@ watch(
                 <h3 class="text-5xl font-semibold text-center mt-6 mb-5">Edit Package</h3>
                 
                 <div class="flex w-full justify-center items-center mb-4">
-                <div class="flex w-1/3 items-center justify-center">
-                    <span class="flex w-44">Package Name:</span>
+                    <div class="w-1/3 flex items-center justify-center">
+                        <span class="flex w-44">Package Name:</span>
                         <input
                             type="text"
-                            id="packageName"
+                            id="brand"
                             v-model="updatePackage.product_package_name"
-                            @input="handleInputChange"
-                            class="w-1/4 input-field text-xs p-1"
+                            class="input-field-package-name text-md p-1"
                         />
-                </div>
+                    </div>
                 </div>
 
                 <div class="px-12 mb-10">    
@@ -2168,6 +2246,63 @@ watch(
                     </div>
                 </form>
                 </div>
+
+
+                <!-- Description and Image Upload Section -->
+                <div class="flex items-start gap-6 px-12 mb-6">
+                <!-- Image Upload Section -->
+                <div class="w-1/6 flex flex-col items-start">
+                    <label class="text-sm font-medium block mb-1 text-gray-700">
+                        Image (jpg, jpeg, png) 
+                        <span class="text-red-500">*</span>
+                        <span class="text-[12px] text-gray-500 block">
+                            Max size: 5MB
+                        </span>
+                    </label>
+                    <div class="relative w-32 h-32 border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
+                        <input
+                            type="file"
+                            id="edit_image_package"
+                            @change="handleEditImageUploadPackage"
+                            class="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            v-if="!editImagePreviewUrlPackage"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 4v16m8-8H4"
+                            />
+                        </svg>
+                        <img
+                            v-if="editImagePreviewUrlPackage"
+                            :src="editImagePreviewUrlPackage"
+                            class="absolute inset-0 w-full h-full object-cover rounded-md"
+                        />
+                    </div>
+                </div>
+
+                <!-- Description Section -->
+                <div class="w-5/6">
+                    <label for="description" class="text-md font-medium text-gray-700">
+                    Package Description:
+                    </label>
+                    <textarea
+                    id="description"
+                    v-model="updatePackage.product_package_description"
+                    class="w-full border border-gray-300 rounded-md p-2 text-md mt-2"
+                    placeholder="Enter package description..."
+                    ></textarea>
+                </div>
+                </div>
+
                 <div class="flex justify-center mt-4 pb-6 gap-4">
                 <button @click="showEditPackageModal = false" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
                 <button @click.prevent="updateProductPackage" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">Update Package</button>
@@ -2176,139 +2311,234 @@ watch(
             </div>
         </transition>
 
-        <transition name="modal-fade" >
-            <div v-if="showAddPackageModal" @click="showAddPackageModal = false" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-                    <div @click.stop class="px-5 bg-white p-4 rounded-lg shadow-lg w-full max-w-7xl relative">
-                    <h3 class="text-5xl font-semibold text-center mt-6 mb-5">Add a Package</h3>
-                            
-                        <div class="flex w-full justify-center items-center mb-4">
-                            <div class="flex w-1/3 items-center justify-center">
-                                <span class="flex w-44">Package Name:</span> <input type="text" id="brand" v-model="newPackage.product_package_name" class="w-1/4 input-field text-xs p-1"/>
-                            </div>
-                        </div>
+        <transition name="modal-fade">
+        <div
+            v-if="showAddPackageModal"
+            @click="showAddPackageModal = false"
+            class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50"
+        >
+            <div
+            @click.stop
+            class="px-5 bg-white p-4 rounded-lg shadow-lg w-full max-w-7xl relative"
+            >
+            <h3 class="text-5xl font-semibold text-center mt-6 mb-5">
+                Add a Package
+            </h3>
 
-
-                    <div class="px-12 mb-10">    
-                        <form @submit.prevent="addProductPackage" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg overflow-hidden" style="max-height: 430px;">
-                            <div class="overflow-auto" style="max-height: 400px;">
-                            <table class="min-w-full bg-white border-gray-700">
-                            <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Product</th>
-                                <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Amount</th>
-                                <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
-                                <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
-                                <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
-                                <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Actions</th>
-
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(field, index) in textItemFields" :key="index" :class="index % 2 === 0 ? 'bg-blue-900 bg-opacity-5' : 'bg-white'" class="items-center text-center">
-                                <td class="px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
-                                    <div class="flex items-center justify-center relative">
-                                    <div class="flex flex-shrink-0 items-center">
-                                        <div v-if="field.image">
-                                        <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" alt="Product image" />
-                                        </div>      
-                                        <div v-else>
-                                        <FontAwesomeIcon :icon="['fas', 'image']" class="w-5 h-5 object-cover" />
-                                        </div>
-                                    </div>
-                                    <div class="ml-4 relative w-full">
-                                        <input 
-                                        class="w-44" 
-                                        @input="field.isSearching = true" 
-                                        type="text" 
-                                        v-model="field.searchProductQuery" 
-                                        placeholder="Search for a Product" 
-                                        />
-                                        
-                                        <ul
-                                        v-if="field.searchProductQuery && field.isSearching"
-                                        class="absolute left-0 mt-1 w-full bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200 z-50"
-                                        >
-                                        <li
-                                            v-for="product in filteredProductsForPackage(field.searchProductQuery)"
-                                            :key="product.id"
-                                            @click="selectProduct(product, index)"
-                                            class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                                        >
-                                            <div class="flex-shrink-0">
-                                            <img
-                                                :src="'/storage/' + product.image"
-                                                :alt="product.name"
-                                                class="w-12 h-12 object-cover rounded-md"
-                                            />
-                                            </div>
-                                            <div class="ml-4 flex-grow">
-                                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                                            <p class="text-sm text-gray-500">{{ product.price }}</p>
-                                            </div>
-                                        </li>
-                                        </ul>
-                                    </div>
-                                    </div>
-                                </td>
-
-                                <td class="pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
-                                    <div class="z-10 flex items-center justify-center">
-                                    <div class="z-10 -ml-4 flex items-center justify-between">
-                                        <span class="z-10 -ml-20 w-24 text-right text-xs text-gray-400">
-                                        {{ field.on_sale === 'yes' ? 'On' : 'Not' }}<br>
-                                        {{ field.on_sale === 'yes' ? 'Sale' : 'On Sale' }}
-                                        </span>
-                                        <label class="z-10 switch px-3">
-                                        <input class="z-10" disabled :disabled="!field.areFieldsEnabled" type="checkbox" v-model="field.on_sale" true-value="yes" false-value="no" />
-                                        <span class="z-10 slider round"></span>
-                                        </label>
-                                    </div>
-                                    <input disabled class="no-spinner w-32" type="number" v-model="field.amount" placeholder="Amount" />
-                                    </div>
-                                </td>
-
-                                <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                    <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
-                                </td>
-
-                                <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                    <input disabled :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" v-model="field.stock" placeholder="Stock." />
-                                </td>
-
-                                <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                    <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.total_amount" placeholder="Total Amount" />
-                                </td>
-
-                                <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                    <button type="button" class="bg-red-500 text-white p-3 rounded-full" @click="removeItemTextField(index)">
-                                    <FontAwesomeIcon icon="fa-solid fa-trash-can" />
-                                    </button>
-                                </td>
-                                </tr>
-
-                                <tr>
-                                <td colspan="6">
-                                    <div class="flex items-center justify-center my-6">
-                                    <button type="button" @click="addItemTextField" class="flex items-center justify-center">
-                                        <FontAwesomeIcon :icon="['fas', 'plus']" class="w-6 h-6 mr-2" />
-                                        Click to add New Field
-                                    </button>
-                                    </div>
-                                </td>
-                                </tr>
-                            </tbody>
-                            </table>
-                        </div>
-                        </form>
-
-                    </div>
-                    <div class="flex justify-center mt-4 pb-6 gap-4">
-                            <button @click="showAddPackageModal = false" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
-                            <button @click.prevent="addProductPackage()" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">Save Package</button>
-                    </div>
+            <!-- Package Name -->
+            <div class="flex w-full items-center justify-center mb-6">
+                <!-- Package Name -->
+                <div class="w-1/3 flex items-center justify-center">
+                <span class="flex w-44">Package Name:</span>
+                <input
+                    type="text"
+                    id="brand"
+                    v-model="newPackage.product_package_name"
+                    class="input-field-package-name text-md p-1"
+                />
                 </div>
             </div>
+
+            <!-- Table Section -->
+            <div class="px-12 mb-6">
+                <form
+                @submit.prevent="addProductPackage"
+                class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg overflow-hidden"
+                style="max-height: 430px;"
+                >
+                <div class="overflow-auto" style="max-height: 400px;">
+                                    <table class="min-w-full bg-white border-gray-700">
+                                    <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                                        <tr>
+                                        <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Product</th>
+                                        <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                        <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
+                                        <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
+                                        <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
+                                        <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Actions</th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(field, index) in textItemFields" :key="index" :class="index % 2 === 0 ? 'bg-blue-900 bg-opacity-5' : 'bg-white'" class="items-center text-center">
+                                        <td class="px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
+                                            <div class="flex items-center justify-center relative">
+                                            <div class="flex flex-shrink-0 items-center">
+                                                <div v-if="field.image">
+                                                <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" alt="Product image" />
+                                                </div>      
+                                                <div v-else>
+                                                <FontAwesomeIcon :icon="['fas', 'image']" class="w-5 h-5 object-cover" />
+                                                </div>
+                                            </div>
+                                            <div class="ml-4 relative w-full">
+                                                <input 
+                                                class="w-44" 
+                                                @input="field.isSearching = true" 
+                                                type="text" 
+                                                v-model="field.searchProductQuery" 
+                                                placeholder="Search for a Product" 
+                                                />
+                                                
+                                                <ul
+                                                v-if="field.searchProductQuery && field.isSearching"
+                                                class="absolute left-0 mt-1 w-full bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200 z-50"
+                                                >
+                                                <li
+                                                    v-for="product in filteredProductsForPackage(field.searchProductQuery)"
+                                                    :key="product.id"
+                                                    @click="selectProduct(product, index)"
+                                                    class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                                                >
+                                                    <div class="flex-shrink-0">
+                                                    <img
+                                                        :src="'/storage/' + product.image"
+                                                        :alt="product.name"
+                                                        class="w-12 h-12 object-cover rounded-md"
+                                                    />
+                                                    </div>
+                                                    <div class="ml-4 flex-grow">
+                                                    <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                                                    <p class="text-sm text-gray-500">{{ product.price }}</p>
+                                                    </div>
+                                                </li>
+                                                </ul>
+                                            </div>
+                                            </div>
+                                        </td>
+
+                                        <td class="pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
+                                            <div class="z-10 flex items-center justify-center">
+                                            <div class="z-10 -ml-4 flex items-center justify-between">
+                                                <span class="z-10 -ml-20 w-24 text-right text-xs text-gray-400">
+                                                {{ field.on_sale === 'yes' ? 'On' : 'Not' }}<br>
+                                                {{ field.on_sale === 'yes' ? 'Sale' : 'On Sale' }}
+                                                </span>
+                                                <label class="z-10 switch px-3">
+                                                <input class="z-10" disabled :disabled="!field.areFieldsEnabled" type="checkbox" v-model="field.on_sale" true-value="yes" false-value="no" />
+                                                <span class="z-10 slider round"></span>
+                                                </label>
+                                            </div>
+                                            <input disabled class="no-spinner w-32" type="number" v-model="field.amount" placeholder="Amount" />
+                                            </div>
+                                        </td>
+
+                                        <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
+                                            <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
+                                        </td>
+
+                                        <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
+                                            <input disabled :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" v-model="field.stock" placeholder="Stock." />
+                                        </td>
+
+                                        <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
+                                            <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.total_amount" placeholder="Total Amount" />
+                                        </td>
+
+                                        <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
+                                            <button type="button" class="bg-red-500 text-white p-3 rounded-full" @click="removeItemTextField(index)">
+                                            <FontAwesomeIcon icon="fa-solid fa-trash-can" />
+                                            </button>
+                                        </td>
+                                        </tr>
+
+                                        <tr>
+                                        <td colspan="6">
+                                            <div class="flex items-center justify-center my-6">
+                                            <button type="button" @click="addItemTextField" class="flex items-center justify-center">
+                                                <FontAwesomeIcon :icon="['fas', 'plus']" class="w-6 h-6 mr-2" />
+                                                Click to add New Field
+                                            </button>
+                                            </div>
+                                        </td>
+                                        </tr>
+                                    </tbody>
+                                    </table>
+                                </div>
+                </form>
+            </div>
+
+        <!-- Description and Image Upload Section -->
+        <div class="flex items-start gap-6 px-12 mb-6">
+        <!-- Image Upload Section -->
+        <div class="w-1/6 flex flex-col items-start">
+            <label
+            class="text-sm font-medium block mb-1 text-gray-700"
+            >
+            Image (jpg, jpeg, png) 
+            <span class="text-red-500">*</span>
+            <span class="text-[12px] text-gray-500 block">
+                Max size: 5MB
+            </span>
+            </label>
+            <div
+            class="relative w-32 h-32 border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer"
+            >
+            <input
+                type="file"
+                id="image"
+                @change="handleImageUploadPackage"
+                class="absolute inset-0 opacity-0 cursor-pointer"
+            />
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+                />
+            </svg>
+            <img
+                v-if="imagePreviewUrlPackage"
+                :src="imagePreviewUrlPackage"
+                class="absolute inset-0 w-full h-full object-cover rounded-md"
+            />
+            </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="w-5/6">
+            <label for="description" class="text-md font-medium text-gray-700">
+            Package Description:
+            </label>
+            <textarea
+            id="description"
+            v-model="newPackage.product_package_description"
+            class="w-full border border-gray-300 rounded-md p-2 text-md mt-2"
+            placeholder="Enter package description..."
+            ></textarea>
+        </div>
+        </div>
+
+
+            <!-- Buttons -->
+            <div class="flex justify-center mt-4 pb-6 gap-4">
+                <button
+                @click="showAddPackageModal = false"
+                type="button" 
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:scale-105 duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                Cancel
+                </button>
+                <button
+                @click.prevent="addProductPackage"
+                class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded"
+                >
+                Save Package
+                </button>
+            </div>
+            </div>
+        </div>
         </transition>
+
+
+
 
         <transition name="modal-fade" >
             <div v-show="showDeleteModal" @click="closeDeleteModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -2957,6 +3187,15 @@ watch(
 .input-field {
     width: 100%;
     padding: 0.4rem 0.6rem;
+    border: 1px solid #CBD5E0;
+    border-bottom-right-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.input-field-package-name {
+    width: 450px;
     border: 1px solid #CBD5E0;
     border-bottom-right-radius: 0.375rem;
     border-bottom-left-radius: 0.375rem;

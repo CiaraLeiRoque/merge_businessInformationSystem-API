@@ -54,18 +54,22 @@ class ProductPackageNameController extends Controller
             Log::info('Incoming UPDATE PACKAGE ID:', $request->all());
 
             // Validate the request data
-            $request->validate([
+            $validated = $request->validate([
                 'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120',
                 'product_package_name' => 'nullable|string|max:255',
                 'product_package_description' => ''
             ]);
 
             // Update the product package name
-            $productPackage->update([
-                'image' => $request->input('image'),
-                'product_package_name' => $request->input('product_package_name'),
-                'product_package_description' => $request->input('product_package_description'),
-            ]);
+
+            $productPackage->update($validated);
+    
+            if ($request->hasFile('image')) {
+                // Handle image upload
+                $imagePath = $request->file('image')->store('products', 'public');
+                $productPackage->image = $imagePath;
+                $productPackage->save();
+            }
 
             return response()->json([
                 'success' => true,
@@ -102,26 +106,33 @@ class ProductPackageNameController extends Controller
             Log::info('Incoming request data:', $request->all());
 
             // Validate the request (no need to validate product_package_id since it's auto-incremented)
-            $validatedData = $request->validate([                
+            $request->validate([                
                 'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120',
                 'product_package_name' => 'nullable|string|max:255',
                 'product_package_description' => ''
             ]);
 
-            // Create the product package (product_package_id will be auto-incremented by the database)
-            $product_package = ProductPackageName::create([
-                
-                'image' => $request->image,
-                'product_package_name' => $request->product_package_name,
-                'product_package_description' => $request->product_package_description,
-                
-            ]);
+            
+            // // Create the product package (product_package_id will be auto-incremented by the database)
+            // $product_package = ProductPackageName::create([
+            //     'product_package_name' => $request->product_package_name,
+            //     'product_package_description' => $request->product_package_description,
+            // ]);
+
+            $productPackageName = new ProductPackageName($request->except('image'));
+
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('products', 'public');
+                $productPackageName->image = $path;
+            }
+
+            $productPackageName->save();
 
             // Log the created product package
-            Log::info('New product package created:', $product_package->toArray());
+            Log::info('New product package created:', $productPackageName->toArray());
 
             // Return the created product package, including the auto-incremented product_package_id
-            return response()->json($product_package, 201);
+            return response()->json($productPackageName, 201);
         } catch (Exception $e) {
             Log::error('Error saving product package name:', ['message' => $e->getMessage()]);
             return response()->json([

@@ -187,6 +187,7 @@ async function getWebsiteInfo(){
 
         
         feature_toggle.value = getWebsiteInfo1.data.featured_section;
+        package_toggle.value = getWebsiteInfo1.data.featured_section;
         onSale_toggle.value = getWebsiteInfo1.data.onSale_section;
         textAreas.about_us1.value = getWebsiteInfo1.data.about_us1;
         textAreas.about_us2.value = getWebsiteInfo1.data.about_us2;
@@ -375,27 +376,30 @@ const fetchPackageInfo = async () => {
 
 
 
+const package_toggle=ref('');
 
-const packageWidth = 420; // Card width
+// Package width and gap
+const packageWidth = 1200; // Updated width of each card
 const gap = 32; // Gap between cards
 const currentIndexCarousel = ref(0);
 const autoLoopInterval = ref(null);
 
+
 const nextSlide = () => {
   currentIndexCarousel.value =
-    (currentIndexCarousel.value + 1) % packageData.value.length; // Loop back to the first slide
+    (currentIndexCarousel.value + 1) % packageData.value.length;
 };
 
 const prevSlide = () => {
   currentIndexCarousel.value =
     (currentIndexCarousel.value - 1 + packageData.value.length) %
-    packageData.value.length; // Loop back to the last slide
+    packageData.value.length;
 };
 
 const startAutoLoop = () => {
   autoLoopInterval.value = setInterval(() => {
     nextSlide();
-  }, 3000); // Change slide every 3 seconds
+  }, 5000); // Change slide every 3 seconds
 };
 
 const stopAutoLoop = () => {
@@ -549,77 +553,91 @@ const stopAutoLoop = () => {
 
         <!-- section 3-->
         <!-- PRODUCT PACKAGES -->
-        <section v-if="feature_toggle === 'true'">
-          <div class="flex flex-col pb-44 items-center relative" style="background-color: #1A202C;">
-            <!-- Title Section -->
-            <div class="pt-28 flex flex-col items-center p-3 mb-20">
-              <p class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight">
-                Check Out Our Packages/Bundles!
-              </p>
-              <p class="mt-[10px] text-[24px] text-gray-300 text-center max-w-2xl">
-                Take a look at our product packages. Best prices <br> guaranteed everyday.
-              </p>
-            </div>
+        <section v-if="package_toggle === 'true'">
+    <div class="flex flex-col pb-36 items-center relative bg-gray-900">
+      <!-- Title Section -->
+      <div class="pt-28 flex flex-col items-center p-3">
+        <p class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight">
+          Check Out Our Packages/Bundles!
+        </p>
+        <p class="mt-[10px] -mb-[20px] text-[24px] text-gray-300 text-center max-w-2xl">
+          Take a look at our product packages. Best prices <br> guaranteed everyday.
+        </p>
+      </div>
 
-            <!-- Product Packages Carousel -->
-            <div class="carousel-container relative w-full max-w-7xl overflow-hidden">
-              <div
-                class="carousel-track flex gap-8 transition-transform duration-500 ease-in-out"
-                :style="{ transform: `translateX(calc(-${currentIndexCarousel} * (${packageWidth}px + ${gap}px) + 50% - ${packageWidth / 2}px))` }"
-              >
-                <div
-                  v-for="(packageItem, index) in packageData"
-                  :key="packageItem.id"
-                  class="carousel-item flex flex-col h-[400px] w-[420px] rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group"
-                >
-                  <!-- Header -->
-                  <div
-                    class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400"
-                  >
-                    <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
-                      {{ packageItem.product_package_name }}
-                    </p>
-                  </div>
-
-                  <!-- Centered List -->
-                  <div class="flex flex-grow flex-col items-center justify-center p-6">
-                    <ul class="space-y-4">
-                      <li
-                        v-for="product in packageItem.packages"
-                        :key="product.id"
-                        class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]"
-                      >
-                        <span
-                          class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"
-                        >
-                          <span class="w-3 h-3 rounded-full bg-gray-600"></span>
-                        </span>
-                        <span>
-                          {{ product.product_name }}
-                          <span class="text-gray-500">(x{{ product.product_quantity }})</span>
-                        </span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+      <!-- Product Packages Carousel -->
+      <div class="carousel-container relative w-full max-w-[3000px] overflow-hidden">
+        <div
+          class="carousel-track flex transition-transform duration-500 ease-in-out"
+          :style="{
+            transform: `translateX(calc(-${currentIndexCarousel} * (${packageWidth + gap}px) + 50% - ${packageWidth / 2}px))`,
+          }"
+        >
+          <div
+            v-for="(packageItem, index) in packageData"
+            :key="packageItem.id"
+            class="carousel-item flex pt-20 flex-col space-y-4"
+          >
+            <!-- Card -->
+            <div class="flex w-[1200px] h-[500px] rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group overflow-hidden">
+              <!-- Image Section -->
+              <div class="w-[500px] h-full bg-gray-200 flex items-center justify-center">
+                <img :src="'/storage/' + packageItem.image" alt="" class="w-[500px] h-[500px] object-cover rounded"/>
               </div>
 
-              <!-- Carousel Controls -->
-              <button
-                class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
-                @click="prevSlide"
-              >
-                ◀
-              </button>
-              <button
-                class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
-                @click="nextSlide"
-              >
-                ▶
-              </button>
+              <!-- Content Section -->
+              <div class="flex-1 flex flex-col">
+                <div class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10">
+                  <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
+                    {{ packageItem.product_package_name }}
+                  </p>
+                </div>
+
+                <div class="flex-grow overflow-auto flex items-center justify-center p-6">
+                  <ul class="space-y-4">
+                    <li
+                      v-for="product in packageItem.packages"
+                      :key="product.id"
+                      class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]"
+                    >
+                      <span
+                        class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"
+                      >
+                        <span class="w-3 h-3 rounded-full bg-gray-600"></span>
+                      </span>
+                      <span>
+                        {{ product.product_name }}
+                        <span class="text-gray-500">(x{{ product.product_quantity }})</span>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description Below Card -->
+            <div class="text-gray-300 text-center text-2xl px-4">
+              {{ packageItem.product_package_description }}
             </div>
           </div>
-        </section>
+        </div>
+
+        <!-- Carousel Controls -->
+        <button
+          class="ml-10 absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+          @click="prevSlide"
+        >
+        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-left']" />
+        </button>
+        <button
+          class="mr-10 absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+          @click="nextSlide"
+        >
+        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-right']" />
+        </button>
+      </div>
+    </div>
+  </section>
 
 
 
@@ -815,19 +833,24 @@ const stopAutoLoop = () => {
 }
 
 .carousel-container {
+  display: flex;
+  justify-content: center; /* Center the carousel */
+  align-items: center;
+  overflow: hidden; /* Hide overflow */
   position: relative;
-  overflow: hidden;
+  width: 100%; /* Full width */
 }
 
 .carousel-track {
   display: flex;
-  transition: transform 0.5s ease-in-out;
+  gap: 32px; /* Space between cards */
+  transition: transform 1s ease-in-out;
 }
 
 .carousel-item {
   flex-shrink: 0;
-  width: 420px; /* Ensure consistent card width */
-  scroll-snap-align: center;
+  width: 1200px; /* Updated card width */
+  scroll-snap-align: center; /* Snap active card to center */
 }
 
 .swiper {
