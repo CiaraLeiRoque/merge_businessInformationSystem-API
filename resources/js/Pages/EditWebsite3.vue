@@ -24,6 +24,7 @@ const textAreas = {
 const showSuccessAddModal = ref(false);
 const feature_toggle=ref('true');
 const onSale_toggle=ref('true');
+const package_toggle=ref('true');
 onMounted(()=>{
 
     getWebsiteInfo();
@@ -50,6 +51,7 @@ async function getWebsiteInfo(){
             params: {business_id: businessId}
         });
         feature_toggle.value=getWebsiteInfo.data.featured_section;
+        package_toggle.value=getWebsiteInfo.data.package_section;
         onSale_toggle.value=getWebsiteInfo.data.onSale_section;
 
         const featuredProducts = getProductsInfo.data.slice(0, 6);
@@ -100,6 +102,7 @@ async function save(){
         const formData = new FormData();
         formData.append('business_id', businessId);
         formData.append('featured_section', feature_toggle.value);
+        formData.append('package_section', package_toggle.value)
         formData.append('onSale_section', onSale_toggle.value);
 
         console.log("Form Data being sent:");
@@ -136,9 +139,9 @@ function goToEditWebsite4(){
         
         <div class="ml-1 bg-website-main flex flex-col min-h-screen relative">
 
-        <div class="ml-auto mt-6 mr-5 p-2 flex flex-col items-center w-[450px] h-1/2 bg-white border-white rounded-lg">
-            <div class="flex items-center justify-center space-x-2 w-full">
-            <p class=" text-lg text-black">Display Feature Section on Website</p>
+        <div class="ml-auto mt-6 mr-5 p-2 flex flex-col items-end w-[500px] h-1/2 bg-white border-white rounded-lg">
+            <div class="flex items-end justify-end space-x-2 w-full">
+            <p class=" text-lg text-black">Display Featured Products Section on Website</p>
             <label class="switch">
                 <input type="checkbox" v-model="feature_toggle" true-value="true" false-value="false" />
                 <span class="slider round"></span>
@@ -148,8 +151,19 @@ function goToEditWebsite4(){
             </span>
             </div>
 
-            <div class="flex items-center justify-center space-x-2 w-full">
-            <p class=" text-lg text-black">Display On Sale Section on Website</p>
+            <div class="flex items-end justify-end space-x-2 w-full">
+            <p class=" text-lg text-black">Display Product Packages Section on Website</p>
+            <label class="switch">
+                <input type="checkbox" v-model="package_toggle" true-value="true" false-value="false" />
+                <span class="slider round"></span>
+            </label>
+            <span class="text-base text-black">
+                {{ package_toggle === 'true' ? 'Show' : 'Don\'t Show' }}
+            </span>
+            </div>
+
+            <div class="flex items-end justify-end space-x-2 w-full">
+            <p class=" text-lg text-black">Display On Sale Products Section on Website</p>
             <label class="switch">
                 <input type="checkbox" v-model="onSale_toggle" true-value="true" false-value="false" />
                 <span class="slider round"></span>
@@ -170,6 +184,8 @@ function goToEditWebsite4(){
                     Best prices guaranteed everyday.
                 </p>
             </div>
+
+
             <transition name="modal-fade" >
             <div v-if="showSuccessAddModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
                 <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
@@ -229,6 +245,117 @@ function goToEditWebsite4(){
                 </div>
             </div>
         </div>
+
+        <section v-if="feature_toggle === 'true'">
+  <div
+    class="flex flex-col pb-44 items-center relative"
+    style="background-color: #1A202C;"
+  >
+    <!-- Title Section -->
+    <div class="pt-28 flex flex-col items-center p-3 mb-20">
+      <p
+        class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight"
+      >
+        Check Out Our Packages/Bundles!
+      </p>
+      <p class="mt-[10px] text-[24px] text-gray-300 text-center max-w-2xl">
+        Take a look at our product packages. Best prices <br> guaranteed everyday.
+      </p>
+    </div>
+
+    <!-- Product Packages -->
+    <div class="flex flex-wrap justify-start gap-8 w-full max-w-screen px-4">
+      <div class="flex flex-col w-[420px] h-auto rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl overflow-hidden group">
+        <!-- Header -->
+        <div class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400">
+          <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
+            Product Package Sample 1
+          </p>
+        </div>
+        <!-- Centered List -->
+        <div class="flex flex-grow flex-col items-center justify-center p-6">
+          <ul class="space-y-4">
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 1<span class="text-gray-500">(x9)</span></span>
+            </li>
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 2<span class="text-gray-500">(x9)</span></span>
+            </li>
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 3<span class="text-gray-500">(x9)</span></span>
+            </li>
+          </ul>
+        </div>
+        <!-- Footer -->
+        <p class="text-gray-800 text-[20px] h-[60px] text-center bg-gradient-to-r from-gray-200 to-gray-300 rounded-b-xl flex items-center justify-center sticky bottom-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400"></p>
+      </div>
+
+      <!-- Repeat above card for other packages -->
+      <div class="flex flex-col w-[420px] h-auto rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl overflow-hidden group">
+        <!-- Header -->
+        <div class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400">
+          <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
+            Product Package Sample 2
+          </p>
+        </div>
+        <!-- Centered List -->
+        <div class="flex flex-grow flex-col items-center justify-center p-6">
+          <ul class="space-y-4">
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 1<span class="text-gray-500">(x9)</span></span>
+            </li>
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 2<span class="text-gray-500">(x9)</span></span>
+            </li>
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 3<span class="text-gray-500">(x9)</span></span>
+            </li>
+          </ul>
+        </div>
+        <!-- Footer -->
+        <p class="text-gray-800 text-[20px] h-[60px] text-center bg-gradient-to-r from-gray-200 to-gray-300 rounded-b-xl flex items-center justify-center sticky bottom-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400"></p>
+      </div>
+
+            <!-- Repeat above card for other packages -->
+            <div class="flex flex-col w-[420px] h-auto rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl overflow-hidden group">
+        <!-- Header -->
+        <div class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400">
+          <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
+            Product Package Sample 3
+          </p>
+        </div>
+        <!-- Centered List -->
+        <div class="flex flex-grow flex-col items-center justify-center p-6">
+          <ul class="space-y-4">
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 1<span class="text-gray-500">(x9)</span></span>
+            </li>
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 2<span class="text-gray-500">(x9)</span></span> 
+            </li>
+            <li class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]">
+              <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"><span class="w-3 h-3 rounded-full bg-gray-600"></span></span>
+              <span>Product Name Sample 3<span class="text-gray-500">(x9)</span></span>
+            </li>
+          </ul>
+        </div>
+        <!-- Footer -->
+        <p class="text-gray-800 text-[20px] h-[60px] text-center bg-gradient-to-r from-gray-200 to-gray-300 rounded-b-xl flex items-center justify-center sticky bottom-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400"></p>
+      </div>
+
+      <!-- Repeat for other cards -->
+    </div>
+  </div>
+</section>
+
 
         <!-- button to next section of homepage -->
         <div class="ml-auto z-50 fixed bottom-4 right-4">

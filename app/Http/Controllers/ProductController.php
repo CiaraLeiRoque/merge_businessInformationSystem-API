@@ -82,19 +82,19 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'brand' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'category' => 'required|string|max:255',
-            'stock' => 'required|integer',
-            'sold' => 'required|integer',
-            'status' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'expDate' => 'required|date',
+            'name' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric',
+            'category' => 'nullable|string|max:255',
+            'stock' => 'nullable|integer',
+            'sold' => 'nullable|integer',
+            'status' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'expDate' => 'nullable|date',
             'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120', // Validate the file input
             'on_sale' => 'nullable|in:yes,no',
             'on_sale_price' => 'nullable|numeric',
-            'featured' => 'required|in:true,false',
+            'featured' => 'nullable|in:true,false',
         ]);
 
         $product = new Product($request->except('image'));
@@ -119,19 +119,19 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'brand' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'category' => 'required|string|max:255',
-            'stock' => 'required|integer',
-            'sold' => 'required|integer',
-            'status' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'expDate' => 'required|date',
+            'name' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric',
+            'category' => 'nullable|string|max:255',
+            'stock' => 'nullable|integer',
+            'sold' => 'nullable|integer',
+            'status' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'expDate' => 'nullable|date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'on_sale' => 'required|in:yes,no',
-            'on_sale_price' => 'required|numeric',
-            'featured' => 'required|in:true,false',
+            'on_sale' => 'nullable|in:yes,no',
+            'on_sale_price' => 'nullable|numeric',
+            'featured' => 'nullable|in:true,false',
         ]);
 
         $product = Product::findOrFail($id);

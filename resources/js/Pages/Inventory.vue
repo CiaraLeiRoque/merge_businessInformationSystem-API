@@ -1573,14 +1573,14 @@ watch(
                                 >
                                 <div 
                                     v-if="isOpenTest" 
-                                    class="origin-top-right absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg"
+                                    class="origin-top-right absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg"
                                 >
                                     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
                                     <a 
                                         v-for="option in optionsTest" 
                                         :key="option"
                                         href="#"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                        class="block pl-10 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                                         role="menuitem"
                                         @click.prevent="selectOptionTest(option)"
                                     >
@@ -1817,9 +1817,6 @@ watch(
                                                 <button @click="editPackage(packageItems[0])" class="hover:bg-yellow-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-yellow-500 text-white px-2 py-1 rounded-full">
                                                     <font-awesome-icon icon="fa-solid fa-pen" size="sm"/>
                                                 </button>
-                                                <button @click="viewProductDetails(product)" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-2 py-1 rounded-full">
-                                                    <font-awesome-icon icon="fa-solid fa-eye" size="sm"/>
-                                                </button>
                                                 <button @click="openDeletePackageModal(packageItems[0].id)" class="hover:bg-red-600 transition hover:scale-105 ease-in-out duration-150 bg-red-500 text-white px-2 py-1 rounded-full">
                                                     <font-awesome-icon :icon="['fas', 'trash-can']" size="sm" />
                                                 </button>
@@ -1903,6 +1900,9 @@ watch(
                                             <div class="flex items-center justify-center">
                                                 <button @click="editProductDetails(product)" class="hover:bg-yellow-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-yellow-500 text-white px-2 py-1 rounded-full">
                                                     <font-awesome-icon icon="fa-solid fa-pen" size="sm"/>
+                                                </button>
+                                                <button @click="viewProductDetails(product)" class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-2 py-1 rounded-full">
+                                                    <font-awesome-icon icon="fa-solid fa-eye" size="sm"/>
                                                 </button>
                                                 <button @click="openDeleteModal(product.id)" class="hover:bg-red-600 transition hover:scale-105 ease-in-out duration-150 bg-red-500 text-white px-2 py-1 rounded-full">
                                                     <font-awesome-icon :icon="['fas', 'trash-can']" size="sm" />

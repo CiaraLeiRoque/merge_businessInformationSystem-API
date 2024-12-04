@@ -49,6 +49,8 @@ Route::get('/all-invoices', function(){
 });
 
 
+Route::get('productPackageNamesWithProducts', [ProductPackageNameController::class, 'getAllPackageNamesWithProducts']);
+
 
 Route::get('productPackageName', [ProductPackageNameController::class, 'show']);  
 Route::post('productPackageName', [ProductPackageNameController::class, 'savePackageName']);  

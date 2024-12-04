@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { onMounted, ref, watch, reactive } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watch, reactive } from 'vue';
 import Chatbot from '@/Components/Chatbot.vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper and SwiperSlide as named imports
 import 'swiper/css';  // Import Swiper styles
@@ -129,9 +129,15 @@ onMounted(()=>{
     getWebsiteInfo();
     startSlideshow();
     getImages();
-    
+    fetchPackageInfo();
+    startAutoLoop();
   window.addEventListener('scroll', handleScroll);
 })
+onBeforeUnmount(() => {
+  stopAutoLoop();
+});
+
+
 
 async function getWebsiteInfo(){
     try{
@@ -332,6 +338,70 @@ function loadMap() {
     title: "Limesen Network Solutions Inc.",
   });
 }
+const packageData = ref([]);
+
+
+
+const textAreasPackage = {
+  card1Package: ref(''),
+  card1PackageName: ref(''),
+  card2Package: ref(''),
+  card2PackageName: ref(''),
+  card3Package: ref(''),
+  card3PackageName: ref(''),
+  card4Package: ref(''),
+  card4PackageName: ref(''),
+  card5Package: ref(''),
+  card5PackageName: ref(''),
+  card6Package: ref(''),
+  card6PackageName: ref(''),
+};
+
+const fetchPackageInfo = async () => {
+  try {
+    const response = await axios.get('/api/productPackageNamesWithProducts');
+    console.log('getPackageInfo data', response.data);
+    packageData.value = response.data;
+  } catch (error) {
+    console.error('There was an error fetching the data:', error);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+const packageWidth = 420; // Card width
+const gap = 32; // Gap between cards
+const currentIndexCarousel = ref(0);
+const autoLoopInterval = ref(null);
+
+const nextSlide = () => {
+  currentIndexCarousel.value =
+    (currentIndexCarousel.value + 1) % packageData.value.length; // Loop back to the first slide
+};
+
+const prevSlide = () => {
+  currentIndexCarousel.value =
+    (currentIndexCarousel.value - 1 + packageData.value.length) %
+    packageData.value.length; // Loop back to the last slide
+};
+
+const startAutoLoop = () => {
+  autoLoopInterval.value = setInterval(() => {
+    nextSlide();
+  }, 3000); // Change slide every 3 seconds
+};
+
+const stopAutoLoop = () => {
+  clearInterval(autoLoopInterval.value);
+};
+
 
 </script>
 
@@ -409,14 +479,165 @@ function loadMap() {
 
         </section>
 
-        <!-- section 2 -->
+
+        <!-- section 2-->
+        <!-- FEATURED PRODUCTS -->
+        <section v-if="feature_toggle==='true'">
+            <div class=" flex h-[1150px] relative" style="background-color: ghostwhite ;min-height: calc(100vh + 100px);">
+
+    <div class="flex flex-col items-center pt-[80px] p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
+        <p class="font-poppins mt-[10px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
+        <p class="mt-[10px] text-[20px]  text-black  text-center">
+            A list of the most popular products loved by customers. 
+            Best prices guaranteed everyday.
+        </p>
+    </div>
+
+    <!-- edit business info wag to iedit kasi business name ito-->
+    <div class=" mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt-[80px] px-4 pt-[200px]">
+        
+        <div class="block flex flex-row gap-5">
+        <!-- card 1 -->
+            <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    <div class="w-full bg-gray-800 h-[35px]"></div>
+                <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
+            </div>
+
+        <!-- card 2 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+            <div class="w-full bg-gray-800 h-[35px]"></div>    
+            <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
+            </div>
+        
+
+        <!-- card 3 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    <div class="w-full bg-gray-800 h-[35px]"></div>
+            <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
+            </div>
+        </div>
+
+        <div class="block flex flex-row gap-5">
+        <!-- card 4 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    <div class="w-full bg-gray-800 h-[35px]"></div>
+            <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
+            </div>
+
+        <!-- card 5 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    <div class="w-full bg-gray-800 h-[35px]"></div>
+            <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
+            </div>
+
+        <!-- card 6 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    <div class="w-full bg-gray-800 h-[35px]"></div>
+            <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
+            </div> 
+        </div>
+    </div>
+            </div>
+        </section>
+
+
+        <!-- section 3-->
+        <!-- PRODUCT PACKAGES -->
+        <section v-if="feature_toggle === 'true'">
+          <div class="flex flex-col pb-44 items-center relative" style="background-color: #1A202C;">
+            <!-- Title Section -->
+            <div class="pt-28 flex flex-col items-center p-3 mb-20">
+              <p class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight">
+                Check Out Our Packages/Bundles!
+              </p>
+              <p class="mt-[10px] text-[24px] text-gray-300 text-center max-w-2xl">
+                Take a look at our product packages. Best prices <br> guaranteed everyday.
+              </p>
+            </div>
+
+            <!-- Product Packages Carousel -->
+            <div class="carousel-container relative w-full max-w-7xl overflow-hidden">
+              <div
+                class="carousel-track flex gap-8 transition-transform duration-500 ease-in-out"
+                :style="{ transform: `translateX(calc(-${currentIndexCarousel} * (${packageWidth}px + ${gap}px) + 50% - ${packageWidth / 2}px))` }"
+              >
+                <div
+                  v-for="(packageItem, index) in packageData"
+                  :key="packageItem.id"
+                  class="carousel-item flex flex-col h-[400px] w-[420px] rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group"
+                >
+                  <!-- Header -->
+                  <div
+                    class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10 transition-colors duration-300 group-hover:from-gray-300 group-hover:to-gray-400"
+                  >
+                    <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
+                      {{ packageItem.product_package_name }}
+                    </p>
+                  </div>
+
+                  <!-- Centered List -->
+                  <div class="flex flex-grow flex-col items-center justify-center p-6">
+                    <ul class="space-y-4">
+                      <li
+                        v-for="product in packageItem.packages"
+                        :key="product.id"
+                        class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]"
+                      >
+                        <span
+                          class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"
+                        >
+                          <span class="w-3 h-3 rounded-full bg-gray-600"></span>
+                        </span>
+                        <span>
+                          {{ product.product_name }}
+                          <span class="text-gray-500">(x{{ product.product_quantity }})</span>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Carousel Controls -->
+              <button
+                class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+                @click="prevSlide"
+              >
+                ◀
+              </button>
+              <button
+                class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+                @click="nextSlide"
+              >
+                ▶
+              </button>
+            </div>
+          </div>
+        </section>
+
+
+
+
+
+
+
+
+
+
+        <!-- section 4 -->
         <section 
         ref="aboutSection" 
-        class="-mt-[100px] bg-website-main1 border-t border-b border-gray-200 flex flex-col h-auto relative transition-transform duration-500"
+        class="mb-30 bg-website-main border-t border-b border-gray-200 flex flex-col h-auto relative transition-transform duration-500"
         :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
         >
         <div class="mt-[50px] text-center">
-            <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
+            <p class="font-poppins text-[70px] tracking-[3px] text-black font-bold flex-grow text-center">About Us</p>
         </div>
 
     <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[180px] pb-[110px]">
@@ -426,8 +647,8 @@ function loadMap() {
             <i class="fa fa-check-circle text-gray-800 text-[70px]"></i>
           </a>
         </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us1 }}</p>
+        <div class="max-w-[330px] min-h-[170px] mt-[100px]" :class="{'translate-active': isVisible, 'translate-custom': !isVisible}">
+          <p class="text-black text-[22px] text-center break-words">{{ textAreas.about_us1 }}</p>
         </div>
       </div>
 
@@ -437,8 +658,8 @@ function loadMap() {
             <i class="fa fa-tag text-gray-800 text-[70px]"></i>
           </a>
         </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us2 }}</p>
+        <div class="max-w-[330px] min-h-[170px] mt-[100px]" :class="{'translate-active': isVisible, 'translate-custom': !isVisible}">
+          <p class="text-black text-[22px] text-center break-words">{{ textAreas.about_us2 }}</p>
         </div>
       </div>
 
@@ -448,89 +669,25 @@ function loadMap() {
                 <i class="fa fa-phone text-gray-800 text-[70px]"></i>
                 </a>
             </div>
-            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-                <p class="text-white text-[22px] text-center break-words">{{ textAreas.about_us3 }}</p>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]" :class="{'translate-active': isVisible, 'translate-custom': !isVisible}">
+                <p class="text-black text-[22px] text-center break-words">{{ textAreas.about_us3 }}</p>
             </div>
             </div>
         </div>
         </section>
 
-    <!-- section 3-->
-    
-    <section v-if="feature_toggle==='true'">
-        <div class="mt-20 bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
 
-<div class="flex flex-col items-center p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
-    <p class="font-poppins mt-[10px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
-    <p class="mt-[10px] text-[20px]  text-black  text-center">
-        A list of the most popular products loved by customers. 
-        Best prices guaranteed everyday.
-    </p>
-</div>
-
-<!-- edit business info wag to iedit kasi business name ito-->
-<div class=" mt-8 mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt-[10px] px-4 pt-[200px]">
-    
-    <div class="block flex flex-row gap-5">
-    <!-- card 1 -->
-        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-            <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
-        </div>
-
-     <!-- card 2 -->
-     <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-        <div class="w-full bg-gray-800 h-[35px]"></div>    
-        <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
-        </div>
-    
-
-    <!-- card 3 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
-        </div>
-    </div>
-
-    <div class="block flex flex-row gap-5">
-    <!-- card 4 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
-        </div>
-
-    <!-- card 5 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
-        </div>
-
-    <!-- card 6 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
-        </div> 
-    </div>
-</div>
-        </div>
-    </section>
 
     <section>
-        <div class="bg-website-main1" >
+        <div class="bg-website-main1 pb-20" >
             <!-- Map Section -->
-        <div class="mt-[50px] text-center mb-20 mx-auto flex flex-col">
+        <div class="mt-[65px] text-center mb-20 mx-auto flex flex-col">
             <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">Visit Us</p>
-            <p class="text-[20px] mt-[10px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
+            <p class="text-[20px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
             <p class="text-[20px] text-white">{{ businessInfo.business_Province }}, 
                 {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}  </p>
         </div>
-        <div class="map-section h-[500px] w-full mb-[100px]">
+        <div class="-mt-[60px] map-section h-[700px] w-full mb-[100px]">
             <div id="map" class="h-full w-full"></div>
         </div>
         </div>
@@ -642,6 +799,120 @@ function loadMap() {
 </section>
 </template>
 <style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+    background-color: #4B5563;
+  }
+  .scrollbar-track-gray-900::-webkit-scrollbar-track {
+    background-color: #111827;
+  }
+}
+
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.carousel-item {
+  flex-shrink: 0;
+  width: 420px; /* Ensure consistent card width */
+  scroll-snap-align: center;
+}
+
+.swiper {
+  width: 100%;
+  padding: 0 20px;
+}
+
+.packages-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.packages-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.package-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.package-card:hover {
+  transform: translateY(-5px);
+}
+
+.package-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.package-items {
+  list-style-type: none;
+  padding: 0;
+}
+
+.package-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.package-item:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #34495e;
+}
+
+.item-quantity {
+  color: #7f8c8d;
+}
+
+.no-packages {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+@media (max-width: 768px) {
+  .packages-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .translate-custom {
   transform: translateY(50px);
   opacity: 0;
@@ -689,7 +960,8 @@ section {
   margin: 0 auto;
   padding: 0;
   width: 80%;
-  height: 500px;
+  height: 750px;
   border: 1px solid #ccc;
+  border-radius: 10px;
 }
 </style>

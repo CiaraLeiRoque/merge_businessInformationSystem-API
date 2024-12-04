@@ -67,7 +67,9 @@ return new class extends Migration
         Schema::create('product_package_names', function (Blueprint $table) {
             //TO STORE MULTIPLE ITEMS IN ONE TABLE 
             $table->id();
+            $table->string('image')->nullable();
             $table->string('product_package_name')->nullable(); // name
+            $table->string('product_package_description')->nullable(); // names
             $table->timestamps();
         });
         Schema::create('product_packages', function (Blueprint $table) {

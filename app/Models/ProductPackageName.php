@@ -13,15 +13,17 @@ class ProductPackageName extends Model
         //'business_id','business_Address','business_TIN',
         
         'product_package_id',
+        'image',
         'product_package_name',
-
+        'product_package_description'
     ];
-
+ 
     
     public function packages()
     {
         return $this->hasMany(ProductPackage::class, 'product_package_id');
     }
+
 
     // public function productPackage()
     // {

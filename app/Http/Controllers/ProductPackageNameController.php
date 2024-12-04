@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProductPackageName;
+use App\Models\ProductPackage;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -16,6 +17,35 @@ class ProductPackageNameController extends Controller
         return ProductPackageName::all();
     }
 
+    public function getAllPackageNamesWithProducts()
+    {
+        try {
+            $packageNames = ProductPackageName::with('packages')->get();
+            
+            if ($packageNames->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No package names found.',
+                    'data' => [],
+                ]);
+            }
+
+            \Log::info('SHOWING ALL PACKAGE NAMES WITH PRODUCTS called', [
+                'packages' => $packageNames->toArray()
+            ]);
+            
+            return response()->json($packageNames);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error fetching product package names with products: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching product package names with products.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function updatePackageName(Request $request, $id)
     {
         try {
@@ -25,12 +55,16 @@ class ProductPackageNameController extends Controller
 
             // Validate the request data
             $request->validate([
-                'product_package_name' => 'nullable|string|max:255'
+                'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120',
+                'product_package_name' => 'nullable|string|max:255',
+                'product_package_description' => ''
             ]);
 
             // Update the product package name
             $productPackage->update([
+                'image' => $request->input('image'),
                 'product_package_name' => $request->input('product_package_name'),
+                'product_package_description' => $request->input('product_package_description'),
             ]);
 
             return response()->json([
@@ -48,8 +82,6 @@ class ProductPackageNameController extends Controller
 
     public function showPackageName(Request $request, $package_id)
     {
-        
-
         // Retrieve the package using `first()` to get a single record
         $package = ProductPackageName::where('id', $package_id)->first();
         
@@ -70,13 +102,19 @@ class ProductPackageNameController extends Controller
             Log::info('Incoming request data:', $request->all());
 
             // Validate the request (no need to validate product_package_id since it's auto-incremented)
-            $validatedData = $request->validate([
+            $validatedData = $request->validate([                
+                'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120',
                 'product_package_name' => 'nullable|string|max:255',
+                'product_package_description' => ''
             ]);
 
             // Create the product package (product_package_id will be auto-incremented by the database)
             $product_package = ProductPackageName::create([
+                
+                'image' => $request->image,
                 'product_package_name' => $request->product_package_name,
+                'product_package_description' => $request->product_package_description,
+                
             ]);
 
             // Log the created product package
