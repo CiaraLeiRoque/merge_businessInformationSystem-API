@@ -429,6 +429,59 @@ const filteredProducts = (query) => {
   });
 };
 
+const filteredProductsAndPackages = computed(() => (query) => {
+  if (!query) {
+    return [];
+  }
+
+  const searchTerm = query.toLowerCase();
+
+  // Filter products
+  const filteredProducts = products.value.filter((product) => {
+    return (
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.status.toLowerCase().includes(searchTerm) ||
+      product.brand.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  // Group packages by product_package_id
+  const groupedPackages = packageData.value.reduce((acc, pkg) => {
+    if (!acc[pkg.product_package_id]) {
+      acc[pkg.product_package_id] = {
+        ...pkg.package_name,
+        products: []
+      };
+    }
+    const productInfo = products.value.find(p => p.id === pkg.product_id);
+    acc[pkg.product_package_id].products.push({
+      id: pkg.product_id,
+      name: pkg.product_name,
+      quantity: pkg.product_quantity,
+      stock: productInfo ? productInfo.stock : 'N/A',
+      price: productInfo ? productInfo.price : 'N/A'
+    });
+    return acc;
+  }, {});
+
+  // Convert grouped packages to array and filter based on the query
+  const filteredPackages = Object.values(groupedPackages).filter((pkg) => {
+    return (
+      pkg.product_package_name.toLowerCase().includes(searchTerm) ||
+      pkg.products.some(product => product.name.toLowerCase().includes(searchTerm))
+    );
+  });
+
+  console.log('COMBINED AND FILTERED PACKAGES:', filteredPackages);
+
+  // Combine filtered products and filtered packages
+  return [...filteredProducts, ...filteredPackages];
+});
+
+
+
+
 const textItemFields = ref([
   { 
     product_id:'', sold:'', image:'', searchProductQuery: '', on_sale: 'no', amount: '', quantity: '', stock:'', total_amount: '', areFieldsEnabled: false, isSearching: false, seniorPWD_discountable:'no' }
@@ -462,6 +515,70 @@ const selectProduct = (product, index) => {
   console.log('Selected Product ID:', textItemFields.value[index].product_id)
   console.log('Selected Product Image:', textItemFields.value[index].image)
 };
+
+
+
+
+const selectProductOrPackage = (item, index) => {
+  if (item.name) {
+    // Handle individual product selection
+    textItemFields.value[index] = {
+      product_id: item.id,
+      image: item.image,
+      searchProductQuery: item.name,
+      on_sale: item.on_sale,
+      amount: parseFloat(item.price),
+      stock: item.stock,
+      sold: item.sold,
+      quantity: 1,
+      total_amount: parseFloat(item.price).toFixed(2),
+      areFieldsEnabled: true,
+      isSearching: false,
+      seniorPWD_discountable: 'no'
+    };
+  } else if (item.product_package_name) {
+    // Handle package selection
+    // Remove the current item
+    textItemFields.value.splice(index, 1);
+
+    // Add rows for each product in the package
+    item.products.forEach((product, i) => {
+      const newItem = {
+        product_id: product.id,
+        image: product.image || '',
+        searchProductQuery: product.name,
+        on_sale: 'no', // Assuming packages don't have on_sale status
+        amount: parseFloat(product.price),
+        stock: product.stock,
+        quantity: product.quantity,
+        total_amount: (parseFloat(product.price) * product.quantity).toFixed(2),
+        areFieldsEnabled: true,
+        isSearching: false,
+        seniorPWD_discountable: 'no',
+        addItemText: `${item.product_package_name} - ${product.name}`,
+        product_package: {
+          id: item.id,
+          name: item.product_package_name
+        }
+      };
+
+      // Insert the new item at the current index + i
+      textItemFields.value.splice(index + i, 0, newItem);
+    });
+
+    // If there are no more items after the inserted package items, add a new empty field
+    if (index + item.products.length >= textItemFields.value.length) {
+      addItemTextField();
+    }
+  }
+
+  // Hide the search dropdown for all items
+  textItemFields.value.forEach(field => field.isSearching = false);
+
+  console.log('Updated textItemFields:', textItemFields.value);
+};
+
+
 
 const addInvoiceItem = async () => {
     try {
@@ -1146,7 +1263,7 @@ const updateInvoice = async () => {
 
 
 //----------------------------------------------FOR UPDATING INVOICE ITEMS------------------------------------------
-const filteredUpdateProducts = (query) => {
+const filteredUpdateProducts1 = (query) => {
   if (!query) {
     return [];
   }
@@ -1161,6 +1278,153 @@ const filteredUpdateProducts = (query) => {
   });
 };
 
+
+const filteredUpdateProducts = computed(() => (query) => {
+  if (!query) {
+    return [];
+  }
+
+  const searchTerm = query.toLowerCase();
+
+  // Filter products
+  const filteredProducts = products.value.filter((product) => {
+    return (
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.status.toLowerCase().includes(searchTerm) ||
+      product.brand.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  // Group packages by product_package_id
+  const groupedPackages = packageData.value.reduce((acc, pkg) => {
+    if (!acc[pkg.product_package_id]) {
+      acc[pkg.product_package_id] = {
+        ...pkg.package_name,
+        products: []
+      };
+    }
+    const productInfo = products.value.find(p => p.id === pkg.product_id);
+    acc[pkg.product_package_id].products.push({
+      id: pkg.product_id,
+      name: pkg.product_name,
+      quantity: pkg.product_quantity,
+      stock: productInfo ? productInfo.stock : 'N/A',
+      price: productInfo ? productInfo.price : 'N/A'
+    });
+    return acc;
+  }, {});
+
+  // Convert grouped packages to array and filter based on the query
+  const filteredPackages = Object.values(groupedPackages).filter((pkg) => {
+    return (
+      pkg.product_package_name.toLowerCase().includes(searchTerm) ||
+      pkg.products.some(product => product.name.toLowerCase().includes(searchTerm))
+    );
+  });
+
+  console.log('COMBINED AND FILTERED PACKAGES:', filteredPackages);
+
+  // Combine filtered products and filtered packages
+  return [...filteredProducts, ...filteredPackages];
+});
+
+const selectUpdateProduct = async (item, index) => {
+  if (item.name) {
+    // Handle individual product selection
+    selectedInvoiceItems.value[index] = {
+      product_id: item.id,
+      sold: item.sold,
+      image: item.image,
+      product_name: item.name,
+      on_sale: item.on_sale,
+      product_price: parseFloat(item.price),
+      seniorPWD_discountable: 'no',
+      isNew: true,
+      areFieldsEnabled: true,
+      isSearching: false,
+      quantity: 0,
+      final_price: 0,
+      stock: item.stock,
+      oldQuantity: 0
+    };
+
+    oldStock.value = item.stock;
+
+    try {
+      const response = await axios.get(`/api/products/${item.id}/stock`);
+      selectedInvoiceItems.value[index].stock = response.data.stock;
+    } catch (error) {
+      console.error('Error fetching product stock:', error);
+      selectedInvoiceItems.value[index].stock = 0; // Set default stock if there's an error
+    }
+  } else if (item.product_package_name) {
+    // Handle package selection
+    // Remove the current item
+    selectedInvoiceItems.value.splice(index, 1);
+
+    // Add rows for each product in the package
+    item.products.forEach((product, i) => {
+      const newItem = {
+        product_id: product.id,
+        sold: product.sold || 0,
+        image: product.image || '',
+        product_name: product.name,
+        on_sale: 'no', // Assuming packages don't have on_sale status
+        product_price: parseFloat(product.price),
+        seniorPWD_discountable: 'no',
+        areFieldsEnabled: true,
+        isSearching: false,
+        quantity: product.quantity,
+        final_price: (parseFloat(product.price) * product.quantity).toFixed(2),
+        stock: product.stock,
+        oldQuantity: 0,
+        isNew: true,
+        product_package: {
+          id: item.id,
+          name: item.product_package_name
+        }
+      };
+
+      // Insert the new item at the current index + i
+      selectedInvoiceItems.value.splice(index + i, 0, newItem);
+
+      // Fetch stock for each product in the package
+      axios.get(`/api/products/${product.id}/stock`)
+        .then(response => {
+          selectedInvoiceItems.value[index + i].stock = response.data.stock;
+        })
+        .catch(error => {
+          console.error(`Error fetching stock for product ${product.id}:`, error);
+          selectedInvoiceItems.value[index + i].stock = 0;
+        });
+    });
+
+    // If there are no more items after the inserted package items, add a new empty field
+    if (index + item.products.length >= selectedInvoiceItems.value.length) {
+      selectedInvoiceItems.value.push({
+        product_id: '',
+        sold: '',
+        image: '',
+        product_name: '',
+        on_sale: 'no',
+        product_price: '',
+        areFieldsEnabled: false,
+        isSearching: false,
+        quantity: 0,
+        final_price: 0,
+        stock: 0,
+        oldQuantity: 0,
+        isNew: true
+      });
+    }
+  }
+
+  // Hide the search dropdown for all items
+  selectedInvoiceItems.value.forEach(item => item.isSearching = false);
+
+  console.log('Updated selectedInvoiceItems:', selectedInvoiceItems.value);
+};
 
 const selectedInvoiceItems = ref([
   { 
@@ -1233,34 +1497,9 @@ const removeItemTextField1 = (index) => {
   console.log('edit remove text field clicked');
   editInvoiceComputation.value.Less_SC_PWD_Discount_Percent = 0;
 };
-const selectUpdateProduct = async (product, index) => {
-  // Assign the selected product's details to the corresponding text field
-  selectedInvoiceItems.value[index].product_id = product.id;
-  selectedInvoiceItems.value[index].sold = product.sold;
 
 
-  selectedInvoiceItems.value[index].image = product.image;
-  selectedInvoiceItems.value[index].product_name = product.name;
-  selectedInvoiceItems.value[index].on_sale = product.on_sale;
-  // Hide the search results (clear the search query)
-  selectedInvoiceItems.value[index].product_price = product.price;
-  selectedInvoiceItems.value[index].areFieldsEnabled = true;
-  selectedInvoiceItems.value[index].isSearching = false; // Hide the search results 
-  selectedInvoiceItems.value[index].quantity = 0;
-  selectedInvoiceItems.value[index].final_price = 0;
-  selectedInvoiceItems.value[index].stock = product.stock;
-  selectedInvoiceItems.value[index].oldQuantity = 0;
 
-  oldStock.value = product.stock;
-  try {
-    const response = await axios.get(`/api/products/${product.id}/stock`);
-    selectedInvoiceItems.value[index].stock = response.data.stock;
-  } catch (error) {
-    console.error('Error fetching product stock:', error);
-    selectedInvoiceItems.value[index].stock = 0; // Set default stock if there's an error
-  }
-  console.log('TANG INA ANO BA YUNG PANGALAN MO HAHAHAHA', selectedInvoiceItems.value[index].stock)
-};
 
 
 const updateInvoiceItem = async () => {
@@ -2017,6 +2256,30 @@ function validateKeyPress(event) {
     event.preventDefault();
   }
 }
+
+
+const packageData = ref([]);
+
+const fetchPackageData = async () => {
+  try {
+    const response = await axios.get('/api/productPackage')
+    packageData.value = response.data
+    console.log('Fetched package data:', packageData.value)
+    
+    console.log('PACKAGE DATA')
+    // Log each package and its products
+    packageData.value.forEach((pkg, index) => {
+      console.log(`Package ${index + 1}:`, pkg.package_name?.product_package_name)
+      console.log('Products:', pkg.products)
+    })
+  } catch (error) {
+    console.error('Error fetching package data:', error)
+  }
+}
+
+
+
+fetchPackageData();
 </script>
 
 
@@ -2520,27 +2783,47 @@ function validateKeyPress(event) {
                                                     <div class="relative z-10 ">
                                                         <!-- Assuming you have an input field above this list -->
                                                         <ul
-                                                        v-if="field.product_name && field.isSearching"
-                                                        class="ml-10 w-80 bg-white shadow-xl rounded-lg mt-2 max-h-80 overflow-y-auto border border-gray-200"
+                                                            v-if="field.product_name && field.isSearching"
+                                                            class="ml-10 w-80 bg-white shadow-xl rounded-lg mt-2 max-h-80 overflow-y-auto border border-gray-200"
                                                         >
-                                                        <li
-                                                            v-for="product in filteredUpdateProducts(field.product_name)"
-                                                            :key="product.id"
-                                                            @click="selectUpdateProduct(product, index)"
+                                                            <li
+                                                            v-for="item in filteredUpdateProducts(field.product_name)"
+                                                            :key="item.id || item.product_package_id"
+                                                            @click="selectUpdateProduct(item, index)"
                                                             class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                                                        >
-                                                            <div class="flex-shrink-0">
-                                                            <img
-                                                                :src="'/storage/' + product.image"
-                                                                :alt="product.name"
+                                                            >
+                                                            <!-- Check if it's a product -->
+                                                            <div v-if="item.name" class="flex-shrink-0 flex items-center">
+                                                                <img
+                                                                :src="'/storage/' + item.image"
+                                                                :alt="item.name"
                                                                 class="w-12 h-12 object-cover rounded-md"
-                                                            />
+                                                                />
+                                                                <div class="ml-4 flex-grow">
+                                                                <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
+                                                                <p class="text-sm text-gray-500">Price: {{ item.price }}</p>
+                                                                <p class="text-sm text-gray-500">Stock: {{ item.stock }}</p>
+                                                                </div>
                                                             </div>
-                                                            <div class="ml-4 flex-grow">
-                                                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                                                            <p class="text-sm text-gray-500">{{ product.price }}</p>
+
+                                                            <!-- Check if it's a package -->
+                                                            <div v-else-if="item.product_package_name" class="flex-shrink-0 w-full">
+                                                                <div class="flex items-center">
+                                                                <div class="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                                                                    <font-awesome-icon icon="fa-box" size="lg" />
+                                                                </div>
+                                                                <div class="ml-4 flex-grow">
+                                                                    <p class="text-sm font-medium text-gray-900">{{ item.product_package_name }}</p>
+                                                                    <p class="text-sm text-gray-500">Package ({{ item.products.length }} products)</p>
+                                                                </div>
+                                                                </div>
+                                                                <ul class="mt-2 space-y-2">
+                                                                <li v-for="product in item.products" :key="product.id" class="text-sm text-gray-600">
+                                                                    {{ product.name }} (Qty: {{ product.quantity }}, Stock: {{ product.stock }}, Price: {{ product.price }})
+                                                                </li>
+                                                                </ul>
                                                             </div>
-                                                        </li>
+                                                            </li>
                                                         </ul>
                                                     </div>
 
@@ -2927,31 +3210,44 @@ function validateKeyPress(event) {
             <div class="ml-4 relative"> <!-- Added relative class here -->
                 <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
                 
-                <!-- The searchProductQuery dropdown -->
-                <ul
-                    v-if="field.searchProductQuery && field.isSearching"
-                    class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
-                    style="z-index: 15;"
-                >
-                    <li
-                        v-for="product in filteredProducts(field.searchProductQuery)"
-                        :key="product.id"
-                        @click="selectProduct(product, index)"
-                        class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                    <!-- The searchProductQuery dropdown -->
+                    <ul
+                        v-if="field.searchProductQuery && field.isSearching"
+                        class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
+                        style="z-index: 15;"
                     >
-                        <div class="flex-shrink-0">
+                        <li
+                        v-for="item in filteredProductsAndPackages(field.searchProductQuery)"
+                        :key="item.id"
+                        @click="selectProductOrPackage(item, index)"
+                        class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                        >
+                        <!-- Check if it's a product -->
+                        <div v-if="item.name" class="flex-shrink-0">
                             <img
-                                :src="'/storage/' + product.image"
-                                :alt="product.name"
-                                class="w-12 h-12 object-cover rounded-md"
+                            :src="'/storage/' + item.image"
+                            :alt="item.name"
+                            class="w-12 h-12 object-cover rounded-md"
                             />
+                            <div class="ml-4 flex-grow">
+                            <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
+                            <p class="text-sm text-gray-500">{{ item.price }}</p>
+                            </div>
                         </div>
-                        <div class="ml-4 flex-grow">
-                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                            <p class="text-sm text-gray-500">{{ product.price }}</p>
+
+                        <!-- Check if it's a package -->
+                        <div v-else-if="item.product_package_name" class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                            <font-awesome-icon icon="fa-box" size="lg" />
+                            </div>
+                            <div class="ml-4 flex-grow">
+                            <p class="text-sm font-medium text-gray-900">{{ item.product_package_name }}</p>
+                            <p class="text-sm text-gray-500">Package ({{ item.products.length }} products)</p>
+                            </div>
                         </div>
-                    </li>
-                </ul>
+                        </li>
+                    </ul>
+
             </div>
         </div>
     </td>

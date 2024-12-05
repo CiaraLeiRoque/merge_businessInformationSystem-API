@@ -579,29 +579,29 @@ const stopAutoLoop = () => {
             class="carousel-item flex pt-20 flex-col space-y-4"
           >
             <!-- Card -->
-            <div class="flex w-[1200px] h-[500px] rounded-xl shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group overflow-hidden">
+            <div class="flex w-[1200px] h-[500px] rounded-lg shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group overflow-hidden">
               <!-- Image Section -->
               <div class="w-[500px] h-full bg-gray-200 flex items-center justify-center">
-                <img :src="'/storage/' + packageItem.image" alt="" class="w-[500px] h-[500px] object-cover rounded"/>
+                <img :src="'/storage/' + packageItem.image" alt="" class="rounded-l-lg border-2 border-black w-[500px] h-[500px] object-cover "/>
               </div>
 
               <!-- Content Section -->
               <div class="flex-1 flex flex-col">
-                <div class="w-full bg-gradient-to-r from-gray-200 to-gray-300 h-[50px] flex items-center justify-center sticky top-0 z-10">
-                  <p style="font-weight: 900;" class="text-gray-800 text-[30px] tracking-wide">
+                <div class="w-full bg-gradient-to-r from-gray-200 to-white h-[50px] flex items-center justify-center sticky top-0 z-10">
+                  <p style="font-weight: 900;" class="text-black text-[30px] tracking-wide">
                     {{ packageItem.product_package_name }}
                   </p>
                 </div>
 
-                <div class="flex-grow overflow-auto flex items-center justify-center p-6">
+                <div class="flex-grow overflow-auto flex items-center bg-white justify-center p-6">
                   <ul class="space-y-4">
                     <li
                       v-for="product in packageItem.packages"
                       :key="product.id"
-                      class="flex items-center justify-start text-left space-x-3 text-gray-800 text-[18px]"
+                      class="flex items-center justify-start text-left space-x-3 text-black text-[18px]"
                     >
                       <span
-                        class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center"
+                        class="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center"
                       >
                         <span class="w-3 h-3 rounded-full bg-gray-600"></span>
                       </span>
