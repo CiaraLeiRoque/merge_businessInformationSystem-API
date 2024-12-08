@@ -88,11 +88,11 @@
 
             <!-- Right-side Content -->
             <div class="flex flex-col">
-                <div class="py-8 px-4 rounded-lg mx-10" style="background-color: rgb(31, 41, 55); max-height: 500px; max-width: 90%; min-width: 90%; min-height: 500px; ">
+                <div class="py-8 px-4 rounded-lg mx-10" style="background-color: rgb(31, 41, 55); max-width: 90%; min-width: 90%;">
                     <div class="text-xl font-semibold text-white mb-4 bg-red-500 rounded-lg flex flex-row justify-center p-2"><h2>Critical Stock Items</h2></div>
                     <div 
                         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto pb-7" 
-                        style=" max-height: 500px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
+                        style=" max-height: 300px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
                         <div 
                             v-for="product in filteredProducts.filter(product => product.stock < 11)" 
                             :key="product.id" 
@@ -109,6 +109,7 @@
                             </div>
                         </div>
                     </div>
+                    <br>
                     <hr class="border-white mx-auto w-11/12 pt-6">
                     <div class="pb-2">
                         <div class="flex flex-row justify-between text-white px-4">
