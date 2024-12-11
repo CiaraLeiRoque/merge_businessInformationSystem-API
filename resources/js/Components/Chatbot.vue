@@ -122,7 +122,7 @@ export default {
         if (chatbotResponse.data && chatbotResponse.data.length > 0) {
           const firstResponse = chatbotResponse.data[0]; // Get the first chatbot response
           this.workingHours = firstResponse?.chabot_BWHours || 'Unavailable';
-          this.productDescription = firstResponse?.chabot_BPDescription || 'description unavailable';
+          this.productDescription = firstResponse?.chabot_BPDescription || 'Unavailable';
           this.lazada = firstResponse?.chabot_Lazada || 'Lazada Link unavailable';
           this.shopee = firstResponse?.chabot_Shopee || 'Shopee Link unavailable';
           this.region1 = firstResponse.chabot_Region1 || 'Delivery time for Region 1 unavailable';
@@ -259,31 +259,51 @@ export default {
           
             break;
 
-          case 5:
-          this.messages.push({
+            case 5:
+            let messageText;
+
+            if (this.workingHours === 'Unavailable') {
+              messageText = "The working hours are currently unavailable.";
+            } else {
+              messageText = `We are available from ${this.workingHours}`;
+            }
+
+            this.messages.push({
               id: new Date().getTime(),
-              text: `We are available from  ${this.workingHours}  `,
+              text: messageText,
               sender: 'bot',
             });
+
             setTimeout(() => {
-              this.showEndMessage(); 
+              this.showEndMessage();
               this.scrollToBottom();
             }, 1000);
-            
+
             break;
+
           
-          case 6:
-          this.messages.push({
+            case 6:
+            let productMessage;
+
+            if (this.productDescription === 'Unavailable' || !this.productDescription) {
+              productMessage = "Sorry, the product description is currently unavailable.";
+            } else {
+              productMessage = `We sell ${this.productDescription}`;
+            }
+
+            this.messages.push({
               id: new Date().getTime(),
-              text: `We sell ${this.productDescription}  `,
+              text: productMessage,
               sender: 'bot',
             });
+
             setTimeout(() => {
-              this.showEndMessage(); 
+              this.showEndMessage();
               this.scrollToBottom();
             }, 1000);
-            
+
             break;
+
           
           
           case 7:
@@ -478,6 +498,7 @@ export default {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  z-index: 10000;
 }
 
 .chat-circle {
