@@ -9,16 +9,11 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ExportProductTemplate implements FromQuery, WithHeadings, WithStyles
+class ExportProductTemplate implements WithHeadings, WithStyles
 {
     /**
      * Return the query of products.
      */
-    public function query()
-    {
-        return Product::query();
-        
-    }
 
     /**
      * Map the data to be exported.

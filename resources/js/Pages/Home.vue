@@ -8,14 +8,14 @@
                         <div class="flex flex-row content-evenly gap-8">
                             <div class="flex flex-row text-center justify-center">
                                 <label for="filterType" style="font-size: 18px; margin-right: 10px">Filter By:</label>
-                                <select id="filterType" style="font-size: 12px; max-height: 30px; background-color: #1F2937; color: #FFFFFF" class="rounded-md border-white text-center" v-model="filterType" @change="applyDateFilter">
+                                <select id="filterType" style="font-size:15px; background-color: #1F2937; color: #FFFFFF" class="-mt-[7px] rounded-md border-white text-center" v-model="filterType" @change="applyDateFilter">
                                     <option value="day">Day</option>
                                     <option value="month">Month</option>
                                     <option value="year">Year</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="flex flex-row items-center justify-evenly content-evenly gap-8">
+                        <div class="mt-2 flex flex-row items-center justify-evenly content-evenly gap-8">
                             <div class="flex flex-col text-center">
                                 <div style="font-size: 18px;">
                                     <b>Total Income ({{ filterLabel }})</b>

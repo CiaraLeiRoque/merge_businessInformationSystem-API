@@ -299,18 +299,28 @@ const moveSlideShow=(direction)=>{
                     <h1 class="font-poppins font-bold text-white text-[70px] tracking-[5px]">{{textAreas.businessName.value}}</h1>
                 </div>
                 <div class="mt-[10px]">
+                    <div class="max-w-[100px]">
+                        <button @click="edit('businessDescription')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
+                    </div>
                     <div class="max-w-[550px]">
                     <p class=" font-poppins font-extrabold text-[25px] text-white">{{ textAreas.businessDescription.value }}</p>
                     </div>
+                    <div v-if="editButton==='businessDescription'">
+                        <textarea v-model="textAreas.businessDescription.value" class="w-full h-[100px] border boder-black"></textarea>
+                        <button @click="save" class="bg-white rounded-xl p-1">Save</button>
+                    </div>
                 </div>
                 <div class="mt-[30px]" >
+                    <div class="max-w-[100px]">
+                        <button @click="edit('businessDetails')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
+                    </div>
                     <div class="max-w-[600px]">
                         <p id=" font-poppins business-details" class="text-[19px] text-white">{{ textAreas.businessDetails.value }} </p>
                     </div>
-                </div>
-
-                <div class="mt-[50px] flex flex-row ">
-                    <a class="text-center rounded-lg p-4 w-[380px] bg-white text-black text-[18px]" :href="route('products_page')">See All Products</a>
+                    <div v-if="editButton==='businessDetails'">
+                        <textarea v-model="textAreas.businessDetails.value" class="w-full h-[100px] border boder-black"></textarea>
+                        <button @click="save" class="bg-white rounded-xl p-1">Save</button>
+                    </div>
                 </div>
             </div>
             </div>

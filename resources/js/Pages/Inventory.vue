@@ -1186,6 +1186,13 @@ const addProductPackage = async () => {
 
 
             fetchPackageData();
+
+            showAddPackageModal.value = false; 
+        showSuccessEditPackageModal.value = true;
+        setTimeout(() => {
+        showSuccessEditPackageModal.value = false
+        }, 1000) // Auto-close after 2 seconds
+
             return;
         }
         fetchPackageData();
@@ -1867,7 +1874,7 @@ const handleEditImageUploadPackage = (event) => {
 
 
                                         <tr v-for="(packageItems, packageName) in groupedPackages" :key="packageName" v-if="isPackageTableShowing" class="border-y-2 border-slate-400 text-center align-middle justify-center items-center">
-                                            <td class="px-6 py-4 border-b flex items-center justify-center border-gray-200 dark:border-gray-700">
+                                            <td class="px-6 h-full py-4 border-b flex items-center justify-center border-gray-200 dark:border-gray-700">
                                                 <img :src="'/storage/' + packageItems[0]?.package_name?.image" alt="" class="w-20 h-20 object-cover rounded"/>
                                             </td>
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700  ">
