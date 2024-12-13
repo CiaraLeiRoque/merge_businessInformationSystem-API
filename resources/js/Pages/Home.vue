@@ -34,10 +34,19 @@
                                 </div>
                                 <div style="font-size: 25px">₱ {{ totalOthers }}</div>
                             </div>
+                                <div class="flex flex-col text-center">
+                                    <div style="font-size: 18px;">
+                                        <b>Total Invoices ({{ filterLabel }})</b>
+                                    </div>
+                                    <div style="font-size: 25px">₱ {{  invoicesByDateTotal  }}</div>
+                                </div>
                         </div>
-                        <div class="flex flex-row justify-center">
+                        <div class="flex flex-row justify-around">
                             <button style="background-color: #FFFFFF; border-radius: 14px;">
                                 <ResponsiveNavLink :href="route('finance')" :active="route().current('finance')" style="color: #0F2C4A; font-size: 12px;">View Finance</ResponsiveNavLink>
+                            </button>
+                            <button style="background-color: #FFFFFF; border-radius: 14px;">
+                                <ResponsiveNavLink :href="route('invoice')" :class="{ active: route().current('invoice')}" style="color: #0F2C4A; font-size: 12px;">View Invoices</ResponsiveNavLink>
                             </button>
                         </div>
                     </div>
@@ -94,7 +103,7 @@
                         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto pb-7" 
                         style=" max-height: 300px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
                         <div 
-                            v-for="product in filteredProducts.filter(product => product.stock < 11)" 
+                            v-for="product in filteredProducts.filter(product => product.stock < stocksDays)" 
                             :key="product.id" 
                             class="bg-white shadow-md rounded-lg p-4 flex flex-row md:flex-col justify-between">
                             <div class="flex flex-row md:flex-col">
@@ -114,7 +123,7 @@
                     <div class="pb-2">
                         <div class="flex flex-row justify-between text-white px-4">
                             <div class="text-center"><b>Total Products:</b><br>{{ filteredProducts.length }}</div>
-                            <div class="text-center"><b>Total Critical:</b><br>{{ filteredProducts.filter(product => product.stock < 11).length }}</div>
+                            <div class="text-center"><b>Total Critical:</b><br>{{ filteredProducts.filter(product => product.stock < stocksDays).length }}</div>
                             <div class="text-center"><b>Total Sold:</b><br>{{ filteredProducts.reduce((total, product) => total + product.sold, 0) }}</div>
                         </div>
                     </div>
@@ -421,7 +430,41 @@ const applyDateFilter = () => {
     startDate.value = formatDate(pastDate);
     endDate.value = formatDate(currentDate);
     fetchFinancesByDate(); // Trigger data fetch for the selected range
+    fetchInvoicesByDate();
 };
+
+const invoices = ref([]); 
+const fetchInvoices = async () => {
+    try {
+        const response = await axios.get('/api/invoice');
+        invoices.value = response.data;
+    } catch (error) {
+        console.error("Error fetching invoices:", error);
+    }
+}
+
+const isOpen = ref(false);
+const stocksDays = ref(0);
+const expiryDays = ref(0);
+
+// Fetch notification settings from the API
+onMounted(async () => {
+    try {
+        const response = await axios.get('/api/productNotif');
+        const settings = response.data;
+
+        // Map API data to the Vue component's variables
+        settings.forEach(setting => {
+            if (setting.stock_expDate === 'stock') {
+                stocksDays.value = setting.count;
+            } else if (setting.stock_expDate === 'expDate') {
+                expiryDays.value = setting.count;
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching product notification settings:', error);
+    }
+});
 
 // Reset totals and fetch new data
 const fetchFinancesByDate = async () => {
@@ -447,12 +490,51 @@ const fetchFinancesByDate = async () => {
                 totalOthers.value += roundToTwoDecimals(finance.amount);
             }
         }
-        console.log("Finances by date:", financesByDate);
-        console.log("Total Income:", totalIncome.value);
-        console.log("Total Expenses:", totalExpenses.value);
+
 
     } catch (error) {
         console.error("Error fetching finances by date:", error);
+    }
+};
+
+const invoicesByDate = ref([]);
+const invoice_computations = ref([]);
+const invoicesByDateTotal = ref(0);
+
+const fetchInvoicesByDate = async () => {
+    try {
+        const response = await axios.get('/api/invoice_by_date', {
+            params: {
+                start_date: startDate.value,
+                end_date: endDate.value
+            }
+        });
+        const responseComputations = await axios.get('/api/invoice_computation');
+        
+        invoice_computations.value = responseComputations.data;
+        invoicesByDate.value = response.data;
+        isDateFiltered.value = true; // Set flag to true after fetching by date
+
+        // Calculate cumulative total_Amount_Due for paid invoices only
+        let totalAmountDue = 0;
+        invoicesByDate.value.forEach(invoice => {
+            if (invoice.status === "paid") {
+                const computation = invoice_computations.value.find(comp => comp.invoice_system_id === invoice.invoice_system_id);
+                if (computation) {
+                    totalAmountDue += parseFloat(computation.total_Amount_Due);
+                }
+            }
+        });
+
+        invoicesByDateTotal.value = totalAmountDue;
+
+        console.log("Invoices by date:", invoicesByDate.value);
+        console.log("Invoice computations:", invoice_computations.value);
+        console.log("Cumulative Total Amount Due (Paid Invoices):", invoicesByDateTotal.value);
+
+        return invoicesByDate.value;
+    } catch (error) {
+        console.error("Error fetching invoices by date:", error);
     }
 };
 
@@ -464,24 +546,22 @@ const fetchFinancesByDate = async () => {
 const fetchsocialmediaLinks = async() =>{
     try {const response_userId = await axios.get('/user-id');
         const userId = response_userId.data.user_id;
-        console.log(userId);
+
 
         const getBusinessInfo = await axios.get('/api/business_info', {
             params: {user_id: userId}
         });
-        console.log(getBusinessInfo.data);
+
         const businessId = getBusinessInfo.data.business_id;
 
         const getWebsiteInfo = await axios.get('/api/website', {
             params: {business_id: businessId}
         });
-        console.log(getWebsiteInfo.data);
+
         business_Facebook.value = validateAndFormatUrl(getBusinessInfo.data.business_Facebook, "facebook.com");
         business_X.value = validateAndFormatUrl(getBusinessInfo.data.business_X, "X.com");
         business_Instagram.value = validateAndFormatUrl(getBusinessInfo.data.business_Instagram, "Instagram.com");
         business_Tiktok.value = validateAndFormatUrl(getBusinessInfo.data.business_Tiktok, "Tiktok.com");
-
-        console.log("Social Media Links:", business_Facebook.value, business_X.value, business_Instagram.value, business_Tiktok.value);
     }catch(error){
         console.error('There was an error fetching the data:', error);
     }
@@ -530,6 +610,7 @@ fetchsocialmediaLinks();
 fetchFinancesByDate();
 fetchProducts();
 fetchListedCategories();
+fetchInvoicesByDate();
 </script>
 <style>
 /* Button and Table Styling */
