@@ -17,13 +17,17 @@ const imagePreviewUrl = ref(null);
 const editImagePreviewUrl = ref(null);
 
 
+
+
 //ERROR TRAPPING
 const priceError = ref('');
 const stockError = ref('');
+const total_stockError = ref('');
 const soldError = ref('');
 const onsaleError = ref('');
 
 const UpdatepriceError = ref('');
+const UpdateTotalStockError = ref('');
 const UpdatestockError = ref('');
 const UpdatesoldError = ref('');
 const UpdateonsaleError = ref('');
@@ -33,6 +37,14 @@ const validatePrice = () => {
         priceError.value = "Please input only numbers for the Price field";
     } else {
         priceError.value = '';
+    }
+};
+
+const validateTotalStock = () => {
+    if (!/^\d+$/.test(newProduct.value.total_stock)) {
+        total_stockError.value = "Please input only positive whole numbers for the Total Stock field";
+    } else {
+        total_stockError.value = '';
     }
 };
 
@@ -65,6 +77,22 @@ const validateUpdatePrice = () => {
         UpdatepriceError.value = "Please input only numbers for the Price field";
     } else {
         UpdatepriceError.value = '';
+    }
+};
+
+const validateUpdateTotalStock = () => {
+    if (!/^\d+$/.test(editProduct.value.total_stock)) {
+        UpdateTotalStockError.value = "Please input only positive whole numbers for the Sold field";
+    } else {
+        total_stockError.value = '';
+    }
+};
+
+const validateTotalStockUpdate = () => {
+    if (!/^\d+$/.test(editProduct.value.total_stock)) {
+        UpdateTotalStockError.value = "Please input only positive whole numbers for the Total Stock field";
+    } else {
+        UpdateTotalStockError.value = '';
     }
 };
 
@@ -205,6 +233,7 @@ const editProduct = ref({
     brand: '',
     price: 0,
     category: '',
+    total_stock: 0,
     stock: 0,
     sold: 0,
     status: '',
@@ -249,6 +278,7 @@ const newProduct = ref({
     category: '',
     stock: 0,
     sold: 0,
+    total_stock: 0,
     status: '',
     expDate: '',
     image: null,
@@ -562,7 +592,7 @@ const closeModal = () => {
 
 
 const summaryOption = ref({
-  option: "",
+  option: "summaryPdf",
 });
 watch(
   () => summaryOption.value.option, // Watch the specific value within the ref
@@ -579,7 +609,10 @@ function printInventorySummary() {
         
         // const categoriesString = selectedCategories.value.join(',');
 
-        if(summaryOption.value.option === 'summaryPdf'){
+        if(summaryOption.value.option === 'summaryMaster'){
+            window.open(`/api/products/print/master/export/xlsx`, '_blank');
+        }
+        else if(summaryOption.value.option === 'summaryPdf'){
             window.open(`/api/products/print/pdf`, '_blank');
         }   
         else{
@@ -842,6 +875,21 @@ function sortByCategory() {
     });
 }
 
+const sortOrderTotalStock = ref('asc'); // Default sort order
+function sortByTotalStock() {
+    // Toggle the sort order
+    sortOrderTotalStock.value = sortOrderTotalStock.value === 'asc' ? 'desc' : 'asc';
+
+    // Sort the products array in-place based on the current sort order
+    products.value.sort((a, b) => {
+        if (sortOrderTotalStock.value === 'asc') {
+            return a.total_stock - b.total_stock;
+        } else {
+            return b.total_stock - a.total_stock;
+        }
+    });
+}
+
 const sortOrderStock = ref('asc'); // Default sort order
 function sortByStock() {
     // Toggle the sort order
@@ -924,6 +972,7 @@ const productsTableVisibility = ref({
   colBrandIsVisible: false,
   colPriceIsVisible: false,
   colCategoryIsVisible: false,
+  colTotalStockIsVisible: false,
   colStockIsVisible: false,
   colSoldIsVisible: false,
   colStatusIsVisible: false,
@@ -938,6 +987,7 @@ const columnMapping = {
   productBrand: "colBrandIsVisible",
   productPrice: "colPriceIsVisible",
   productCategory: "colCategoryIsVisible",
+  productTotalStock: "colTotalStockIsVisible",
   productStock: "colStockIsVisible",
   productSold: "colSoldIsVisible",
   productStatus: "colStatusIsVisible",
@@ -1006,6 +1056,7 @@ const saveColumnVisibilitySettings = async () => {
         { column_Table: 'productBrand', is_visible: productsTableVisibility.value.colBrandIsVisible },
         { column_Table: 'productPrice', is_visible: productsTableVisibility.value.colPriceIsVisible },
         { column_Table: 'productCategory', is_visible: productsTableVisibility.value.colCategoryIsVisible },
+        { column_Table: 'productTotalStock', is_visible: productsTableVisibility.value.colTotalStockIsVisible },
         { column_Table: 'productStock', is_visible: productsTableVisibility.value.colStockIsVisible },
         { column_Table: 'productSold', is_visible: productsTableVisibility.value.colSoldIsVisible },
         { column_Table: 'productStatus', is_visible: productsTableVisibility.value.colStatusIsVisible },
@@ -1186,6 +1237,13 @@ const addProductPackage = async () => {
 
 
             fetchPackageData();
+
+            showAddPackageModal.value = false; 
+        showSuccessEditPackageModal.value = true;
+        setTimeout(() => {
+        showSuccessEditPackageModal.value = false
+        }, 1000) // Auto-close after 2 seconds
+
             return;
         }
         fetchPackageData();
@@ -1612,6 +1670,11 @@ const handleEditImageUploadPackage = (event) => {
 };
 
 
+
+const updateTotalStock = () => {
+  const total = roundToTwoDecimals(newProduct.stock + newProduct.sold || 0);
+  newProduct.total_stock = total;
+};
 </script>
 
 <template>
@@ -1816,7 +1879,19 @@ const handleEditImageUploadPackage = (event) => {
                                                 <span>Category</span>
                                             </div>
                                         </th>
-
+                                        <th 
+                                            v-if="productsTableVisibility.colTotalStockIsVisible && isProductTableShowing" 
+                                            class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left align-middle cursor-pointer whitespace-nowrap"
+                                            @click="sortByTotalStock">
+                                            <div class="p-3 flex justify-center items-center space-x-1">
+                                                <font-awesome-icon 
+                                                    :icon="['fas', 'angle-down']"
+                                                    :class="sortOrderTotalStock === 'asc' ? 'rotate-180' : 'rotate-0'"
+                                                    class="ml-2 transition-transform duration-300 ease-in-out" 
+                                                /> 
+                                                <span>Total Stock</span>
+                                            </div>
+                                        </th>
                                         <th 
                                             v-if="productsTableVisibility.colStockIsVisible && isProductTableShowing" 
                                             class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left align-middle cursor-pointer whitespace-nowrap"
@@ -1867,7 +1942,7 @@ const handleEditImageUploadPackage = (event) => {
 
 
                                         <tr v-for="(packageItems, packageName) in groupedPackages" :key="packageName" v-if="isPackageTableShowing" class="border-y-2 border-slate-400 text-center align-middle justify-center items-center">
-                                            <td class="px-6 py-4 border-b flex items-center justify-center border-gray-200 dark:border-gray-700">
+                                            <td class="px-6 h-full py-4 border-b flex items-center justify-center border-gray-200 dark:border-gray-700">
                                                 <img :src="'/storage/' + packageItems[0]?.package_name?.image" alt="" class="w-20 h-20 object-cover rounded"/>
                                             </td>
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-700  ">
@@ -1916,6 +1991,7 @@ const handleEditImageUploadPackage = (event) => {
                                         <td v-if="productsTableVisibility.colBrandIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 da   k:border-gray-700 text-center align-middle">{{ product.brand }}</td>
                                         <td v-if="productsTableVisibility.colPriceIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ product.price }}</td>
                                         <td v-if="productsTableVisibility.colCategoryIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ product.category }}</td>
+                                        <td v-if="productsTableVisibility.colTotalStockIsVisible && isProductTableShowing" class="px-2 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ product.total_stock }}</td>
                                         <td v-if="productsTableVisibility.colStockIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">
                                             <span v-if="product.stock === 0" 
                                                 class="transition hover:scale-105 ease-in-out duration-150 hover:bg-red-700 font-semibold group inline-block rounded-full bg-red-600 text-white font-bold px-3 py-1 text-sm mr-2 cursor-pointer align-middle">
@@ -2684,7 +2760,10 @@ const handleEditImageUploadPackage = (event) => {
                             v-model="summaryOption.option"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                         >
+                            <option value="summaryMaster">Master File (.xlsx)</option>
+                            <option value="summaryPdf">PDF (.pdf)</option>
                             <option value="summaryExcel">Excel Sheet (.xlsx)</option>
+                            
                         </select>
                         </div>
                         <button @click="printInventorySummary()" class="text-sm hover:bg-blue-600 w-full transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">
@@ -2697,9 +2776,6 @@ const handleEditImageUploadPackage = (event) => {
                         Download Template
                     </button>
                     </div>
-
-
-
                     </div>
                 </div>
 
@@ -2751,19 +2827,66 @@ const handleEditImageUploadPackage = (event) => {
                                     </select>
                                     <span v-if="validationErrors.category" class="text-red-500 text-xs">{{ validationErrors.category }}</span>
                                 </div>
-                                <!-- Stock Field -->
-                                <div>
-                                    <label for="stock" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Stock <span class="text-red-500">*</span></label>
-                                    <input type="number" min="0"  id="stock" v-model="newProduct.stock" class="input-field text-xs p-1" required @input="validateStock" />
-                                    <div v-if="stockError" class="text-red-500 text-sm">{{ stockError }}</div>
-                                </div>
+  <!-- TOTAL STOCK FIELD -->
+  <div>
+    <label
+      for="total_stock"
+      style="font-size: 11px;"
+      class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
+    >
+      Total Stock <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="number"
+      min="0"
+      id="total_stock"
+      v-model="newProduct.total_stock"
+      class="input-field text-xs p-1"
+      readonly
+    />
+    <div v-if="total_stockError" class="text-red-500 text-sm">{{ total_stockError }}</div>
+  </div>
 
-                                <!-- Sold Field -->
-                                <div>
-                                    <label for="sold" style="font-size: 11px;" class=" pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline   text-white">Items Already Sold  <span class="text-red-500">*</span></label>
-                                    <input type="number" min="0"  id="sold" v-model="newProduct.sold" class="input-field text-xs p-1" @input="validateSold" />
-                                    <div v-if="soldError" class="text-red-500 text-sm">{{ soldError }}</div>
-                                </div>
+  <!-- Unsold Stock -->
+  <div>
+    <label
+      for="stock"
+      style="font-size: 11px;"
+      class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
+    >
+      Unsold Stock <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="number"
+      min="0"
+      id="stock"
+      v-model="newProduct.stock"
+      class="input-field text-xs p-1"
+      required
+      @input="updateTotalStock"
+    />
+    <div v-if="stockError" class="text-red-500 text-sm">{{ stockError }}</div>
+  </div>
+
+  <!-- Sold Field -->
+  <div>
+    <label
+      for="sold"
+      style="font-size: 11px;"
+      class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
+    >
+      Items Already Sold <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="number"
+      min="0"
+      id="sold"
+      v-model="newProduct.sold"
+      class="input-field text-xs p-1"
+      @input="updateTotalStock"
+    />
+    <div v-if="soldError" class="text-red-500 text-sm">{{ soldError }}</div>
+  </div>
                                 <!-- Status Field -->
                                 <div>
                                     <label for="status" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Status <span class="text-red-500">*</span></label>
@@ -2893,6 +3016,28 @@ const handleEditImageUploadPackage = (event) => {
                                 </select>
                                 <span v-if="validationErrorsEdit.category" class="text-red-500 text-xs">{{ validationErrorsEdit.category }}</span>
                             </div>
+
+                              <!-- Unsold Stock -->
+                            <div>
+                                <label
+                                for="stock"
+                                style="font-size: 11px;"
+                                class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
+                                >
+                                Total Stock<span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                type="number"
+                                min="0"
+                                id="stock"
+                                v-model="editProduct.total_stock"
+                                class="input-field text-xs p-1"
+                                required
+                                @input="validateTotalStockUpdate"
+                                />
+                                <div v-if="UpdateTotalStockError" class="text-red-500 text-sm">{{ UpdateTotalStockError }}</div>
+                            </div>
+
                             <!-- Stock Field -->
                             <div>
                                 <label for="edit_stock" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Stock <span class="text-red-500">*</span></label>

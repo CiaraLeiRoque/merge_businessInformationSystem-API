@@ -303,7 +303,7 @@ const startSlideshow = () => {
   slideShowClick.value=setInterval(() => {
     currentIndex = (currentIndex + 1) % images.value.length;
     currentImage.value = images.value[currentIndex];
-  }, 1000); 
+  }, 5000); 
 }
 };
 
@@ -473,10 +473,10 @@ const stopAutoLoop = () => {
             </div>
             
 
-            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
+            <div class="mt-[75px] ml-auto relative flex-grow-0 max-w-3xl z-20">
                 <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
                 <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
-                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
+                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-tl-[100px] rounded-bl-[5px] rounded-r-[5px] z-10"/>
             </div>
         </div>
         </div>
@@ -503,14 +503,14 @@ const stopAutoLoop = () => {
         <div class="block flex flex-row gap-5">
         <!-- card 1 -->
             <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-    <div class="w-full bg-gray-800 h-[35px]"></div>
+    
                 <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
                 <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
             </div>
 
         <!-- card 2 -->
         <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-            <div class="w-full bg-gray-800 h-[35px]"></div>    
+                
             <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
                 <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
             </div>
@@ -518,7 +518,7 @@ const stopAutoLoop = () => {
 
         <!-- card 3 -->
         <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-    <div class="w-full bg-gray-800 h-[35px]"></div>
+    
             <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
                 <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
             </div>
@@ -527,21 +527,21 @@ const stopAutoLoop = () => {
         <div class="block flex flex-row gap-5">
         <!-- card 4 -->
         <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-    <div class="w-full bg-gray-800 h-[35px]"></div>
+    
             <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
                 <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
             </div>
 
         <!-- card 5 -->
         <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-    <div class="w-full bg-gray-800 h-[35px]"></div>
+    
             <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
                 <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
             </div>
 
         <!-- card 6 -->
-        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-    <div class="w-full bg-gray-800 h-[35px]"></div>
+        <div class="flex flex-col w-[320px] h-[380]px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    
             <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
                 <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
             </div> 
@@ -566,7 +566,7 @@ const stopAutoLoop = () => {
       </div>
 
       <!-- Product Packages Carousel -->
-      <div class="carousel-container relative w-full max-w-[3000px] overflow-hidden">
+      <div class="carousel-container relative w-full pb-10 max-w-[3000px] overflow-hidden">
         <div
           class="carousel-track flex transition-transform duration-500 ease-in-out"
           :style="{
@@ -612,13 +612,16 @@ const stopAutoLoop = () => {
                     </li>
                   </ul>
                 </div>
+
+                <div class="text-black italic text-center text-xl px-4">
+                  {{ packageItem.product_package_description }}
+                </div>
+
               </div>
             </div>
 
             <!-- Description Below Card -->
-            <div class="text-gray-300 text-center text-2xl px-4">
-              {{ packageItem.product_package_description }}
-            </div>
+
           </div>
         </div>
 

@@ -1341,6 +1341,7 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/d6a89ec1883ecd1de145179d44cb274cf4927da9",
                 "reference": "d6a89ec1883ecd1de145179d44cb274cf4927da9",
+
                 "shasum": ""
             },
             "require": {
@@ -1372,6 +1373,7 @@
                 "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.385.0"
             },
             "time": "2024-12-09T01:08:31+00:00"
+
         },
         {
             "name": "google/auth",
@@ -4116,6 +4118,7 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
+<<<<<<< Updated upstream
             "version": "1.29.6",
             "source": {
                 "type": "git",
@@ -4126,6 +4129,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/08597725b84570cd6f32bf0ea92e75a803ef28c2",
                 "reference": "08597725b84570cd6f32bf0ea92e75a803ef28c2",
+=======
+            "version": "1.29.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
+                "reference": "727cb704d5479fe4ddc291497ee471c4ec08f1b6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/727cb704d5479fe4ddc291497ee471c4ec08f1b6",
+                "reference": "727cb704d5479fe4ddc291497ee471c4ec08f1b6",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
@@ -4215,9 +4230,15 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
+<<<<<<< Updated upstream
                 "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/1.29.6"
             },
             "time": "2024-12-08T05:49:00+00:00"
+=======
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/1.29.5"
+            },
+            "time": "2024-11-22T05:57:44+00:00"
+>>>>>>> Stashed changes
         },
         {
             "name": "phpoption/phpoption",
@@ -4867,6 +4888,7 @@
         },
         {
             "name": "psy/psysh",
+<<<<<<< Updated upstream
             "version": "v0.12.7",
             "source": {
                 "type": "git",
@@ -4877,6 +4899,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/bobthecow/psysh/zipball/d73fa3c74918ef4522bb8a3bf9cab39161c4b57c",
                 "reference": "d73fa3c74918ef4522bb8a3bf9cab39161c4b57c",
+=======
+            "version": "v0.12.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bobthecow/psysh.git",
+                "reference": "36a03ff27986682c22985e56aabaf840dd173cb5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bobthecow/psysh/zipball/36a03ff27986682c22985e56aabaf840dd173cb5",
+                "reference": "36a03ff27986682c22985e56aabaf840dd173cb5",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
@@ -4940,9 +4974,15 @@
             ],
             "support": {
                 "issues": "https://github.com/bobthecow/psysh/issues",
+<<<<<<< Updated upstream
                 "source": "https://github.com/bobthecow/psysh/tree/v0.12.7"
             },
             "time": "2024-12-10T01:58:33+00:00"
+=======
+                "source": "https://github.com/bobthecow/psysh/tree/v0.12.5"
+            },
+            "time": "2024-11-29T06:14:30+00:00"
+>>>>>>> Stashed changes
         },
         {
             "name": "ralouphie/getallheaders",
@@ -5765,6 +5805,7 @@
         },
         {
             "name": "spatie/laravel-package-tools",
+<<<<<<< Updated upstream
             "version": "1.17.0",
             "source": {
                 "type": "git",
@@ -5775,6 +5816,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/spatie/laravel-package-tools/zipball/9ab30fd24f677e5aa370ea4cf6b41c517d16cf85",
                 "reference": "9ab30fd24f677e5aa370ea4cf6b41c517d16cf85",
+=======
+            "version": "1.16.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/laravel-package-tools.git",
+                "reference": "1f26942dc1e5c49eacfced34fdbc29ed234bd7b3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/laravel-package-tools/zipball/1f26942dc1e5c49eacfced34fdbc29ed234bd7b3",
+                "reference": "1f26942dc1e5c49eacfced34fdbc29ed234bd7b3",
+>>>>>>> Stashed changes
                 "shasum": ""
             },
             "require": {
@@ -5813,7 +5866,11 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-package-tools/issues",
+<<<<<<< Updated upstream
                 "source": "https://github.com/spatie/laravel-package-tools/tree/1.17.0"
+=======
+                "source": "https://github.com/spatie/laravel-package-tools/tree/1.16.6"
+>>>>>>> Stashed changes
             },
             "funding": [
                 {
@@ -5821,7 +5878,11 @@
                     "type": "github"
                 }
             ],
+<<<<<<< Updated upstream
             "time": "2024-12-09T16:29:14+00:00"
+=======
+            "time": "2024-11-18T15:02:02+00:00"
+>>>>>>> Stashed changes
         },
         {
             "name": "spatie/macroable",
