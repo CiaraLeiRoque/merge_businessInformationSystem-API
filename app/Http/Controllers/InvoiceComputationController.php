@@ -31,10 +31,16 @@ class InvoiceComputationController extends Controller
     public function show($invoice_system_id)
     {
         $invoice = InvoiceComputation::where('invoice_system_id', $invoice_system_id)->first();
-    
+
         if (!$invoice) {
             return response()->json(['error' => 'Invoice Computation not found'], 404);
         }
+
+        if (!$invoice) {
+            Log::error("Invoice Computation not found for invoice_system_id: $invoice_system_id");
+            return response()->json(['error' => 'Invoice Computation not found'], 404);
+        }
+        
     
         return response()->json($invoice);
     }

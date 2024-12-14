@@ -2848,7 +2848,7 @@ fetchPackageData();
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input @keypress="validateKeyPress" disabled class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmountUpdate(index)" v-model="field.quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmountUpdate(index)" v-model="field.quantity" placeholder="Qty." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2856,7 +2856,7 @@ fetchPackageData();
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input  @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.final_price" placeholder="Total Amount" />
+                                                <input  @keypress="validateKeyPress" disabled :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.final_price" placeholder="Total Amount" />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">

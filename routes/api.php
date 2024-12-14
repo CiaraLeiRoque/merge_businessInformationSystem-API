@@ -175,6 +175,9 @@ Route::get('/invoice_additional/{invoice_system_id}', [InvoiceAdditionalControll
 Route::get('invoice_computation',[InvoiceComputationController::class,'index']);
 Route::post('invoice_computation',[InvoiceComputationController::class,'store']);
 Route::get('/invoice_computation/{invoice_system_id}',[InvoiceComputationController::class,'show']);
+Route::get('/invoice_computation/{invoice_system_id}',[InvoiceComputationController::class,'show']);
+
+
 
 Route::get('invoice_print/{invoice_id}', [InvoiceController::class, 'invoice_print']);
 
