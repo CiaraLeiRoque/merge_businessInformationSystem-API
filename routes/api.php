@@ -205,7 +205,11 @@ Route::get('products/print/pdf', [FinanceController::class, 'printProductsPdf'])
 
 Route::post('products/import/xlsx', [ProductController::class, 'importProductsXlsx']);
 
-Route::get('products/print/export/xlsx', [ProductController::class, 'exportProductsXslx']);
+
+Route::get('products/print/master/export/xlsx', [ProductController::class, 'exportMasterProductsXlsx']);
+
+Route::get('products/print/export/pdf', [ProductController::class, 'exportProductsPdf']);
+Route::get('products/print/export/xlsx', [ProductController::class, 'exportProductsXlsx']);
 
 Route::get('products/print/export/template_xslx', [ProductController::class, 'downloadTemplate']);
 

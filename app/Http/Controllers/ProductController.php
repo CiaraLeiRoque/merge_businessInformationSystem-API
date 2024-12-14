@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Exports\ExportProduct;
 use App\Imports\ImportProduct;
 use App\Exports\ExportProductTemplate;
+use App\Exports\ExportMasterProduct;
+use App\Models\ProductColumnTableVisibility;
 use App\Models\Product;
 use App\Exports\ProductsExport;
 use Illuminate\Http\Request;
@@ -15,7 +17,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Validators\ValidationException; 
-
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class ProductController extends Controller
@@ -86,6 +88,7 @@ class ProductController extends Controller
             'brand' => 'nullable|string|max:255',
             'price' => 'nullable|numeric',
             'category' => 'nullable|string|max:255',
+            'total_stock' => 'nullable|integer',
             'stock' => 'nullable|integer',
             'sold' => 'nullable|integer',
             'status' => 'nullable|string|max:255',
@@ -123,6 +126,7 @@ class ProductController extends Controller
             'brand' => 'nullable|string|max:255',
             'price' => 'nullable|numeric',
             'category' => 'nullable|string|max:255',
+            'total_stock' => 'nullable|integer',
             'stock' => 'nullable|integer',
             'sold' => 'nullable|integer',
             'status' => 'nullable|string|max:255',
@@ -205,7 +209,48 @@ class ProductController extends Controller
         return response()->json($financesByDate);
     }
 
-    public function exportProductsXslx(Request $request)
+    public function exportMasterProductsXlsx(Request $request)
+    {
+        return Excel::download(new ExportMasterProduct, 'products_master.xlsx');
+    }
+
+
+    public function exportProductsPdf()
+{
+    $visibleColumns = ProductColumnTableVisibility::where('is_visible', true)
+        ->pluck('column_Table')
+        ->toArray();
+
+    $columnMapping = [
+        'productId' => 'id',
+        'productImage' => 'image',
+        'productName' => 'name',
+        'productBrand' => 'brand',
+        'productPrice' => 'price',
+        'productCategory' => 'category',
+        'productTotalStock' => 'total_stock',
+        'productStock' => 'stock',
+        'productSold' => 'sold',
+        'productStatus' => 'status',
+        'productExpiry' => 'expDate',
+    ];
+
+    $products = Product::all();
+
+    $data = [
+        'visibleColumns' => $visibleColumns,
+        'columnMapping' => $columnMapping,
+        'products' => $products,
+    ];
+
+
+
+    $pdf = \PDF::loadView('productsPdf', $data)->setPaper([0, 0, 612, 936], 'landscape'); ;
+    return $pdf->download('products.pdf');
+}
+
+
+    public function exportProductsXlsx(Request $request)
     {
         return Excel::download(new ExportProduct, 'products.xlsx');
     }

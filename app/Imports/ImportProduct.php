@@ -21,8 +21,9 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
             'name'                   => $row['name'],
             'description'            => $row['description'],
             'brand'                  => $row['brand'], // No need for formatBrand here
-            'price'                  => $row['price'],
+            'price'                  => $row['unit_price'],
             'category'               => $row['category'],
+            'total_stock'            => $row['total_stock'],
             'stock'                  => $row['stock'],
             'sold'                   => $row['sold'] ?? 0,
             'status'                 => $row['status'],
@@ -70,6 +71,7 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
             '*.brand'                  => 'nullable|string',
             '*.price'                  => 'nullable|numeric',
             '*.category'               => 'nullable|string',
+            '*.total_stock'            => 'nullable|integer',
             '*.stock'                  => 'nullable|integer',
             '*.sold'                   => 'nullable|integer',
             '*.status'                 => 'nullable|string',

@@ -2756,7 +2756,7 @@ fetchPackageData();
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
@@ -2848,7 +2848,7 @@ fetchPackageData();
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmountUpdate(index)" v-model="field.quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" disabled class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmountUpdate(index)" v-model="field.quantity" placeholder="Qty." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2901,7 +2901,7 @@ fetchPackageData();
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Description</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Action</th>
@@ -3188,7 +3188,7 @@ fetchPackageData();
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
@@ -3198,59 +3198,59 @@ fetchPackageData();
                                     <tbody>
                                         <tr v-for="(field, index) in textItemFields" :key="index" :class="index % 2 === 0 ? 'bg-blue-900 bg-opacity-5' : 'bg-white'" class="items-center text-center">
                                             <td class="px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
-        <div class="flex items-center justify-center relative">
-            <div class="flex flex-shrink-0 items-center">
-                <div v-if="field.image">
-                    <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" />
-                </div>
-                <div v-else>
-                    <font-awesome-icon :icon="['fas', 'image']" class="w-5 h-5 object-cover" size="sm" />
-                </div>
-            </div>
-            <div class="ml-4 relative"> <!-- Added relative class here -->
-                <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
-                
-                    <!-- The searchProductQuery dropdown -->
-                    <ul
-                        v-if="field.searchProductQuery && field.isSearching"
-                        class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
-                        style="z-index: 15;"
-                    >
-                        <li
-                        v-for="item in filteredProductsAndPackages(field.searchProductQuery)"
-                        :key="item.id"
-                        @click="selectProductOrPackage(item, index)"
-                        class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                        >
-                        <!-- Check if it's a product -->
-                        <div v-if="item.name" class="flex-shrink-0">
-                            <img
-                            :src="'/storage/' + item.image"
-                            :alt="item.name"
-                            class="w-12 h-12 object-cover rounded-md"
-                            />
-                            <div class="ml-4 flex-grow">
-                            <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
-                            <p class="text-sm text-gray-500">{{ item.price }}</p>
-                            </div>
-                        </div>
+                                                <div class="flex items-center justify-center relative">
+                                                    <div class="flex flex-shrink-0 items-center">
+                                                        <div v-if="field.image">
+                                                            <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" />
+                                                        </div>
+                                                        <div v-else>
+                                                            <font-awesome-icon :icon="['fas', 'image']" class="w-5 h-5 object-cover" size="sm" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-4 relative"> <!-- Added relative class here -->
+                                                        <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
+                                                        
+                                                            <!-- The searchProductQuery dropdown -->
+                                                            <ul
+                                                                v-if="field.searchProductQuery && field.isSearching"
+                                                                class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
+                                                                style="z-index: 15;"
+                                                            >
+                                                                <li
+                                                                v-for="item in filteredProductsAndPackages(field.searchProductQuery)"
+                                                                :key="item.id"
+                                                                @click="selectProductOrPackage(item, index)"
+                                                                class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                                                                >
+                                                                <!-- Check if it's a product -->
+                                                                <div v-if="item.name" class="flex-shrink-0">
+                                                                    <img
+                                                                    :src="'/storage/' + item.image"
+                                                                    :alt="item.name"
+                                                                    class="w-12 h-12 object-cover rounded-md"
+                                                                    />
+                                                                    <div class="ml-4 flex-grow">
+                                                                    <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
+                                                                    <p class="text-sm text-gray-500">{{ item.price }}</p>
+                                                                    </div>
+                                                                </div>
 
-                        <!-- Check if it's a package -->
-                        <div v-else-if="item.product_package_name" class="flex-shrink-0">
-                            <div class="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
-                            <font-awesome-icon icon="fa-box" size="lg" />
-                            </div>
-                            <div class="ml-4 flex-grow">
-                            <p class="text-sm font-medium text-gray-900">{{ item.product_package_name }}</p>
-                            <p class="text-sm text-gray-500">Package ({{ item.products.length }} products)</p>
-                            </div>
-                        </div>
-                        </li>
-                    </ul>
+                                                                <!-- Check if it's a package -->
+                                                                <div v-else-if="item.product_package_name" class="flex-shrink-0">
+                                                                    <div class="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                                                                    <font-awesome-icon icon="fa-box" size="lg" />
+                                                                    </div>
+                                                                    <div class="ml-4 flex-grow">
+                                                                    <p class="text-sm font-medium text-gray-900">{{ item.product_package_name }}</p>
+                                                                    <p class="text-sm text-gray-500">Package ({{ item.products.length }} products)</p>
+                                                                    </div>
+                                                                </div>
+                                                                </li>
+                                                            </ul>
 
-            </div>
-        </div>
-    </td>
+                                                    </div>
+                                                </div>
+                                            </td>
 
                                             <td class=" pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
                                                 <div class="flex items-center justify-center">
@@ -3269,7 +3269,7 @@ fetchPackageData();
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" disabled @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -3316,7 +3316,7 @@ fetchPackageData();
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Description</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Action</th>
@@ -3604,7 +3604,7 @@ fetchPackageData();
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
@@ -3678,7 +3678,7 @@ fetchPackageData();
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Description</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Action</th>

@@ -566,7 +566,7 @@ const stopAutoLoop = () => {
       </div>
 
       <!-- Product Packages Carousel -->
-      <div class="carousel-container relative w-full max-w-[3000px] overflow-hidden">
+      <div class="carousel-container relative w-full pb-10 max-w-[3000px] overflow-hidden">
         <div
           class="carousel-track flex transition-transform duration-500 ease-in-out"
           :style="{
@@ -612,13 +612,16 @@ const stopAutoLoop = () => {
                     </li>
                   </ul>
                 </div>
+
+                <div class="text-black italic text-center text-xl px-4">
+                  {{ packageItem.product_package_description }}
+                </div>
+
               </div>
             </div>
 
             <!-- Description Below Card -->
-            <div class="text-gray-300 text-center text-2xl px-4">
-              {{ packageItem.product_package_description }}
-            </div>
+
           </div>
         </div>
 

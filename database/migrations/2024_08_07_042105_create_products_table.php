@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('category');
             $table->integer('stock')->default(0);
             $table->integer('sold')->default(0);
+            $table->integer('total_stock')->default(0);
             $table->string('status');
             $table->text('description');
             $table->date('expDate');
@@ -53,10 +54,11 @@ return new class extends Migration
         DB::table('product_column_table_visibilities')->insert([
             ['column_table' => 'productId', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
             ['column_table' => 'productImage', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['column_table' => 'productName', 'is_visible' => false, 'created_at' => now(), 'updated_at' => now()],
-            ['column_table' => 'productBrand', 'is_visible' => false, 'created_at' => now(), 'updated_at' => now()],
-            ['column_table' => 'productPrice', 'is_visible' => false, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productName', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productBrand', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productPrice', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
             ['column_table' => 'productCategory', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productTotalStock', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
             ['column_table' => 'productStock', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
             ['column_table' => 'productSold', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
             ['column_table' => 'productStatus', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],

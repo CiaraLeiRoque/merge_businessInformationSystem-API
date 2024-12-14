@@ -9,15 +9,43 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ExportProductTemplate implements WithHeadings, WithStyles
+class ExportMasterProduct implements FromQuery, WithHeadings, WithStyles, WithMapping
 {
     /**
      * Return the query of products.
      */
+    public function query()
+    {
+        return Product::query();
+        
+    }
 
     /**
      * Map the data to be exported.
      */
+    public function map($product): array
+    {
+        return [
+            $product->id,
+            $product->name,
+            $product->description,
+            $product->brand,
+            $product->price,
+            $product->category,
+            $product->total_stock,
+            $product->stock,
+            $product->sold ?? 0,  // This will now always be 0 or a positive integer
+            $product->status,
+            $product->expDate,
+            $product->image,
+            $product->featured,
+            $product->on_sale,
+            $product->on_sale_price,
+            $product->business_id,
+            $product->created_at,
+            $product->updated_at,
+        ];
+    }
 
     /**
      * Define headings for all columns.
@@ -29,7 +57,7 @@ class ExportProductTemplate implements WithHeadings, WithStyles
             'Name',
             'Description',
             'Brand',
-            'Price',
+            'Unit Price',
             'Category',
             'Total Stock',
             'Stock',
