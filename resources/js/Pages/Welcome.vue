@@ -699,20 +699,31 @@ const stopAutoLoop = () => {
 
 
 
-    <section>
-        <div class="bg-website-main1 pb-20" >
-            <!-- Map Section -->
-        <div class="mt-[65px] text-center mb-20 mx-auto flex flex-col">
-            <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">Visit Us</p>
-            <p class="text-[20px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
-            <p class="text-[20px] text-white">{{ businessInfo.business_Province }}, 
-                {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}  </p>
-        </div>
-        <div class="-mt-[60px] map-section h-[700px] w-full mb-[100px]">
-            <div id="map" class="h-full w-full"></div>
-        </div>
-        </div>
-    </section>
+        <section>
+            <div class="bg-website-main1 pb-20">
+                <!-- Map Section -->
+                <div class="mt-[65px] text-center mb-20 mx-auto flex flex-col">
+                    <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">Visit Us</p>
+                    <p class="text-[20px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
+                    <p class="text-[20px] text-white">
+                        {{ businessInfo.business_Province }}, 
+                        {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}
+                    </p>
+                </div>
+                <div class="-mt-[60px] map-section h-[700px] w-full mb-[100px]">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3856.341368136968!2d120.81536007492927!3d14.862178085655763!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c9c439257747%3A0x5d3762a1e14af687!2sLimesen%20Network%20Solutions%20Inc.!5e0!3m2!1sen!2sph!4v1734287746976!5m2!1sen!2sph" 
+                        width="100%" 
+                        height="100%" 
+                        style="border:0;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+        </section>
+
 
 
     <!-- section /Chat Section -->
