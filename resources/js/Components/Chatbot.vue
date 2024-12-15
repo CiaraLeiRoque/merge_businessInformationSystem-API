@@ -231,18 +231,51 @@ export default {
           
             break;
             
-          case 3:
-          this.messages.push({
-              id: new Date().getTime(),
-              text: `We are located at ${this.businessProvince}, ${this.businessCity},  ${this.businessBarangay},  ${this.businessAddress}  `,
-              sender: 'bot',
-            });
-            setTimeout(() => {
-              this.showEndMessage(); 
-              this.scrollToBottom();
-            }, 1000);
-            
+            case 3:
+            const address = `${this.businessAddress}, ${this.businessBarangay}, ${this.businessCity}, ${this.businessProvince}`;
+            const encodedAddress = encodeURIComponent(address);
+
+            // Request user's current location
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+
+                    // Create a Google Maps directions URL
+                    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&origin=${userLat},${userLng}`;
+
+                    // Push the message with the Google Maps link
+                    this.messages.push({
+                        id: new Date().getTime(),
+                        text: `We are located at ${address}. \n <a href="${googleMapsUrl}" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to view us on Google Maps and get directions from your current location.`,
+                        sender: 'bot',
+                    });
+
+                    setTimeout(() => {
+                        this.showEndMessage();
+                        this.scrollToBottom();
+                    }, 1000);
+                },
+                (error) => {
+                    // Fallback in case geolocation fails
+                    console.error("Geolocation error:", error);
+
+                    this.messages.push({
+                        id: new Date().getTime(),
+                        text: `We are located at ${address}. Unfortunately, we couldn't get your current location. \n <a href="https://www.google.com/maps/search/?api=1&query=${encodedAddress}" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to view us on Google Maps.`,
+                        sender: 'bot',
+                    });
+
+                    setTimeout(() => {
+                        this.showEndMessage();
+                        this.scrollToBottom();
+                    }, 1000);
+                }
+            );
+
             break;
+
+
             
           case 4:
           this.messages.push({
@@ -286,9 +319,9 @@ export default {
             let productMessage;
 
             if (this.productDescription === 'Unavailable' || !this.productDescription) {
-              productMessage = "Sorry, the product description is currently unavailable.";
+                productMessage = "Sorry, the product description is currently unavailable.";
             } else {
-              productMessage = `We sell ${this.productDescription}`;
+                productMessage = `We sell ${this.productDescription} \n <a href="http://127.0.0.1:8000/products_page" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to check out our products.`;
             }
 
             this.messages.push({
