@@ -6,6 +6,15 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 import { route } from 'ziggy-js';
+import WebsiteModal from '@/Pages/WebsiteModal.vue'; // Import the modal
+
+const showModal = ref(false);
+
+const handleFilterApplied = ({ fromDate, toDate }) => {
+    console.log('Filter applied with dates:', fromDate, toDate);
+    // Now you can modify your fetchAnalyticsData or API request to use the selected date range
+    fetchAnalyticsData({ fromDate, toDate });
+};
 
 let visitorsViewsChart = null;
 let engagementRateChart = null;
@@ -22,7 +31,7 @@ function goToPreviewHomePage(){
 
 Chart.register(...registerables);
 
-const selectedPeriod = ref(7);
+const selectedPeriod = ref('today'); // Default period
 const views = ref(0);
 const visits = ref(0);
 const visitors = ref(0);
@@ -33,10 +42,37 @@ const engagementRate = ref(0);
 const dailyData = ref([]);
 const userTypes = ref({ new: 0, returning: 0 });
 
-const fetchAnalyticsData = async () => {
+const granularity = ref('hour'); // Default granularity
+
+const updateGranularity = () => {
+  switch (selectedPeriod.value) {
+    case 'today':
+      granularity.value = 'hour';
+      break;
+    case 'weekly':
+      granularity.value = 'day';
+      break;
+    case 'monthly':
+      granularity.value = 'week';
+      break;
+    case 'yearly':
+      granularity.value = 'month';
+      break;
+    default:
+      granularity.value = 'day';
+  }
+};
+
+const fetchAnalyticsData = async ({ fromDate = '', toDate = '' } = {}) => {
     try {
+        updateGranularity(); // Update granularity based on the selected period
         const { data } = await axios.get(`/api/analytics`, {
-            params: { period: selectedPeriod.value },
+            params: { 
+                period: selectedPeriod.value, 
+                granularity: granularity.value,
+                fromDate,
+                toDate 
+            },
         });
 
         views.value = data.metricsData.views;
@@ -65,13 +101,21 @@ const renderVisitorsViewsChart = () => {
         visitorsViewsChart.destroy();
     }
 
-    const labels = dailyData.value.map(data => data.date);
+    const labels = dailyData.value.map(data => {
+        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
+            // Convert date to weekday name
+            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        return granularity.value === 'hour'
+            ? `${data.dimension.toString().padStart(2, '0')}:00`
+            : data.dimension;
+    });
     const viewsData = dailyData.value.map(data => data.views);
     const visitorsData = dailyData.value.map(data => data.visitors);
 
     const ctx = document.getElementById("visitorsViewsChart").getContext("2d");
     visitorsViewsChart = new Chart(ctx, {
-        type: "bar",
+        type: "line",
         data: {
             labels: labels,
             datasets: [
@@ -125,7 +169,15 @@ const renderBounceRateChart = () => {
         bounceRateChart.destroy();
     }
 
-    const labels = dailyData.value.map((data) => data.date);
+    const labels = dailyData.value.map(data => {
+        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
+            // Convert date to weekday name
+            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        return granularity.value === 'hour'
+            ? `${data.dimension.toString().padStart(2, '0')}:00`
+            : data.dimension;
+    });
     const bounceRateData = dailyData.value.map((data) => data.bounceRate);
 
     const ctx = document.getElementById('bounceRateChart').getContext('2d');
@@ -168,7 +220,15 @@ const renderEngagementRateChart = () => {
         engagementRateChart.destroy();
     }
 
-    const labels = dailyData.value.map(data => data.date);
+    const labels = dailyData.value.map(data => {
+        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
+            // Convert date to weekday name
+            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        return granularity.value === 'hour'
+            ? `${data.dimension.toString().padStart(2, '0')}:00`
+            : data.dimension;
+    });
     const engagementRateData = dailyData.value.map(data => data.engagementRate);
 
     const ctx = document.getElementById("engagementRateChart").getContext("2d");
@@ -220,6 +280,10 @@ const renderUserTypesChart = () => {
         userTypesChart.destroy();
     }
 
+    const totalUsers = userTypes.value.new + userTypes.value.returning;
+    const newUsersPercentage = totalUsers ? ((userTypes.value.new / totalUsers) * 100).toFixed(2) : 0;
+    const returningUsersPercentage = totalUsers ? ((userTypes.value.returning / totalUsers) * 100).toFixed(2) : 0;
+
     const ctx = document.getElementById('userTypesChart').getContext('2d');
     userTypesChart = new Chart(ctx, {
         type: 'pie',
@@ -246,11 +310,12 @@ const renderUserTypesChart = () => {
                         label: (context) => {
                             const label = context.label || '';
                             const value = context.raw || 0;
-                            return `${label}: ${value}`;
+                            const percentage = totalUsers ? ((value / totalUsers) * 100).toFixed(2) : 0;
+                            return `${label}: ${value} (${percentage}%)`;
                         },
                     },
                 },
-                // Custom plugin to display the new and returning users count
+                // Custom plugin to display the new and returning users count and percentages
                 beforeDraw: (chart) => {
                     const { ctx } = chart;
                     const { new: newUsers, returning: returningUsers } = userTypes.value;
@@ -267,18 +332,18 @@ const renderUserTypesChart = () => {
                     ctx.textAlign = 'left';
                     ctx.font = '16px Arial';
 
-                    // Draw new users count
+                    // Draw new users count and percentage
                     ctx.fillStyle = '#5E9FF2';
                     ctx.fillText('New Users:', leftX, startY);
                     ctx.font = 'bold 18px Arial';
-                    ctx.fillText(newUsers, leftX, startY + 20);
+                    ctx.fillText(`${newUsers} (${newUsersPercentage}%)`, leftX, startY + 20);
 
-                    // Draw returning users count
+                    // Draw returning users count and percentage
                     ctx.font = '16px Arial';
                     ctx.fillStyle = '#FFB74D';
                     ctx.fillText('Returning Users:', leftX, startY + 50);
                     ctx.font = 'bold 18px Arial';
-                    ctx.fillText(returningUsers, leftX, startY + 70);
+                    ctx.fillText(`${returningUsers} (${returningUsersPercentage}%)`, leftX, startY + 70);
 
                     ctx.restore();
                 },
@@ -286,7 +351,6 @@ const renderUserTypesChart = () => {
         },
     });
 };
-
 
 
 
@@ -310,7 +374,7 @@ onMounted(fetchAnalyticsData);
     <AuthenticatedLayout>
         <!-- Top stats section -->
         <div class="px-8 border-b border-black">
-            <div class="grid grid-cols-6 gap-4 text-center">
+            <div class="grid grid-cols-7 gap-4 text-center">
                 <div>
                     <h2 class="text-3xl font-extrabold mb-2">{{ views }}</h2>
                     <p class="font-bold">Visits</p>
@@ -333,49 +397,66 @@ onMounted(fetchAnalyticsData);
                 </div>
                 <div>
                     <select v-model="selectedPeriod" class="ml-4 p-2 pr-8 border rounded">
-                        <option value="7">7 Days</option>
-                        <option value="14">14 Days</option>
-                        <option value="28">28 Days</option>
+                        <option value="today">Today</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
                     </select>
+                </div>
+                <div>
+                    <button 
+                        @click="showModal = true"
+                        class="ml-4 p-2 pr-8 border-black #0E2940 rounded text-white mr-10"
+                        style="background-color: #0E2940;"
+                    >
+                        Custom Date
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="flex flex-wrap justify-center px-8 gap-3">
+        <div class="flex flex-wrap justify-center px-8 gap-5">
             <!-- Visitors & Views Chart -->
-            <div class="custom-chart-width p-4 border border-black rounded-lg mt-3">
-                <canvas id="visitorsViewsChart" class="w-full" style="height: 200px;"></canvas>
+            <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
+                <h3 class="text-l font-semibold text-center">Visitors and Views</h3>
+                <canvas id="visitorsViewsChart" class="w-full" style="height: 280px;"></canvas>
             </div>
-
             <!-- Bounce Rate Chart -->
-            <div class="custom-chart-width p-4 border border-black rounded-lg mt-3">
-                <canvas id="bounceRateChart" class="w-full" style="height: 200px;"></canvas>
+            <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
+                <h3 class="text-l font-semibold text-center">Retention Rate</h3>
+                <canvas id="bounceRateChart" class="w-full" style="height: 280px;"></canvas>
             </div>
-
             <!-- Engagement Rate Chart -->
-            <div class="custom-chart-width p-4 border border-black rounded-lg mt-3">
-                <canvas id="engagementRateChart" class="w-full" style="height: 200px;"></canvas>
+            <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
+                <h3 class="text-l font-semibold text-center">Engagement Rate</h3>
+                <canvas id="engagementRateChart" class="w-full" style="height: 280px;"></canvas>
             </div>
-
-            <!-- Returning vs New Users Pie Chart -->
-            <div class="custom-chart-width p-4 border border-black rounded-lg mt-3">
-                <canvas id="userTypesChart" class="w-full" style="height: 200px;"></canvas>
+            <!-- User Types Pie Chart -->
+            <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
+                <h3 class="text-l font-semibold text-center">User Types</h3>
+                <canvas id="userTypesChart" class="w-full" style="height: 280px;"></canvas>
             </div>
         </div>
-
-
-
 
         <!-- Footer buttons -->
         <div class="ml-48 fixed bottom-0 left-0 right-0 flex justify-center mb-3 space-x-2">
             <button class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-6 py-4 rounded-md" @click="goToPreviewHomePage">Preview Website</button>
             <button class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-6 py-4 rounded-md" @click="goToEditWebsite1">Edit Website</button>
         </div>
+
+        <WebsiteModal 
+        :showModal="showModal" 
+        @filter-applied="handleFilterApplied" 
+        @close="showModal = false" 
+    />
     </AuthenticatedLayout>
 </template>
 
 <style scoped>
 .custom-chart-width {
-        width: 550px;
+        width: 750px;
+        max-height: 300px;
+        height: 300px;
+        
     }
 </style>
