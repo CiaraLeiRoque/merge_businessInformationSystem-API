@@ -18,7 +18,8 @@ use App\Imports\ProductsImport;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Validators\ValidationException; 
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use App\Models\Subscribers;
+use Illuminate\Support\Facades\Mail;
 
 class ProductController extends Controller
 {
@@ -109,6 +110,10 @@ class ProductController extends Controller
 
         $product->save();
 
+        if ($product->on_sale === 'yes') {
+            $this->notifySubscribers($product);
+        }
+
         return response()->json(['message' => 'Product added successfully', 'product' => $product], 201);
     }
 
@@ -139,8 +144,9 @@ class ProductController extends Controller
         ]);
 
         $product = Product::findOrFail($id);
+        $previousOnSale = $product->on_sale;
 
-        $product->update($validated);
+       $product->update($validated);
 
         if ($request->hasFile('image')) {
             // Handle image upload
@@ -149,8 +155,25 @@ class ProductController extends Controller
             $product->save();
         }
 
+        if ($previousOnSale !== 'yes' && $product->on_sale === 'yes') {
+            $this->notifySubscribers($product);
+        }
+    
+
         return response()->json(['product' => $product], 200);
     }
+
+    private function notifySubscribers(Product $product)
+{
+    $subscribers = Subscribers::whereNotNull('email_verified_at')->pluck('email');
+
+    foreach ($subscribers as $email) {
+        Mail::send('emails.product_on_sale', ['product' => $product], function ($message) use ($email, $product) {
+            $message->to($email)
+                    ->subject("Product on Sale: {$product->name}");
+        });
+    }
+}
 
 
 
