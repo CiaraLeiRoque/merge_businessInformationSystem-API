@@ -185,6 +185,8 @@ Route::get('/email-verified', function () {
     return view('email-verified');
 });
 
+Route::get('/unsubscribe', [SubscriberController::class, 'unsubscribe']);
+
 /*Route::get('/api/products', [ProductController::class, 'index']);
 Route::post('/api/products', [ProductController::class, 'store']);*/
 

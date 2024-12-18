@@ -94,5 +94,25 @@ class SubscriberController extends Controller
         return redirect('/email-verified');
     }
 
+    public function unsubscribe(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $subscriber = Subscribers::where('email', $request->email)
+            ->whereNotNull('email_verified_at') // Ensure the user is subscribed
+            ->first();
+
+        if (!$subscriber) {
+            return response()->json(['message' => 'Subscriber not found or already unsubscribed.'], 404);
+        }
+
+        // Set email_verified_at to null to mark as unsubscribed
+        $subscriber->update(['email_verified_at' => null]);
+
+        return response()->json(['message' => 'You have successfully unsubscribed.'], 200);
+    }
+
 
 }
