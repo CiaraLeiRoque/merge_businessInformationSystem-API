@@ -168,10 +168,10 @@ class ProductController extends Controller
     $subscribers = Subscribers::whereNotNull('email_verified_at')->pluck('email');
 
     foreach ($subscribers as $email) {
-        Mail::send('emails.product_on_sale', ['product' => $product], function ($message) use ($email, $product) {
+        Mail::send('emails.product_on_sale', ['product' => $product, 'email' => $email], function ($message) use ($email, $product) {
             $message->to($email)
                     ->subject("Product on Sale: {$product->name}");
-        });
+        });   
     }
 }
 
