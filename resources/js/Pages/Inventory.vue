@@ -613,7 +613,7 @@ function printInventorySummary() {
             window.open(`/api/products/print/master/export/xlsx`, '_blank');
         }
         else if(summaryOption.value.option === 'summaryPdf'){
-            window.open(`/api/products/print/pdf`, '_blank');
+            window.open(`/api/products/print/export/pdf`, '_blank');
         }   
         else{
             window.open(`/api/products/print/export/xlsx/`, '_blank');
@@ -1139,12 +1139,36 @@ const newInvoiceComputation = ref({
     };
 
 
+
     function validateKeyPress(event) {
   // Allow numbers (0-9) and the period/dot character
   if (!/^[0-9.]$/.test(event.key)) {
     event.preventDefault();
   }
 }
+const totalAmountDueHolder  = ref(0);
+
+const totalAmountDue = computed(() => {
+  if (!Array.isArray(textItemFields.value)) {
+    console.error('textItemFields is not an array:', textItemFields.value);
+    return 0;
+  }
+
+  return textItemFields.value.reduce((sum, field) => {
+    const totalAmount = parseFloat(field.total_amount) || 0;
+    if (isNaN(totalAmount)) {
+      console.warn('Invalid total_amount in field:', field);
+      return sum;
+    }
+    return sum + totalAmount;
+  }, 0);
+});
+
+watch(() => totalAmountDue.value, (newValue) => {
+  totalAmountDueHolder.value = roundToTwoDecimals(newValue);
+});
+
+
 
 const roundToTwoDecimals = (num) => Math.round(num * 100) / 100;
 const updateTotalProductAmount = (index) => {
@@ -1156,7 +1180,8 @@ const updateTotalProductAmount = (index) => {
 const newPackage = ref({
     product_package_id: '',
     product_package_name: '',
-    product_package_description: ''
+    product_package_description: '',
+    product_package_discount: '',
 });
 
 watch(
@@ -1179,7 +1204,8 @@ const addProductPackage = async () => {
                 const formData = new FormData();
                 formData.append('image', newPackage.value.image);
                 formData.append('product_package_name', newPackage.value.product_package_name);
-                formData.append('product_package_description', newPackage.value.product_package_description)
+                formData.append('product_package_description', newPackage.value.product_package_description);
+                formData.append('product_package_discount', newPackage.value.product_package_discount)
 
                 console.log([...formData.entries()]); 
                 console.log('NEW PACKAGE PRODUCT NAME: ', newPackage.value.product_package_name);
@@ -1675,6 +1701,10 @@ const updateTotalStock = () => {
   const total = roundToTwoDecimals(newProduct.stock + newProduct.sold || 0);
   newProduct.total_stock = total;
 };
+
+
+
+
 </script>
 
 <template>
@@ -1958,6 +1988,10 @@ const updateTotalStock = () => {
                                                             
                                                             <div class="flex items-start justify-start text-left w-1/2">
                                                                 x {{ item.product_quantity }}
+                                                            </div>
+
+                                                            <div class="flex items-start justify-start text-left w-1/2">
+                                                                x {{ item.productPrice }}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2401,8 +2435,8 @@ const updateTotalStock = () => {
                 Add a Package
             </h3>
 
-            <!-- Package Name -->
-            <div class="flex w-full items-center justify-center mb-6">
+                        <!-- Package Name -->
+                        <div class="flex w-full items-center justify-center mb-6">
                 <!-- Package Name -->
                 <div class="w-1/3 flex items-center justify-center">
                 <span class="flex w-44">Package Name:</span>
@@ -2414,6 +2448,7 @@ const updateTotalStock = () => {
                 />
                 </div>
             </div>
+
 
             <!-- Table Section -->
             <div class="px-12 mb-6">
@@ -2533,6 +2568,35 @@ const updateTotalStock = () => {
                                 </div>
                 </form>
             </div>
+
+        <div class="flex justify-center items-center">        <!-- Package Name -->
+            <div class="flex w-1/3 items-center justify-center mb-6">
+                <!-- Package Name -->
+                <div class="w-1/3 flex items-center justify-center">
+                <span class="flex w-44">Total Amount:</span>
+                <input
+                    type="text"
+                    id="brand"
+                    v-model="totalAmountDueHolder"
+                    class="input-field-package-name text-md p-1"
+                />
+                </div>
+            </div>
+
+            <div class="flex w-1/3 items-center justify-center mb-6">
+                <!-- Package Name -->
+                <div class="w-1/3 flex items-center justify-center">
+                <span class="flex w-44">Package Discount:</span>
+                <input
+                    type="text"
+                    id="brand"
+                    v-model="newPackage.product_package_discount"
+                    class="input-field-package-name text-md p-1"
+                />
+                </div>
+            </div>
+
+        </div>
 
         <!-- Description and Image Upload Section -->
         <div class="flex items-start gap-6 px-12 mb-6">

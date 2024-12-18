@@ -46,8 +46,6 @@ class ExportProductTemplate implements WithHeadings, WithStyles
             
             
             'Business ID',
-            'Created At',
-            'Updated At',
 
 
         ];
@@ -59,7 +57,7 @@ class ExportProductTemplate implements WithHeadings, WithStyles
     public function styles(Worksheet $sheet)
     {
         // Apply styles to the first row (header)
-        $sheet->getStyle('A1:R1')->applyFromArray([
+        $sheet->getStyle('A1:P1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['argb' => 'FFFFFFFF'], // White text
@@ -75,4 +73,9 @@ class ExportProductTemplate implements WithHeadings, WithStyles
             1 => ['font' => ['bold' => true]],
         ];
     }
+    public function prepareForValidation($data)
+{
+    unset($data['created_at'], $data['updated_at']); // Remove unnecessary fields
+    return $data;
+}
 }

@@ -72,6 +72,7 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('product_package_name')->nullable(); // name
             $table->string('product_package_description')->nullable(); // names
+            $table->string(column: 'product_package_discount')->nullable();
             $table->timestamps();
         });
         Schema::create('product_packages', function (Blueprint $table) {

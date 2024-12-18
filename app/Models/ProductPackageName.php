@@ -15,7 +15,8 @@ class ProductPackageName extends Model
         'product_package_id',
         'image',
         'product_package_name',
-        'product_package_description'
+        'product_package_description',
+        'product_package_discount'
     ];
  
     

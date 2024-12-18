@@ -521,25 +521,30 @@ const selectProduct = (product, index) => {
 
 const selectProductOrPackage = (item, index) => {
   if (item.name) {
-    // Handle individual product selection
+    // Determine the price based on on_sale status
+    const isOnSale = item.on_sale === 'yes';
+    const selectedAmount = isOnSale
+      ? parseFloat(item.on_sale_price)
+      : parseFloat(item.price);
+
+    // Update the textItemFields for the selected item
     textItemFields.value[index] = {
       product_id: item.id,
       image: item.image,
       searchProductQuery: item.name,
-      on_sale: item.on_sale,
-      amount: parseFloat(item.price),
+      on_sale: item.on_sale, // 'yes' or 'no'
+      amount: selectedAmount,
+      total_amount: selectedAmount.toFixed(2),
       stock: item.stock,
       sold: item.sold,
       quantity: 1,
-      total_amount: parseFloat(item.price).toFixed(2),
       areFieldsEnabled: true,
       isSearching: false,
-      seniorPWD_discountable: 'no'
+      seniorPWD_discountable: 'no',
     };
   } else if (item.product_package_name) {
     // Handle package selection
-    // Remove the current item
-    textItemFields.value.splice(index, 1);
+    textItemFields.value.splice(index, 1); // Remove the current item
 
     // Add rows for each product in the package
     item.products.forEach((product, i) => {
@@ -558,25 +563,26 @@ const selectProductOrPackage = (item, index) => {
         addItemText: `${item.product_package_name} - ${product.name}`,
         product_package: {
           id: item.id,
-          name: item.product_package_name
-        }
+          name: item.product_package_name,
+        },
       };
 
-      // Insert the new item at the current index + i
+      // Insert the new item at the correct position
       textItemFields.value.splice(index + i, 0, newItem);
     });
 
-    // If there are no more items after the inserted package items, add a new empty field
+    // If the inserted package items are the last, add an empty field
     if (index + item.products.length >= textItemFields.value.length) {
       addItemTextField();
     }
   }
 
   // Hide the search dropdown for all items
-  textItemFields.value.forEach(field => field.isSearching = false);
+  textItemFields.value.forEach((field) => (field.isSearching = false));
 
   console.log('Updated textItemFields:', textItemFields.value);
 };
+
 
 
 
