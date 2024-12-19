@@ -205,7 +205,7 @@ export default {
                 { id: 3, text: "Location" },
                 { id: 4, text: "Contact" },
                 { id: 5, text: "Working Hours"},
-                { id: 6, text: "Product Description"},
+                { id: 6, text: "Products"},
               ],
               buttonContainerClass: 'chat-buttons-container',
             });
@@ -319,7 +319,7 @@ export default {
             let productMessage;
 
             if (this.productDescription === 'Unavailable' || !this.productDescription) {
-                productMessage = "Sorry, the product description is currently unavailable.";
+                productMessage = "Sorry, the product list is currently unavailable.";
             } else {
                 productMessage = `We sell ${this.productDescription} \n <a href="http://127.0.0.1:8000/products_page" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to check out our products.`;
             }
@@ -354,37 +354,38 @@ export default {
             
             break;
 
-          case 8:
-          this.messages.push({
+            case 8:
+            this.messages.push({
               id: new Date().getTime(),
-              text:this.formatMessage( `You can contact us through the following Social Media Sites: 
-                    \n Facebook: ${this.businessFacebook} 
-                    \n X: ${this.businessX} 
-                    \n Instagram: ${this.businessInstagram} 
-                    \n Tiktok: ${this.businessTiktok} `),
+              text: this.formatMessage(`You can contact us through the following Social Media Sites: 
+                <br> Facebook: <a href="https://${this.businessFacebook}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessFacebook}</a> 
+                <br> X: <a href="https://${this.businessX}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessX}</a> 
+                <br> Instagram: <a href="https://${this.businessInstagram}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessInstagram}</a> 
+                <br> Tiktok: <a href="https://${this.businessTiktok}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessTiktok}</a>`),
               sender: 'bot',
             });
             setTimeout(() => {
               this.showEndMessage(); 
               this.scrollToBottom();
             }, 1000);
-            
             break;
 
-          case 9:
-          this.messages.push({
+
+            case 9:
+            this.messages.push({
               id: new Date().getTime(),
-              text:this.formatMessage( `You can contact us through the following E-Commerce Sites: 
-                    \n Lazada: ${this.lazada} 
-                    \n Shopee: ${this.shopee} `),
+              text: this.formatMessage(`You can contact us through the following E-Commerce Sites: 
+                <br> Lazada: <a href="https://${this.lazada}" target="_blank" style="color: blue; text-decoration: underline;">${this.lazada}</a> 
+                <br> Shopee: <a href="https://${this.shopee}" target="_blank" style="color: blue; text-decoration: underline;">${this.shopee}</a>`),
               sender: 'bot',
             });
             setTimeout(() => {
               this.showEndMessage(); 
               this.scrollToBottom();
             }, 1000);
-            
             break;
+
+
           
           case 10:
           this.messages.push({
