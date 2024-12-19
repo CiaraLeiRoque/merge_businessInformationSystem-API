@@ -2842,7 +2842,7 @@ fetchPackageData();
                                                                 />
                                                                 <div class="ml-4 flex-grow">
                                                                 <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
-                                                                <p class="text-sm text-gray-500">Price: {{ item.price }}</p>
+                                                                <p class="text-sm text-gray-500">Price: {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(item.price) }}</p>
                                                                 <p class="text-sm text-gray-500">Stock: {{ item.stock }}</p>
                                                                 </div>
                                                             </div>

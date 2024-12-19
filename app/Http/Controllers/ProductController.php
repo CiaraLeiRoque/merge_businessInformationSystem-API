@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Exports\ExportProduct;
 use App\Imports\ImportProduct;
 use App\Exports\ExportProductTemplate;
 use App\Exports\ExportMasterProduct;
 use App\Models\ProductColumnTableVisibility;
+use App\Models\ProductNotificationSettings;
 use App\Models\Product;
+use App\Models\Business;
 use App\Exports\ProductsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -238,8 +239,72 @@ class ProductController extends Controller
     }
 
 
-    public function exportProductsPdf()
+
+    public function exportCriticalStockPdf(Request $request)
+    {
+
+        
+    $exportTitle = $request->query('exportTitle');
+
+        // Get visible columns
+        $visibleColumns = ProductColumnTableVisibility::where('is_visible', true)
+            ->pluck('column_Table')
+            ->toArray();
+    
+        // Always include stock
+        if (!in_array('productStock', $visibleColumns)) {
+            $visibleColumns[] = 'productStock';
+        }
+    
+        // Get stock threshold from product_notification_settings
+        $stockThreshold = ProductNotificationSettings::where('stock_expDate', 'stock')
+            ->value('count');
+    
+        // Retrieve products with low stock
+        $products = Product::where('stock', '<', $stockThreshold)->get();
+    
+        $business = Business::first();
+        $businessName = $business->business_Name;
+        $businessAddress = $business->business_Address;
+        $businessTIN = $business->business_TIN;
+        $businessImage = $business->business_image;
+
+        
+        // Prepare data for the PDF
+        $data = [
+            'visibleColumns' => $visibleColumns,
+            'columnMapping' => [
+                'productId' => 'id',
+                'productImage' => 'image',
+                'productName' => 'name',
+                'productBrand' => 'brand',
+                'productPrice' => 'price',
+                'productCategory' => 'category',
+                'productTotalStock' => 'total_stock',
+                'productStock' => 'stock',
+                'productSold' => 'sold',
+                'productStatus' => 'status',
+                'productExpiry' => 'expDate',
+            ],
+            'products' => $products,
+            'businessName' => $businessName,
+            'businessAddress' => $businessAddress,
+            'businessTIN' => $businessTIN,
+            'businessImage' => $businessImage,
+            'exportTitle' => $exportTitle,
+        ];
+    
+        $pdf = PDF::loadView('productsPdf', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('low_stock_products.pdf');
+    }
+
+
+    public function exportProductsPdf(Request $request)
 {
+
+    
+    $exportTitle = $request->query('exportTitle');
+
     $visibleColumns = ProductColumnTableVisibility::where('is_visible', true)
         ->pluck('column_Table')
         ->toArray();
@@ -259,11 +324,22 @@ class ProductController extends Controller
     ];
 
     $products = Product::all();
+    
+    $business = Business::first();
+    $businessName = $business->business_Name;
+    $businessAddress = $business->business_Address;
+    $businessTIN = $business->business_TIN;
+    $businessImage = $business->business_image;
 
     $data = [
         'visibleColumns' => $visibleColumns,
         'columnMapping' => $columnMapping,
         'products' => $products,
+        'businessName' => $businessName,
+        'businessAddress' => $businessAddress,
+        'businessTIN' => $businessTIN,
+        'businessImage' => $businessImage,
+        'exportTitle' => $exportTitle,
     ];
 
 

@@ -20,25 +20,25 @@
                                 <div style="font-size: 18px;">
                                     <b>Total Income ({{ filterLabel }})</b>
                                 </div>
-                                <div style="font-size: 25px">₱ {{ totalIncome }}</div>
+                                <div style="font-size: 25px">₱ {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalIncome) }}</div>
                             </div>
                             <div class="flex flex-col text-center">
                                 <div style="font-size: 18px;">
                                     <b>Total Expenses ({{ filterLabel }})</b>
                                 </div>
-                                <div style="font-size: 25px">₱ {{ totalExpenses }}</div>
+                                <div style="font-size: 25px">₱ {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalExpenses) }}</div>
                             </div>
                             <div class="flex flex-col text-center">
                                 <div style="font-size: 18px;">
                                     <b>Other Finances ({{ filterLabel }})</b>
                                 </div>
-                                <div style="font-size: 25px">₱ {{ totalOthers }}</div>
+                                <div style="font-size: 25px">₱ {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalOthers) }}</div>
                             </div>
                                 <div class="flex flex-col text-center">
                                     <div style="font-size: 18px;">
                                         <b>Total Invoices ({{ filterLabel }})</b>
                                     </div>
-                                    <div style="font-size: 25px">₱ {{  invoicesByDateTotal  }}</div>
+                                    <div style="font-size: 25px">₱ {{  new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoicesByDateTotal)  }}</div>
                                 </div>
                         </div>
                         <div class="flex flex-row justify-around">

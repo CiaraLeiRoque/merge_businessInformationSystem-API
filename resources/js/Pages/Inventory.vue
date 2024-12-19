@@ -539,6 +539,32 @@ watch([startDate, endDate], async ([newStartDate, newEndDate]) => {
 
 
 
+const updateStockFromTotal = () => {
+  // Adjust unsold stock based on the new total
+  newProduct.value.stock = newProduct.value.total_stock - newProduct.value.sold
+}
+
+watch(
+  () => [newProduct.value.stock, newProduct.value.sold],
+  ([stock, sold]) => {
+    newProduct.value.total_stock = stock + sold
+  },
+  { immediate: true }
+)
+
+
+watch(
+  () => [editProduct.value.stock, editProduct.value.sold],
+  ([stock, sold]) => {
+    editProduct.value.total_stock = stock + sold
+  },
+  { immediate: true }
+)
+const updateStockFromTotalUpdate = () => {
+  // Adjust unsold stock based on the new total
+  newProduct.value.stock = newProduct.value.total_stock - newProduct.value.sold
+}
+
 
 const fileImport = ref(null);
 const message = ref('');
@@ -589,6 +615,19 @@ const closeModal = () => {
 
 
 
+const handleSelectChange = (event) => {
+  console.log('Selected export format:', summaryOption.value.option);
+
+  // Additional logic based on the selected value
+  if (summaryOption.value.option === 'summaryCriticalStocks') {
+    exportTitle.value = 'Low Stock Product Report'
+  } else if (summaryOption.value.option === 'summaryPdf') {
+    exportTitle.value = 'Exported Products List'
+    // Perform action for PDF
+  } else if (summaryOption.value.option === 'summaryExcel') {
+    exportTitle.value = 'Exported Products List'
+  }
+};
 
 
 const summaryOption = ref({
@@ -602,6 +641,8 @@ watch(
   }
 );
 
+const exportTitle = ref('Exported Products List');
+
 function printInventorySummary() {
     try {
         // const startDate = startDatePrint.value;
@@ -609,11 +650,12 @@ function printInventorySummary() {
         
         // const categoriesString = selectedCategories.value.join(',');
 
-        if(summaryOption.value.option === 'summaryMaster'){
-            window.open(`/api/products/print/master/export/xlsx`, '_blank');
+        if(summaryOption.value.option === 'summaryCriticalStocks'){
+            window.open(`/api/export-products-pdf?exportTitle=${exportTitle.value}`, '_blank');
         }
         else if(summaryOption.value.option === 'summaryPdf'){
-            window.open(`/api/products/print/export/pdf`, '_blank');
+            window.open(`/api/products/print/export/pdf?exportTitle=${exportTitle.value}`, '_blank');
+            
         }   
         else{
             window.open(`/api/products/print/export/xlsx/`, '_blank');
@@ -1722,13 +1764,6 @@ const handleEditImageUploadPackage = (event) => {
 
 
 
-const updateTotalStock = () => {
-  const total = roundToTwoDecimals(newProduct.stock + newProduct.sold || 0);
-  newProduct.total_stock = total;
-};
-
-
-
 
 </script>
 
@@ -1918,7 +1953,7 @@ const updateTotalStock = () => {
                                         </th>
                                         <th  v-if="productsTableVisibility.colPriceIsVisible && isProductTableShowing" class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left align-middle cursor-pointer whitespace-nowrap" @click="sortByPrice">
                                             <div class="p-3 flex justify-center items-center space-x-1"><font-awesome-icon :icon="['fas', 'angle-down']":class="sortOrderPrice === 'asc' ? 'rotate-180' : 'rotate-0'"class="ml-2 transition-transform duration-300 ease-in-out" /> 
-                                                <span>Price (PHP)</span>
+                                                <span>Unit Unit Price (PHP)</span>
                                             </div>
                                         </th>
                                         <th 
@@ -2048,7 +2083,7 @@ const updateTotalStock = () => {
                                         </td>
                                         <td v-if="productsTableVisibility.colNameIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center align-middle">{{ product.name }}</td>
                                         <td v-if="productsTableVisibility.colBrandIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 da   k:border-gray-700 text-center align-middle">{{ product.brand }}</td>
-                                        <td v-if="productsTableVisibility.colPriceIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ product.price }}</td>
+                                        <td v-if="productsTableVisibility.colPriceIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(product.price) }}</td>
                                         <td v-if="productsTableVisibility.colCategoryIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ product.category }}</td>
                                         <td v-if="productsTableVisibility.colTotalStockIsVisible && isProductTableShowing" class="px-2 py-4 border-b border-gray-200 dark:border-gray-700 text-center">{{ product.total_stock }}</td>
                                         <td v-if="productsTableVisibility.colStockIsVisible && isProductTableShowing" class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center">
@@ -2834,14 +2869,19 @@ const updateTotalStock = () => {
                     <div class="w-1/2 pl-6">
                     <h3 class="text-lg font-semibold mb-4">Export Products</h3>
                     <div class="space-y-4">
+                        
+                        <label for="export_title" class="block text-sm font-medium text-gray-700 mb-[-15px]">Report Title:</label>
+                        <input maxlength="64" type="text" id="export_title" v-model="exportTitle" class="input-field-export-title w-3/5 text-md" required />
+                        
                         <div>
                         <label for="exportFormat" class="block text-sm font-medium text-gray-700">Export Format</label>
                         <select 
                             id="exportFormat" 
                             v-model="summaryOption.option"
+                            @change="handleSelectChange"
                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                         >
-                            <option value="summaryMaster">Master File (.xlsx)</option>
+                            <option value="summaryCriticalStocks">Critical Stocks (.pdf)</option>
                             <option value="summaryPdf">PDF (.pdf)</option>
                             <option value="summaryExcel">Excel Sheet (.xlsx)</option>
                             
@@ -2853,7 +2893,7 @@ const updateTotalStock = () => {
                     </div>
                     <p class="text-center text-gray-500 justify-center">or</p>
                     <div class="flex items-center justify-center">
-                    <button @click="printInventoryTemplate()" class="justify-center text-sm hover:bg-blue-600 w-1/2 transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">
+                    <button @click="printInventoryTemplate()" class="justify-center text-sm hover:bg-blue-600 w-full transition hover:scale-105 ease-in-out duration-150 bg-blue-500 text-white py-2 px-4 rounded">
                         Download Template
                     </button>
                     </div>
@@ -2895,7 +2935,7 @@ const updateTotalStock = () => {
                                 </div>
                                 <!-- Price Field -->
                                 <div>
-                                    <label for="price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Price (PHP) <span class="text-red-500">*</span></label>
+                                    <label for="price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Unit Price (PHP) <span class="text-red-500">*</span></label>
                                     <input type="number" min="0"  step="0.01" id="price" v-model="newProduct.price" class="input-field text-xs p-1" required @input="validatePrice" />
                                     <div v-if="priceError" class="text-red-500 text-sm">{{ priceError }}</div>
                                     <span v-if="validationErrors.price" class="text-red-500 text-xs">{{ validationErrors.price }}</span>
@@ -2908,26 +2948,6 @@ const updateTotalStock = () => {
                                     </select>
                                     <span v-if="validationErrors.category" class="text-red-500 text-xs">{{ validationErrors.category }}</span>
                                 </div>
-  <!-- TOTAL STOCK FIELD -->
-  <div>
-    <label
-      for="total_stock"
-      style="font-size: 11px;"
-      class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
-    >
-      Total Stock <span class="text-red-500">*</span>
-    </label>
-    <input
-      type="number"
-      min="0"
-      id="total_stock"
-      v-model="newProduct.total_stock"
-      class="input-field text-xs p-1"
-      readonly
-    />
-    <div v-if="total_stockError" class="text-red-500 text-sm">{{ total_stockError }}</div>
-  </div>
-
   <!-- Unsold Stock -->
   <div>
     <label
@@ -2935,16 +2955,15 @@ const updateTotalStock = () => {
       style="font-size: 11px;"
       class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
     >
-      Unsold Stock <span class="text-red-500">*</span>
+      Products Unsold <span class="text-red-500">*</span>
     </label>
     <input
       type="number"
       min="0"
       id="stock"
-      v-model="newProduct.stock"
+      v-model.number="newProduct.stock"
       class="input-field text-xs p-1"
       required
-      @input="updateTotalStock"
     />
     <div v-if="stockError" class="text-red-500 text-sm">{{ stockError }}</div>
   </div>
@@ -2956,17 +2975,36 @@ const updateTotalStock = () => {
       style="font-size: 11px;"
       class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
     >
-      Items Already Sold <span class="text-red-500">*</span>
+      Products Sold <span class="text-red-500">*</span>
     </label>
     <input
       type="number"
       min="0"
       id="sold"
-      v-model="newProduct.sold"
+      v-model.number="newProduct.sold"
       class="input-field text-xs p-1"
-      @input="updateTotalStock"
     />
     <div v-if="soldError" class="text-red-500 text-sm">{{ soldError }}</div>
+  </div>
+
+  <!-- TOTAL STOCK FIELD -->
+  <div>
+    <label
+      for="total_stock"
+      style="font-size: 11px;"
+      class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
+    >
+      Total Quantity <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="number"
+      min="0"
+      id="total_stock"
+      v-model.number="newProduct.total_stock"
+      class="input-field text-xs p-1"
+      @input="updateStockFromTotal"
+    />
+    <div v-if="total_stockError" class="text-red-500 text-sm">{{ total_stockError }}</div>
   </div>
                                 <!-- Status Field -->
                                 <div>
@@ -3041,7 +3079,7 @@ const updateTotalStock = () => {
                         </div>
                             <!-- On Sale Price (Visible only if 'On Sale' is selected) -->
                             <div class="col-span-3" v-if="newProduct.on_sale === 'yes'">
-                                <label for="on_sale_price" class="block text-xs font-medium text-gray-700">On Sale Price (PHP):</label>
+                                <label for="on_sale_price" class="block text-xs font-medium text-gray-700">On Sale Unit Price (PHP):</label>
                                 <input type="number" min="0"  step="0.01" id="on_sale_price" v-model="newProduct.on_sale_price" class="input-field text-xs p-1" @input="validateOnsaleError"/>
                                 <div v-if="onsaleError" class="text-red-500 text-sm">{{ onsaleError }}</div>
                             </div>
@@ -3084,7 +3122,7 @@ const updateTotalStock = () => {
                             </div>
                             <!-- Price Field -->
                             <div>
-                                <label for="edit_price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Price (PHP) <span class="text-red-500">*</span></label>
+                                <label for="edit_price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Unit Price (PHP) <span class="text-red-500">*</span></label>
                                 <input type="number" min="0" step="0.01" id="edit_price" v-model="editProduct.price" class="input-field text-xs p-1" required @input="validateUpdatePrice" />
                                 <div v-if="UpdatepriceError" class="text-red-500 text-sm">{{ UpdatepriceError }}</div>
                                 <span v-if="validationErrorsEdit.price" class="text-red-500 text-xs">{{ validationErrorsEdit.price }}</span>
@@ -3099,13 +3137,28 @@ const updateTotalStock = () => {
                             </div>
 
                               <!-- Unsold Stock -->
+
+                                                          <!-- Stock Field -->
+                            <div>
+                                <label for="edit_stock" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Products Stock <span class="text-red-500">*</span></label>
+                                <input type="number" min="0" id="edit_stock" v-model="editProduct.stock" class="input-field text-xs p-1" required @input="validateUpdateStock" />
+                                <div v-if="UpdatestockError" class="text-red-500 text-sm">{{ UpdatestockError }}</div>
+                            </div>
+
+                            <!-- Sold Field -->
+                            <div>
+                                <label for="edit_sold" style="font-size: 11px;" class=" pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline   text-white">Products Sold  <span class="text-red-500">*</span></label>
+                                <input type="number" min="0" id="edit_sold" v-model="editProduct.sold" class="input-field text-xs p-1" @input="validateUpdateSold" />
+                                <div v-if="UpdatesoldError" class="text-red-500 text-sm">{{ UpdatesoldError }}</div>
+                            </div>
+
                             <div>
                                 <label
                                 for="stock"
                                 style="font-size: 11px;"
                                 class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
                                 >
-                                Total Stock<span class="text-red-500">*</span>
+                                Total Quantity<span class="text-red-500">*</span>
                                 </label>
                                 <input
                                 type="number"
@@ -3114,24 +3167,12 @@ const updateTotalStock = () => {
                                 v-model="editProduct.total_stock"
                                 class="input-field text-xs p-1"
                                 required
-                                @input="validateTotalStockUpdate"
+                                @input="updateStockFromTotalUpdate ,validateTotalStockUpdate"
                                 />
                                 <div v-if="UpdateTotalStockError" class="text-red-500 text-sm">{{ UpdateTotalStockError }}</div>
                             </div>
 
-                            <!-- Stock Field -->
-                            <div>
-                                <label for="edit_stock" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Stock <span class="text-red-500">*</span></label>
-                                <input type="number" min="0" id="edit_stock" v-model="editProduct.stock" class="input-field text-xs p-1" required @input="validateUpdateStock" />
-                                <div v-if="UpdatestockError" class="text-red-500 text-sm">{{ UpdatestockError }}</div>
-                            </div>
 
-                            <!-- Sold Field -->
-                            <div>
-                                <label for="edit_sold" style="font-size: 11px;" class=" pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline   text-white">Sold  <span class="text-red-500">*</span></label>
-                                <input type="number" min="0" id="edit_sold" v-model="editProduct.sold" class="input-field text-xs p-1" @input="validateUpdateSold" />
-                                <div v-if="UpdatesoldError" class="text-red-500 text-sm">{{ UpdatesoldError }}</div>
-                            </div>
                             <!-- Status Field -->
                             <div>
                                 <label for="edit_status" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Status <span class="text-red-500">*</span></label>
@@ -3198,7 +3239,7 @@ const updateTotalStock = () => {
                                 </label>
                                 <span class="text-xs text-gray-700">{{ editProduct.on_sale === 'yes' ? 'Yes' : 'No' }}</span>
                             </div>
-                            <input step="0.01" v-if="editProduct.on_sale === 'yes'" type="number" min="0" id="edit_on_sale_price" v-model="editProduct.on_sale_price" class="input-field mt-2 text-xs p-1" placeholder="On Sale Price (PHP)"  @input="validateUpdateOnsaleError"/>
+                            <input step="0.01" v-if="editProduct.on_sale === 'yes'" type="number" min="0" id="edit_on_sale_price" v-model="editProduct.on_sale_price" class="input-field mt-2 text-xs p-1" placeholder="On Sale Unit Price (PHP)"  @input="validateUpdateOnsaleError"/>
                             <div v-if="UpdateonsaleError" class="text-red-500 text-sm">{{ UpdateonsaleError }}</div>
                         </div>
                     </div>
@@ -3241,7 +3282,7 @@ const updateTotalStock = () => {
                             </div>
                             <!-- Price Field -->
                             <div>
-                                <label for="edit_price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Price (PHP) <span class="text-red-500">*</span></label>
+                                <label for="edit_price" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white">Unit Price (PHP) <span class="text-red-500">*</span></label>
                                 <input disabled type="number" id="edit_price" v-model="editProduct.price" class="input-field text-xs p-1" required />
                                 <span v-if="validationErrorsEdit.price" class="text-red-500 text-xs">{{ validationErrorsEdit.price }}</span>
                             </div>
@@ -3331,7 +3372,7 @@ const updateTotalStock = () => {
                                 </label>
                                 <span class="text-xs text-gray-700">{{ editProduct.on_sale === 'yes' ? 'Yes' : 'No' }}</span>
                             </div>
-                            <input disabled v-if="editProduct.on_sale === 'yes'" type="number" id="edit_on_sale_price" v-model="editProduct.on_sale_price" class="input-field mt-2 text-xs p-1" placeholder="On Sale Price (PHP)" />
+                            <input disabled v-if="editProduct.on_sale === 'yes'" type="number" id="edit_on_sale_price" v-model="editProduct.on_sale_price" class="input-field mt-2 text-xs p-1" placeholder="On Sale Unit Price (PHP)" />
                         </div>
                     </div>
                     <div class="col-span-3 flex justify-center mt-3 space-x-2">
@@ -3355,6 +3396,15 @@ const updateTotalStock = () => {
 
 .input-field-package-discount {
     width: 100px;
+    border: 1px solid #CBD5E0;
+    border-bottom-right-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.input-field-export-title {
+    width: 300px;
     border: 1px solid #CBD5E0;
     border-bottom-right-radius: 0.375rem;
     border-bottom-left-radius: 0.375rem;
