@@ -52,8 +52,8 @@ class AnalyticsController extends Controller
                     break;
 
                 case 'yearly':
-                    $startDate = Carbon::now()->subMonth();
-                    $endDate = Carbon::now();
+                    $startDate = Carbon::now()->startOfYear();
+                    $endDate = Carbon::now()->endOfYear();
                     $granularity = 'month'; // Adjust granularity for yearly
                     break;
 
@@ -122,10 +122,8 @@ class AnalyticsController extends Controller
 
         // Request 2: Daily breakdown for views and visitors (for the chart)
         $dimensions = $granularity === 'hour'
-        ? [new Dimension(['name' => 'hour'])]
-        : [new Dimension(['name' => 'date'])];
-
-        
+            ? [new Dimension(['name' => 'hour'])]
+            : ($granularity === 'month' ? [new Dimension(['name' => 'month'])] : [new Dimension(['name' => 'date'])]);
 
         $dailyResponse = $this->analyticsDataClient->runReport([
             'property' => 'properties/' . $propertyId,
@@ -144,7 +142,9 @@ class AnalyticsController extends Controller
         foreach ($dailyResponse->getRows() as $row) {
             $dimensionValue = $granularity === 'hour' 
                 ? $row->getDimensionValues()[0]->getValue() 
-                : Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString();
+                : ($granularity === 'month' 
+                    ? Carbon::create(null, $row->getDimensionValues()[0]->getValue())->format('Y-m')
+                    : Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString());
 
             $dataArray[] = [
                 'dimension' => $dimensionValue,
@@ -155,55 +155,38 @@ class AnalyticsController extends Controller
             ];
         }
 
-        usort($dataArray, function ($a, $b) use ($granularity) {
-            if ($granularity === 'hour') {
-                return $a['dimension'] <=> $b['dimension'];
-            }
-            return strtotime($a['dimension']) <=> strtotime($b['dimension']);
-        });
-
         // Generate complete dimension range
-if ($granularity === 'hour') {
-    $dimensionsArray = range(0, 23); // 00:00 to 23:00
-} else {
-    $datePeriod = new \DatePeriod(
-        new \DateTime($startDate->toDateString()),
-        new \DateInterval('P1D'),
-        (new \DateTime($endDate->toDateString()))->modify('+1 day')
-    );
-    $dimensionsArray = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($datePeriod));
-}
+        if ($granularity === 'hour') {
+            $dimensionsArray = range(0, 23); // 00:00 to 23:00
+        } elseif ($granularity === 'month') {
+            $dimensionsArray = array_map(fn($month) => Carbon::create($startDate->year, $month)->format('Y-m'), range(1, 12));
+        } else {
+            $datePeriod = new \DatePeriod(
+                new \DateTime($startDate->toDateString()),
+                new \DateInterval('P1D'),
+                (new \DateTime($endDate->toDateString()))->modify('+1 day')
+            );
+            $dimensionsArray = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($datePeriod));
+        }
 
-// Prepare data with defaults
-$completeData = array_map(fn($dim) => [
-    'dimension' => $dim,
-    'views' => 0,
-    'visitors' => 0,
-    'engagementRate' => '0.00',
-    'bounceRate' => '0.00',
-], $dimensionsArray);
+        // Prepare data with defaults
+        $completeData = array_map(fn($dim) => [
+            'dimension' => $dim,
+            'views' => 0,
+            'visitors' => 0,
+            'engagementRate' => '0.00',
+            'bounceRate' => '0.00',
+        ], $dimensionsArray);
 
-// Merge API data into complete data
-foreach ($dailyResponse->getRows() as $row) {
-    $dimensionValue = $granularity === 'hour' 
-        ? (int) $row->getDimensionValues()[0]->getValue()
-        : Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString();
+        // Merge API data into complete data
+        foreach ($dataArray as $row) {
+            $index = array_search($row['dimension'], array_column($completeData, 'dimension'));
+            if ($index !== false) {
+                $completeData[$index] = $row;
+            }
+        }
 
-    $index = array_search($dimensionValue, array_column($completeData, 'dimension'));
-    if ($index !== false) {
-        $completeData[$index] = [
-            'dimension' => $dimensionValue,
-            'views' => $row->getMetricValues()[0]->getValue(),
-            'visitors' => $row->getMetricValues()[1]->getValue(),
-            'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
-            'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
-        ];
-    }
-}
-
-$dataArray = $completeData; // Use complete data in response
-
-        
+        $dataArray = $completeData; // Use complete data in response
 
         // Request 3: Breakdown of returning vs. new users
         $userTypeResponse = $this->analyticsDataClient->runReport([
