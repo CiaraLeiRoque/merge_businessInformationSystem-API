@@ -16,7 +16,7 @@ class ProductPackage extends Model
 
         'product_id',
         'product_name',
-        'product_quantity',
+        'product_quantity'
     ];
 
     public function packageName()
@@ -24,10 +24,12 @@ class ProductPackage extends Model
         return $this->belongsTo(ProductPackageName::class, 'product_package_id');
     }
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
+    // public function productPackage()
+    // {
+    //     return $this->belongsTo(Invoice::class, 'invoice_system_id', 'invoice_system_id');
+    // }
+
     
 }
+
 

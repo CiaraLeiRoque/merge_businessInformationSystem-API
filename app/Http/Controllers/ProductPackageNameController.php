@@ -1,12 +1,10 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProductPackageName;
 use App\Models\ProductPackage;
-use App\Models\Product;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -19,13 +17,10 @@ class ProductPackageNameController extends Controller
         return ProductPackageName::all();
     }
 
-
     public function getAllPackageNamesWithProducts()
     {
         try {
-            $packageNames = ProductPackageName::with(['packages' => function($query) {
-                $query->with('product:id,price');
-            }])->get();
+            $packageNames = ProductPackageName::with('packages')->get();
             
             if ($packageNames->isEmpty()) {
                 return response()->json([
@@ -35,66 +30,22 @@ class ProductPackageNameController extends Controller
                 ]);
             }
 
-            $packageNames = $packageNames->map(function ($packageName) {
-                $totalPrice = 0;
-                $packageName->packages = $packageName->packages->map(function ($package) use (&$totalPrice) {
-                    $package->price = $package->product ? $package->product->price : 0;
-                    $totalPrice += $package->price * $package->product_quantity;
-                    unset($package->product);
-                    return $package;
-                });
-                $packageName->total_price = $totalPrice;
-                return $packageName;
-            });
-
-            \Log::info('SHOWING ALL PACKAGE NAMES WITH PRODUCTS, PRICES, AND TOTAL', [
+            \Log::info('SHOWING ALL PACKAGE NAMES WITH PRODUCTS called', [
                 'packages' => $packageNames->toArray()
             ]);
             
             return response()->json($packageNames);
             
         } catch (\Exception $e) {
-            \Log::error('Error fetching product package names with products, prices, and total: ' . $e->getMessage());
+            \Log::error('Error fetching product package names with products: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error fetching product package names with products, prices, and total.',
+                'message' => 'Error fetching product package names with products.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-
-    // public function getAllPackageNamesWithProducts()
-    // {
-    //     try {
-    //         $packageNames = ProductPackageName::with('packages')->get();
-            
-    //         if ($packageNames->isEmpty()) {
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'message' => 'No package names found.',
-    //                 'data' => [],
-    //             ]);
-    //         }
-
-    //         \Log::info('SHOWING ALL PACKAGE NAMES WITH PRODUCTS called', [
-    //             'packages' => $packageNames->toArray()
-    //         ]);
-            
-    //         return response()->json($packageNames);
-            
-    //     } catch (\Exception $e) {
-    //         \Log::error('Error fetching product package names with products: ' . $e->getMessage());
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Error fetching product package names with products.',
-    //             'error' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
-
-    
-    
     public function updatePackageName(Request $request, $id)
     {
         try {

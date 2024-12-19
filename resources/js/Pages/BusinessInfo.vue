@@ -409,7 +409,7 @@ function checkNegative() {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="address" class="block text-gray-700 text-sm font-bold mb-2">
-                                    <span>House/Bldg No., Street<span class="text-red-500">*</span></span>
+                                    <span>Address <span class="text-red-500">*</span></span>
                                 </label>
                                 <input
                                     type="text"

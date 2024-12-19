@@ -125,6 +125,7 @@ function account(){
 }
 
 onMounted(()=>{
+    loadMap();
     getWebsiteInfo();
     startSlideshow();
     getImages();
@@ -322,6 +323,22 @@ const moveSlideShow=(direction)=>{
     currentImage.value = images.value[currentIndex];
 }
 
+
+function loadMap() {
+  const mapOptions = {
+    center: { lat: 14.862140, lng: 120.817826}, 
+    zoom: 15,
+  };
+
+  const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+  // Optional: Add a marker
+  new google.maps.Marker({
+    position: { lat: 14.862140, lng: 120.817826 }, 
+    map: map,
+    title: "Limesen Network Solutions Inc.",
+  });
+}
 const packageData = ref([]);
 
 
@@ -344,12 +361,13 @@ const textAreasPackage = {
 const fetchPackageInfo = async () => {
   try {
     const response = await axios.get('/api/productPackageNamesWithProducts');
-    console.log('Package data with prices:', response.data);
+    console.log('getPackageInfo data', response.data);
     packageData.value = response.data;
   } catch (error) {
-    console.error('There was an error fetching the package data:', error);
+    console.error('There was an error fetching the data:', error);
   }
 };
+
 
 
 
@@ -575,31 +593,25 @@ const stopAutoLoop = () => {
                   </p>
                 </div>
 
-                <div class="flex-grow overflow-auto flex flex-col items-center bg-white justify-center p-6">
-    <ul class="space-y-4 w-full">
-      <li
-        v-for="product in packageItem.packages"
-        :key="product.id"
-        class="flex ml-5 items-center justify-start text-left space-x-3 text-black text-[18px]"
-      >
-        <span
-          class="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center"
-        >
-          <span class="w-3 h-3 rounded-full bg-gray-600"></span>
-        </span>
-        <span>
-          {{ product.product_name }}
-          <span class="text-gray-500">
-            (x{{ product.product_quantity }})
-            - PHP {{ product.price}}
-          </span>
-        </span>
-      </li>
-    </ul>
-    <div class="mt-8 text-2xl font-bold text-black">
-      Total Price: PHP{{ packageItem.total_price }}
-    </div>
-  </div>
+                <div class="flex-grow overflow-auto flex items-center bg-white justify-center p-6">
+                  <ul class="space-y-4">
+                    <li
+                      v-for="product in packageItem.packages"
+                      :key="product.id"
+                      class="flex items-center justify-start text-left space-x-3 text-black text-[18px]"
+                    >
+                      <span
+                        class="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center"
+                      >
+                        <span class="w-3 h-3 rounded-full bg-gray-600"></span>
+                      </span>
+                      <span>
+                        {{ product.product_name }}
+                        <span class="text-gray-500">(x{{ product.product_quantity }})</span>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
 
                 <div class="text-black italic text-center text-xl px-4">
                   {{ packageItem.product_package_description }}
