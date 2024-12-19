@@ -142,7 +142,7 @@
 </head>
 <body>
 @php
-    $itemsPerPage = 11; // Adjust this value based on how many items fit comfortably on one page
+    $itemsPerPage = 10; // Adjust this value based on how many items fit comfortably on one page
     $totalPages = ceil(count($products) / $itemsPerPage);
     $currentPage = 1;
 @endphp
@@ -167,10 +167,24 @@
         <!-- Products Table -->
         <div class="table-container">
             <table>
-                <thead>
+            <thead>
                     <tr>
                         @foreach ($visibleColumns as $column)
-                            <th>{{ ucwords(str_replace(['_', 'product'], [' ', ''], $column)) }}</th>
+                            <th>
+                                @if ($column === 'productTotalStock')
+                                    Total Quantity
+                                @elseif ($column === 'productStock')
+                                    Products Unsold
+                                @elseif ($column === 'productSold')
+                                    Products Sold
+                                @elseif ($column === 'image')
+                                    <div class>
+                                        <img src="{{ $product[$column] }}" alt="Product Image">
+                                    </div>
+                                @else
+                                    {{ ucwords(str_replace(['_', 'product'], [' ', ''], $column)) }}
+                                @endif
+                            </th>
                         @endforeach
                     </tr>
                 </thead>

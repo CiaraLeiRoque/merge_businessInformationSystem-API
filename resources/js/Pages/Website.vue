@@ -106,6 +106,12 @@ const renderVisitorsViewsChart = () => {
             // Convert date to weekday name
             return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
         }
+        else if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
+            // Convert date to month name
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+            return monthNames[new Date(data.dimension).getMonth()];
+        }
         return granularity.value === 'hour'
             ? `${data.dimension.toString().padStart(2, '0')}:00`
             : data.dimension;
@@ -174,6 +180,12 @@ const renderBounceRateChart = () => {
             // Convert date to weekday name
             return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
         }
+        else if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
+            // Convert date to month name
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+            return monthNames[new Date(data.dimension).getMonth()];
+        }
         return granularity.value === 'hour'
             ? `${data.dimension.toString().padStart(2, '0')}:00`
             : data.dimension;
@@ -205,7 +217,7 @@ const renderBounceRateChart = () => {
             },
         plugins: {
                 legend: {
-                    display: true,
+                    display: false,
                     position: 'bottom',
                 },
             },
@@ -224,6 +236,12 @@ const renderEngagementRateChart = () => {
         if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
             // Convert date to weekday name
             return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
+        }
+        else if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
+            // Convert date to month name
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                                "July", "August", "September", "October", "November", "December"];
+            return monthNames[new Date(data.dimension).getMonth()];
         }
         return granularity.value === 'hour'
             ? `${data.dimension.toString().padStart(2, '0')}:00`
@@ -266,7 +284,7 @@ const renderEngagementRateChart = () => {
             },
             plugins: {
                 legend: {
-                    display: true,
+                    display: false,
                     position: 'bottom',
                 },
             },

@@ -1979,7 +1979,7 @@ const handleEditImageUploadPackage = (event) => {
                                                     :class="sortOrderTotalStock === 'asc' ? 'rotate-180' : 'rotate-0'"
                                                     class="ml-2 transition-transform duration-300 ease-in-out" 
                                                 /> 
-                                                <span>Total Stock</span>
+                                                <span>Total Qty.</span>
                                             </div>
                                         </th>
                                         <th 
@@ -1992,7 +1992,7 @@ const handleEditImageUploadPackage = (event) => {
                                                     :class="sortOrderStock === 'asc' ? 'rotate-180' : 'rotate-0'"
                                                     class="ml-2 transition-transform duration-300 ease-in-out" 
                                                 /> 
-                                                <span>Stock</span>
+                                                <span>Unsold</span>
                                             </div>
                                         </th>
                                         <th v-if="productsTableVisibility.colSoldIsVisible && isProductTableShowing" class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-left align-middle cursor-pointer whitespace-nowrap" @click="sortBySold">
