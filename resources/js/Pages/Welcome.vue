@@ -536,99 +536,117 @@ const stopAutoLoop = () => {
         <!-- section 3-->
         <!-- PRODUCT PACKAGES -->
         <section v-if="package_toggle === 'true'">
-    <div class="flex flex-col pb-36 items-center relative bg-gray-900">
-      <!-- Title Section -->
-      <div class="pt-28 flex flex-col items-center p-3">
-        <p class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight">
-          Check Out Our Packages/Bundles!
-        </p>
-        <p class="mt-[10px] -mb-[20px] text-[24px] text-gray-300 text-center max-w-2xl">
-          Take a look at our product packages. Best prices <br> guaranteed everyday.
-        </p>
-      </div>
+  <div class="flex flex-col pb-36 items-center relative bg-gray-900">
 
-      <!-- Product Packages Carousel -->
-      <div class="carousel-container relative w-full pb-10 max-w-[3000px] overflow-hidden">
-        <div
-          class="carousel-track flex transition-transform duration-500 ease-in-out"
-          :style="{
-            transform: `translateX(calc(-${currentIndexCarousel} * (${packageWidth + gap}px) + 50% - ${packageWidth / 2}px))`,
-          }"
-        >
-          <div
-            v-for="(packageItem, index) in packageData"
-            :key="packageItem.id"
-            class="carousel-item flex pt-20 flex-col space-y-4"
-          >
-            <!-- Card -->
-            <div class="flex w-[1200px] h-[500px] rounded-lg shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group overflow-hidden">
-              <!-- Image Section -->
-              <div class="w-[500px] h-full bg-gray-200 flex items-center justify-center">
-                <img :src="'/storage/' + packageItem.image" alt="" class="rounded-l-lg border-2 border-black w-[500px] h-[500px] object-cover "/>
-              </div>
-
-              <!-- Content Section -->
-              <div class="flex-1 flex flex-col">
-                <div class="w-full bg-gradient-to-r from-gray-200 to-white h-[50px] flex items-center justify-center sticky top-0 z-10">
-                  <p style="font-weight: 900;" class="text-black text-[30px] tracking-wide">
-                    {{ packageItem.product_package_name }}
-                  </p>
-                </div>
-
-                <div class="flex-grow overflow-auto flex flex-col items-center bg-white justify-center p-6">
-    <ul class="space-y-4 w-full">
-      <li
-        v-for="product in packageItem.packages"
-        :key="product.id"
-        class="flex ml-5 items-center justify-start text-left space-x-3 text-black text-[18px]"
-      >
-        <span
-          class="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center"
-        >
-          <span class="w-3 h-3 rounded-full bg-gray-600"></span>
-        </span>
-        <span>
-          {{ product.product_name }}
-          <span class="text-gray-500">
-            (x{{ product.product_quantity }})
-            - PHP {{ product.price}}
-          </span>
-        </span>
-      </li>
-    </ul>
-    <div class="mt-8 text-2xl font-bold text-black">
-      Total Price: PHP{{ packageItem.total_price }}
+    <div class="pt-28 flex flex-col items-center p-3">
+      <p class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight">
+        Check Out Our Packages/Bundles!
+      </p>
+      <p class="mt-[10px] -mb-[20px] text-[24px] text-gray-300 text-center max-w-2xl">
+        Take a look at our product packages. Best prices <br /> guaranteed everyday.
+      </p>
     </div>
-  </div>
 
-                <div class="text-black italic text-center text-xl px-4">
-                  {{ packageItem.product_package_description }}
-                </div>
+    <div class="carousel-container relative w-full pb-10 max-w-[3000px] overflow-hidden">
+      <div
+        class="carousel-track flex transition-transform duration-500 ease-in-out"
+        :style="{
+          transform: `translateX(calc(-${currentIndexCarousel} * (${packageWidth + gap}px) + 50% - ${packageWidth / 2}px))`,
+        }"
+      >
+        <div
+          v-for="(packageItem, index) in packageData"
+          :key="packageItem.id"
+          class="carousel-item flex pt-20 flex-col space-y-4"
+        >
+          <div class="flex w-[1200px] h-[500px] rounded-lg shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group overflow-hidden relative">
 
-              </div>
+            <div 
+              v-if="packageItem.product_package_discount > 0"
+              class="absolute top-4 left-4 bg-red-600 bg-opacity-90 text-white px-4 py-2 rounded-full transform -rotate-12 z-10 shadow-lg"
+            >
+              <span class="font-extrabold text-2xl">{{ packageItem.product_package_discount }}% OFF!</span>
             </div>
 
-            <!-- Description Below Card -->
+            <div class="w-[500px] h-full bg-gray-200 flex items-center justify-center">
+              <img :src="'/storage/' + packageItem.image" alt="" class="rounded-l-lg border-2 border-black w-[500px] h-[500px] object-cover " />
+            </div>
 
+            <div class="flex-1 flex flex-col">
+              <div class="w-full bg-gradient-to-r from-gray-200 to-white h-[50px] flex items-center justify-center sticky top-0 z-10">
+                <p style="font-weight: 900;" class="text-black text-[30px] tracking-wide">
+                  {{  packageItem.product_package_name }}
+                </p>
+              </div>
+
+              <div class="flex-grow overflow-auto flex flex-col items-center bg-white justify-between p-6">
+                <div class="mb-4 font-semibold w-full flex items-start justify-start">
+                  <p class="text-xl">Inclusions:</p>
+                </div>
+                <ul class="space-y-4 w-full">
+                  <li
+                    v-for="product in packageItem.packages"
+                    :key="product.id"
+                    class="flex ml-5 items-center justify-start text-left space-x-3 text-black text-[18px]"
+                  >
+                    <span
+                      class="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center"
+                    >
+                      <span class="w-3 h-3 rounded-full bg-gray-600"></span>
+                    </span>
+                    <span>
+                      {{ product.product_name }}
+                      <span class="text-gray-500">
+                        (x{{ product.product_quantity }})
+                        - PHP {{ product.price}}
+                      </span>
+                    </span>
+                  </li>
+                </ul>
+                <div class="w-full mt-8 space-y-2">
+                  <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+                    <span class="text-lg font-semibold text-gray-700">Original Price:</span>
+                    <span class="text-xl font-bold text-gray-500 line-through">PHP {{ packageItem.total_price }}</span>
+                  </div>
+                  
+                  <div class="flex justify-between items-center p-3 bg-green-100 rounded-lg">
+                    <span class="text-lg font-semibold text-green-700">DISCOUNTED PRICE:</span>
+                    <span class="text-3xl font-extrabold text-green-600">
+                      PHP {{ (packageItem.total_price - (packageItem.total_price * (packageItem.product_package_discount / 100))).toFixed(2) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-black italic text-center text-xl px-4 py-2 bg-gray-100">
+                {{ packageItem.product_package_description }}
+              </div>
+            </div>
           </div>
         </div>
-
-        <!-- Carousel Controls -->
-        <button
-          class="ml-10 absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
-          @click="prevSlide"
-        >
-        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-left']" />
-        </button>
-        <button
-          class="mr-10 absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
-          @click="nextSlide"
-        >
-        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-right']" />
-        </button>
       </div>
+
+      <button
+        class="ml-10 absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+        @click="prevSlide"
+      >
+        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-left']" />
+      </button>
+      <button
+        class="mr-10 absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+        @click="nextSlide"
+      >
+        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-right']" />
+      </button>
     </div>
-  </section>
+  </div>
+</section>
+
+
+
+
+
+
 
 
 

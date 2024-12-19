@@ -1139,6 +1139,30 @@ const newInvoiceComputation = ref({
     };
 
 
+    const discountPercentage = ref(0);
+
+const discountedTotalAmountDue = computed(() => {
+  const discount = parseFloat(discountPercentage.value) || 0;
+  const totalAmount = totalAmountDueHolder.value || 0;
+
+  if (discount < 0 || discount > 100) {
+    console.warn("Discount percentage must be between 0 and 100.");
+    return totalAmount;
+  }
+
+  return roundToTwoDecimals(totalAmount - (totalAmount * discount) / 100);
+});
+
+// Watcher to update the total amount due based on discount
+watch(
+  () => discountedTotalAmountDue.value,
+  (newDiscountedValue) => {
+    newInvoiceComputation.value.total_Amount_Due = newDiscountedValue;
+    
+  }
+);
+
+
 
     function validateKeyPress(event) {
   // Allow numbers (0-9) and the period/dot character
@@ -1166,6 +1190,7 @@ const totalAmountDue = computed(() => {
 
 watch(() => totalAmountDue.value, (newValue) => {
   totalAmountDueHolder.value = roundToTwoDecimals(newValue);
+  discountedTotalAmountDue.value = roundToTwoDecimals(newValue);
 });
 
 
@@ -1205,7 +1230,7 @@ const addProductPackage = async () => {
                 formData.append('image', newPackage.value.image);
                 formData.append('product_package_name', newPackage.value.product_package_name);
                 formData.append('product_package_description', newPackage.value.product_package_description);
-                formData.append('product_package_discount', newPackage.value.product_package_discount)
+                formData.append('product_package_discount', discountPercentage.value)
 
                 console.log([...formData.entries()]); 
                 console.log('NEW PACKAGE PRODUCT NAME: ', newPackage.value.product_package_name);
@@ -2462,10 +2487,10 @@ const updateTotalStock = () => {
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                         <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Product</th>
-                                        <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                        <th class="sticky top-0 z-20 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                         <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                         <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
-                                        <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
+                                        <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
                                         <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Actions</th>
 
                                         </tr>
@@ -2519,19 +2544,8 @@ const updateTotalStock = () => {
                                         </td>
 
                                         <td class="pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
-                                            <div class="z-10 flex items-center justify-center">
-                                            <div class="z-10 -ml-4 flex items-center justify-between">
-                                                <span class="z-10 -ml-20 w-24 text-right text-xs text-gray-400">
-                                                {{ field.on_sale === 'yes' ? 'On' : 'Not' }}<br>
-                                                {{ field.on_sale === 'yes' ? 'Sale' : 'On Sale' }}
-                                                </span>
-                                                <label class="z-10 switch px-3">
-                                                <input class="z-10" disabled :disabled="!field.areFieldsEnabled" type="checkbox" v-model="field.on_sale" true-value="yes" false-value="no" />
-                                                <span class="z-10 slider round"></span>
-                                                </label>
-                                            </div>
+
                                             <input disabled class="no-spinner w-32" type="number" v-model="field.amount" placeholder="Amount" />
-                                            </div>
                                         </td>
 
                                         <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2569,34 +2583,37 @@ const updateTotalStock = () => {
                 </form>
             </div>
 
-        <div class="flex justify-center items-center">        <!-- Package Name -->
-            <div class="flex w-1/3 items-center justify-center mb-6">
-                <!-- Package Name -->
-                <div class="w-1/3 flex items-center justify-center">
-                <span class="flex w-44">Total Amount:</span>
-                <input
-                    type="text"
-                    id="brand"
-                    v-model="totalAmountDueHolder"
-                    class="input-field-package-name text-md p-1"
-                />
-                </div>
-            </div>
+            <div class="flex justify-center items-center">
+  <!-- Total Amount -->
+  <div class="flex w-1/3 items-end justify-end mb-6 pr-10">
+    <div class="flex items-center space-x-3 justify-end">
+      <span class="flex items-center justify-end">Discount %:</span>
+      <input
+        type="number"
+        id="totalAmount"
+        v-model="discountPercentage"
+        placeholder="Discount %"
+        class="input-field-package-discount text-md p-1"
+      />
+    </div>
+  </div>
 
-            <div class="flex w-1/3 items-center justify-center mb-6">
-                <!-- Package Name -->
-                <div class="w-1/3 flex items-center justify-center">
-                <span class="flex w-44">Package Discount:</span>
-                <input
-                    type="text"
-                    id="brand"
-                    v-model="newPackage.product_package_discount"
-                    class="input-field-package-name text-md p-1"
-                />
-                </div>
-            </div>
+  <!-- Discount Percentage -->
+  <div class="flex w-1/3 items-start justify-start mb-6">
+    <div class="flex items-center space-x-3 justify-start">
+      <span class="flex items-center justify-start">Total Amount:</span>
+      <input
+        type="text"
+        id="discountPercentage"
+        v-model="discountedTotalAmountDue"
+        disabled
+        placeholder="0"
+        class="input-field-package-total-amount text-md p-1"
+      />
+    </div>
+  </div>
+</div>
 
-        </div>
 
         <!-- Description and Image Upload Section -->
         <div class="flex items-start gap-6 px-12 mb-6">
@@ -3336,6 +3353,25 @@ const updateTotalStock = () => {
 
 <style scoped>
 
+.input-field-package-discount {
+    width: 100px;
+    border: 1px solid #CBD5E0;
+    border-bottom-right-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.input-field-package-total-amount {
+    width: 150px;
+    border: 1px solid #CBD5E0;
+    border-bottom-right-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
 
 .modal-fade-enter-active,
 .modal-fade-leave-active {

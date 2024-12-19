@@ -55,7 +55,7 @@ class InvoiceComputationController extends Controller
                 'VAT_Exempt_Sales' => 'nullable|numeric',
                 'Zero_Rated_Sales' => 'nullable|numeric',
                 'VAT_Amount' => 'nullable|numeric',
-
+                'package_discount_percent' => 'nullable|numeric',
                 'VAT_Inclusive' => 'nullable|numeric',
                 'Less_VAT' => 'nullable|numeric',
                 'Amount_NET_of_VAT' => 'nullable|numeric',
@@ -76,7 +76,7 @@ class InvoiceComputationController extends Controller
                 'VAT_Exempt_Sales' => $request->VAT_Exempt_Sales,
                 'Zero_Rated_Sales' => $request->Zero_Rated_Sales,
                 'VAT_Amount' => $request->VAT_Amount,
-
+                'package_discount_percent' => $request->package_discount_percent,
                 'VAT_Inclusive' => $request->VAT_Inclusive,
                 'Less_VAT' => $request->Less_VAT,
                 'Amount_NET_of_VAT' => $request->Amount_NET_of_VAT,

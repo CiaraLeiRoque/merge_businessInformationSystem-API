@@ -1,6 +1,75 @@
 <script setup>
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
-import { onMounted, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref, watch, reactive } from 'vue';
+import Chatbot from '@/Components/Chatbot.vue';
+import { Swiper, SwiperSlide } from 'swiper/vue';  // Correctly import Swiper and SwiperSlide as named imports
+import 'swiper/css';  // Import Swiper styles
+import 'swiper/css/navigation';  // Navigation styles
+import 'swiper/css/pagination'; 
+import ErrorToast from '@/Components/ErrorToast.vue';
+import SuccessToast from '@/Components/SuccessToast.vue';
+
+const{props} = usePage();
+defineProps({
+    canLogin: {
+        type: Boolean,
+    },
+    canRegister: {
+        type: Boolean,
+    },
+    laravelVersion: {
+        type: String,
+        required: true,
+    },
+    phpVersion: {
+        type: String,
+        required: true,
+    },
+});
+
+function handleImageError() {
+    document.getElementById('screenshot-container')?.classList.add('!hidden');
+    document.getElementById('docs-card')?.classList.add('!row-span-1');
+    document.getElementById('docs-card-content')?.classList.add('!flex-row');
+    document.getElementById('background')?.classList.add('!hidden');
+}
+
+function goTochatPage(){
+    Inertia.visit(route('chat_with_us'));
+}
+
+//subscribers   
+const email = ref('');
+
+const subscribe = async () => {
+    if (!email.value) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+
+    try {
+        const response = await axios.post('/api/subscribe', { email: email.value });
+        showToast("Email verification link sent", "success");
+        email.value = ''; // Reset the input field
+    } catch (error) {
+        alert(error.response?.data?.message || 'Subscription failed. Please try again.');
+    }
+};
+
+const showErrorToast = ref(false);
+const showSuccessToast = ref(false);
+const toastMessage = ref('');
+
+const showToast = (message, type) => {
+  toastMessage.value = message;
+  if (type === 'error') showErrorToast.value = true;
+  if (type === 'success') showSuccessToast.value = true;
+  setTimeout(() => {
+    showErrorToast.value = false;
+    showSuccessToast.value = false;
+  }, 3000);
+};
 
 const businessInfo = {
     businessImage: ref(''),
@@ -22,7 +91,6 @@ const businessInfo = {
 
 let isLoading = ref(true);
 
-
 const textAreas = {
     about_us1: ref(''),
     about_us2: ref(''),
@@ -42,6 +110,7 @@ const textAreas = {
     website_footNote: ref('')
 }
 
+let user_type=ref('');
 const feature_toggle=ref('');
 const onSale_toggle=ref('');
 let profile_img = ref('');
@@ -57,27 +126,33 @@ function account(){
 
 onMounted(()=>{
     getWebsiteInfo();
-    
+    startSlideshow();
+    getImages();
+    fetchPackageInfo();
+    startAutoLoop();
   window.addEventListener('scroll', handleScroll);
 })
+onBeforeUnmount(() => {
+  stopAutoLoop();
+});
+
+
 
 async function getWebsiteInfo(){
     try{
 
-        const response = await axios.get('/showUser');
-        if (response.data) {
-            profilePicture.value = response.data.profile_img 
-        ? `/storage/user_profile/${response.data.profile_img}` 
-        : '/storage/user_profile/default-profile.png';
-            isLoading.value=false;
-        }
-        profilePicture.value = response.data.profile_img 
-        ? `/storage/user_profile/${response.data.profile_img}` 
-        : '/storage/user_profile/default-profile.png';
-
         const getBusinessInfo = await axios.get('/api/business_info', {
             params: {user_id: 1}
         });
+
+        if(props.auth.user){
+        const getUserInfo = await axios.get('/auth_user', {
+            
+        });
+         user_type.value=getUserInfo.data.user_type;
+         console.log("user type", user_type.value);
+    }
+
         
         const getWebsiteInfo1 = await axios.get('/api/website', {
             params: {business_id: 1}
@@ -91,7 +166,7 @@ async function getWebsiteInfo(){
 
         businessInfo.businessName.value = getBusinessInfo.data.business_Name;
         businessInfo.business_Email.value = getBusinessInfo.data.business_Email;
-        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Contact_Number;
+        businessInfo.business_Contact_Number.value = getBusinessInfo.data.business_Phone_Number;
         businessInfo.business_Address.value = getBusinessInfo.data.business_Address;
 
         businessInfo.business_Province.value = getBusinessInfo.data.business_Province;
@@ -111,6 +186,7 @@ async function getWebsiteInfo(){
 
         
         feature_toggle.value = getWebsiteInfo1.data.featured_section;
+        package_toggle.value = getWebsiteInfo1.data.featured_section;
         onSale_toggle.value = getWebsiteInfo1.data.onSale_section;
         textAreas.about_us1.value = getWebsiteInfo1.data.about_us1;
         textAreas.about_us2.value = getWebsiteInfo1.data.about_us2;
@@ -176,10 +252,159 @@ const handleScroll = () => {
     }
   }
 };
+
+const images = reactive({ value: [] });
+const currentImage = ref(null);
+let currentIndex = 0;
+const slideShowClick = ref(null);
+
+const getImages = async () => {
+    try {
+        const response = await axios.get('/api/images', {
+            params: { business_id: 1 }
+        });
+        
+        console.log("Response data: ", response.data);
+
+        if (response.data) {
+            for (let i = 1; i <= 5; i++) {
+                const imageKey = `image${i}`;
+                if(response.data[imageKey]){
+                const imagePath = `/storage/${response.data[imageKey]}`;
+                console.log("Response data imageKey: ", imagePath);
+
+                if (imagePath && imagePath !== null) {
+
+                    images.value.push(imagePath);
+                }
+            }
+            }
+        }
+
+        console.log("Updated images.value: ", JSON.stringify(images.value));
+
+        // If there are images, set the first one as the current image
+        if (images.value.length > 0) {
+            currentImage.value = images.value[0];  
+        }
+    } catch (error) {
+        console.error("Error fetching images:", error);
+    }
+};
+
+watch(() => images.value,  () => {
+    if (images.value.length > 0) {
+        currentImage.value = images.value[0];  
+    }
+});
+const startSlideshow = () => {
+    if (slideShowClick.value === null) {
+  slideShowClick.value=setInterval(() => {
+    currentIndex = (currentIndex + 1) % images.value.length;
+    currentImage.value = images.value[currentIndex];
+  }, 5000); 
+}
+};
+
+const stopSlideshow = () => {
+  if (slideShowClick.value) {
+    clearInterval(slideShowClick.value);
+  }
+};
+
+const moveSlideShow=(direction)=>{
+    stopSlideshow();
+    if(direction=='right'){
+        currentIndex = (currentIndex + 1) % images.value.length;
+    }else if(direction=='left'){
+        currentIndex = (currentIndex - 1 + images.value.length) % images.value.length;
+    }
+    currentImage.value = images.value[currentIndex];
+}
+
+const packageData = ref([]);
+
+
+
+const textAreasPackage = {
+  card1Package: ref(''),
+  card1PackageName: ref(''),
+  card2Package: ref(''),
+  card2PackageName: ref(''),
+  card3Package: ref(''),
+  card3PackageName: ref(''),
+  card4Package: ref(''),
+  card4PackageName: ref(''),
+  card5Package: ref(''),
+  card5PackageName: ref(''),
+  card6Package: ref(''),
+  card6PackageName: ref(''),
+};
+
+const fetchPackageInfo = async () => {
+  try {
+    const response = await axios.get('/api/productPackageNamesWithProducts');
+    console.log('Package data with prices:', response.data);
+    packageData.value = response.data;
+  } catch (error) {
+    console.error('There was an error fetching the package data:', error);
+  }
+};
+
+
+
+
+
+
+
+
+const package_toggle=ref('');
+
+// Package width and gap
+const packageWidth = 1200; // Updated width of each card
+const gap = 32; // Gap between cards
+const currentIndexCarousel = ref(0);
+const autoLoopInterval = ref(null);
+
+
+const nextSlide = () => {
+  currentIndexCarousel.value =
+    (currentIndexCarousel.value + 1) % packageData.value.length;
+};
+
+const prevSlide = () => {
+  currentIndexCarousel.value =
+    (currentIndexCarousel.value - 1 + packageData.value.length) %
+    packageData.value.length;
+};
+
+const startAutoLoop = () => {
+  autoLoopInterval.value = setInterval(() => {
+    nextSlide();
+  }, 5000); // Change slide every 3 seconds
+};
+
+const stopAutoLoop = () => {
+  clearInterval(autoLoopInterval.value);
+};
+
+
 </script>
 
 <template>
     <Head title="Home" />
+            <ErrorToast
+                v-if="showErrorToast"
+                :visible="showErrorToast"
+                :message="toastMessage"
+                @close="showErrorToast = false"
+            />
+            <SuccessToast
+                v-if="showSuccessToast"
+                :visible="showSuccessToast"
+                :message="toastMessage"
+                @close="showSuccessToast = false"
+            />
         <!-- header -->
         <div class=" bg-business-website-header flex items-center p-5">
             <div class="ml-[50px] w-[50px] h-[50px]">
@@ -191,13 +416,8 @@ const handleScroll = () => {
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('products_page')">Products</a>
                     <a class="text-white rounded-3xl px-4 py-2 transition ease-in-out duration-150 hover:bg-white hover:text-black text-[18px] cursor-pointer" :href="route('aboutUs_page')">About Us</a>
                     <p class="text-white">|</p>
-                    <div v-if="userLogIn" class="flex flex-col">
-                        <a @click="logout('logout')" class=" cursor-pointer text-white text-[14px] underline">Log Out</a>
-                        <a @click="account" class=" cursor-pointer text-white text-[14px] underline">Account</a>
-                    </div>
-                    <div v-else>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In &nbsp; &nbsp;</a>
-                        <a class="text-white text-[18px] cursor-pointer" :href="route('register')">Register</a>
+                    <div>
+                        <a class="text-white text-[18px] cursor-pointer" :href="route('login')">Log In</a>
                     </div>
                     <div class="w-[50px] h-[50px]">
                         <img v-if="isLoading" src='/storage/user_profile/default-profile.png'/>
@@ -208,160 +428,317 @@ const handleScroll = () => {
                 </div>
         </div>
 
-        <!-- section 1/EditWebsite1 -->
+        <!-- section 1 -->
         <section>
-        <div style="background-color: ghostwhite" class=" flex min-h-screen">
-
-            <div class="mt-[230px] ml-[80px] flex-col h-1/2">
+        <div :style="{ backgroundImage: `url(${businessInfo.homePageImage.value})` }" class="bg-no-repeat bg-cover min-h-screen">
+            <div class="flex flex-row ">
+            <div class="h-auto flex-grow-0 flex-shrink-0">
+            <div class="max-w-[980px] mt-[100px] ml-[105px] flex flex-col h-auto flex-shrink-0 rounded-lg p-4">
                 <div>
-                    <h1 class="font-black text-black text-[60px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
+                    <h1 class="font-poppins font-bold text-white text-[80px] tracking-[5px]">{{businessInfo.businessName.value}}</h1>
                 </div>
-                <div class="mt-[10px]">
+                <div class="mt-[20px]">
                     <div class="max-w-[550px]">
-                    <p class="font-extrabold text-[25px] text-black">{{ businessInfo.businessDescription.value }}</p>
+                    <p class=" font-poppins font-extrabold text-[35px] text-white">{{ businessInfo.businessDescription.value }}</p>
                     </div>
                 </div>
                 <div class="mt-[30px]" >
-                    <div class="max-w-[550px]">
-                        <p id="business-details" class="text-[19px] text-black">{{ businessInfo.businessDetails.value }} </p>
+                    <div class="max-w-[690px]">
+                        <p id=" font-poppins business-details" class="text-[29px] text-white">{{ businessInfo.businessDetails.value }} </p>
                     </div>
                 </div>
 
-                <div class="mt-[90px] flex flex-row">
-                    <button @click="logout('register')"  class="transition ease-in-out duration-150 hover:text-black bg-gray-800 hover:bg-white text-white border border-black mt-[-5px] mr-[20px] cursor-pointer shadow-m rounded-lg py-[8px] px-[70px]">Register</button>
-                    <p class="text-black text-xl">|</p>
-                    <a class="ml-[35px] justify-center text-black text-[18px]" :href="route('products_page')">See All Products</a>
+                <div class="mt-[50px] flex flex-row ">
+                    <a class="font-poppins  text-center rounded-lg p-4 w-[380px] bg-white text-black text-[21px]" :href="route('products_page')">See All Products</a>
                 </div>
             </div>
+            </div>
+            
+
+            <div class="mt-[75px] ml-auto relative flex-grow-0 max-w-3xl z-20">
+                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
+                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
+                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-tl-[100px] rounded-bl-[5px] rounded-r-[5px] z-10"/>
+            </div>
+        </div>
+        </div>
+
+        </section>
 
 
-            <!-- image -->
-            <div class=" mt-[50px] ml-auto flex-grow-0 w-1/2 max-w-4xl">
+        <!-- section 2-->
+        <!-- FEATURED PRODUCTS -->
+        <section v-if="feature_toggle==='true'">
+            <div class=" flex h-[1150px] relative" style="background-color: ghostwhite ;min-height: calc(100vh + 100px);">
+
+    <div class="flex flex-col items-center pt-[80px] p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
+        <p class="font-poppins mt-[10px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
+        <p class="mt-[10px] text-[20px]  text-black  text-center">
+            A list of the most popular products loved by customers. 
+            Best prices guaranteed everyday.
+        </p>
+    </div>
+
+    <!-- edit business info wag to iedit kasi business name ito-->
+    <div class=" mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt-[80px] px-4 pt-[200px]">
+        
+        <div class="block flex flex-row gap-5">
+        <!-- card 1 -->
+            <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    
+                <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
+            </div>
+
+        <!-- card 2 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
                 
-                <img :src='businessInfo.homePageImage.value' class ="mt-8 w-full h-[690px] object-cover rounded-tl-[125px]"/>
+            <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
+            </div>
+        
+
+        <!-- card 3 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    
+            <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
+            </div>
+        </div>
+
+        <div class="block flex flex-row gap-5">
+        <!-- card 4 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    
+            <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
+            </div>
+
+        <!-- card 5 -->
+        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    
+            <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
+            </div>
+
+        <!-- card 6 -->
+        <div class="flex flex-col w-[320px] h-[380]px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
+    
+            <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
+                <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
+            </div> 
+        </div>
+    </div>
+            </div>
+        </section>
+
+
+        <!-- section 3-->
+        <!-- PRODUCT PACKAGES -->
+        <section v-if="package_toggle === 'true'">
+  <div class="flex flex-col pb-36 items-center relative bg-gray-900">
+
+    <div class="pt-28 flex flex-col items-center p-3">
+      <p class="font-poppins mt-[10px] text-[65px] text-white font-bold text-center leading-tight">
+        Check Out Our Packages/Bundles!
+      </p>
+      <p class="mt-[10px] -mb-[20px] text-[24px] text-gray-300 text-center max-w-2xl">
+        Take a look at our product packages. Best prices <br /> guaranteed everyday.
+      </p>
+    </div>
+
+    <div class="carousel-container relative w-full pb-10 max-w-[3000px] overflow-hidden">
+      <div
+        class="carousel-track flex transition-transform duration-500 ease-in-out"
+        :style="{
+          transform: `translateX(calc(-${currentIndexCarousel} * (${packageWidth + gap}px) + 50% - ${packageWidth / 2}px))`,
+        }"
+      >
+        <div
+          v-for="(packageItem, index) in packageData"
+          :key="packageItem.id"
+          class="carousel-item flex pt-20 flex-col space-y-4"
+        >
+          <div class="flex w-[1200px] h-[500px] rounded-lg shadow-2xl bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 border border-gray-300 transition-all duration-300 hover:scale-105 hover:shadow-3xl group overflow-hidden relative">
+
+            <div 
+              v-if="packageItem.product_package_discount > 0"
+              class="absolute top-4 left-4 bg-red-600 bg-opacity-90 text-white px-4 py-2 rounded-full transform -rotate-12 z-10 shadow-lg"
+            >
+              <span class="font-extrabold text-2xl">{{ packageItem.product_package_discount }}% OFF!</span>
+            </div>
+
+            <div class="w-[500px] h-full bg-gray-200 flex items-center justify-center">
+              <img :src="'/storage/' + packageItem.image" alt="" class="rounded-l-lg border-2 border-black w-[500px] h-[500px] object-cover " />
+            </div>
+
+            <div class="flex-1 flex flex-col">
+              <div class="w-full bg-gradient-to-r from-gray-200 to-white h-[50px] flex items-center justify-center sticky top-0 z-10">
+                <p style="font-weight: 900;" class="text-black text-[30px] tracking-wide">
+                  {{  packageItem.product_package_name }}
+                </p>
+              </div>
+
+              <div class="flex-grow overflow-auto flex flex-col items-center bg-white justify-between p-6">
+                <div class="mb-4 font-semibold w-full flex items-start justify-start">
+                  <p class="text-xl">Inclusions:</p>
+                </div>
+                <ul class="space-y-4 w-full">
+                  <li
+                    v-for="product in packageItem.packages"
+                    :key="product.id"
+                    class="flex ml-5 items-center justify-start text-left space-x-3 text-black text-[18px]"
+                  >
+                    <span
+                      class="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center"
+                    >
+                      <span class="w-3 h-3 rounded-full bg-gray-600"></span>
+                    </span>
+                    <span>
+                      {{ product.product_name }}
+                      <span class="text-gray-500">
+                        (x{{ product.product_quantity }})
+                        - PHP {{ product.price}}
+                      </span>
+                    </span>
+                  </li>
+                </ul>
+                <div class="w-full mt-8 space-y-2">
+                  <div class="flex justify-between items-center p-3 bg-gray-100 rounded-lg">
+                    <span class="text-lg font-semibold text-gray-700">Original Price:</span>
+                    <span class="text-xl font-bold text-gray-500 line-through">PHP {{ packageItem.total_price }}</span>
+                  </div>
+                  
+                  <div class="flex justify-between items-center p-3 bg-green-100 rounded-lg">
+                    <span class="text-lg font-semibold text-green-700">DISCOUNTED PRICE:</span>
+                    <span class="text-3xl font-extrabold text-green-600">
+                      PHP {{ (packageItem.total_price - (packageItem.total_price * (packageItem.product_package_discount / 100))).toFixed(2) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-black italic text-center text-xl px-4 py-2 bg-gray-100">
+                {{ packageItem.product_package_description }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        class="ml-10 absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+        @click="prevSlide"
+      >
+        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-left']" />
+      </button>
+      <button
+        class="mr-10 absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white rounded-full p-3"
+        @click="nextSlide"
+      >
+        <font-awesome-icon class="text-lg" :icon="['fas', 'arrow-right']" />
+      </button>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- section 4 -->
+        <section 
+        ref="aboutSection" 
+        class="mb-30 bg-website-main border-t border-b border-gray-200 flex flex-col h-auto relative transition-transform duration-500"
+        :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
+        >
+        <div class="mt-[50px] text-center">
+            <p class="font-poppins text-[70px] tracking-[3px] text-black font-bold flex-grow text-center">About Us</p>
+        </div>
+
+    <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[180px] pb-[110px]">
+      <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3">
+        <div class="flex justify-center w-full">
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-check-circle text-gray-800 text-[70px]"></i>
+          </a>
+        </div>
+        <div class="max-w-[330px] min-h-[170px] mt-[100px]" :class="{'translate-active': isVisible, 'translate-custom': !isVisible}">
+          <p class="text-black text-[22px] text-center break-words">{{ textAreas.about_us1 }}</p>
+        </div>
+      </div>
+
+      <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
+        <div class="flex justify-center w-full">
+          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+            <i class="fa fa-tag text-gray-800 text-[70px]"></i>
+          </a>
+        </div>
+        <div class="max-w-[330px] min-h-[170px] mt-[100px]" :class="{'translate-active': isVisible, 'translate-custom': !isVisible}">
+          <p class="text-black text-[22px] text-center break-words">{{ textAreas.about_us2 }}</p>
+        </div>
+      </div>
+
+            <div class="flex -mt-[20px] max-h-[350px] flex-col items-center space-y-4 w-1/3">
+            <div class="flex justify-center w-full">
+                <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-phone text-gray-800 text-[70px]"></i>
+                </a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]" :class="{'translate-active': isVisible, 'translate-custom': !isVisible}">
+                <p class="text-black text-[22px] text-center break-words">{{ textAreas.about_us3 }}</p>
+            </div>
             </div>
         </div>
         </section>
 
-        <!-- section 2/EditWebsite2 -->
-        <section 
-  ref="aboutSection" 
-  class="-mt-[100px] bg-website-main1 border-t border-b border-gray-200 flex h-[800px] relative transition-transform duration-500"
-  :class="{'translate-active': isVisible, 'translate-custom': !isVisible}"
->
-    <div class="-mt-[250px] flex items-center p-3 absolute top-[5px] left-0 right-0 bottom-[250px] m-auto">
-      <p class=" text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">About Us</p>
-    </div>
 
-    <div class="mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[200px]">
-      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-check-circle text-gray-800 text-[50px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us1 }}</p>
-        </div>
-      </div>
 
-      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-tag text-gray-800 text-[50px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us2 }}</p>
-        </div>
-      </div>
+        <section>
+            <div class="bg-website-main1 pb-20">
+                <!-- Map Section -->
+                <div class="mt-[65px] text-center mb-20 mx-auto flex flex-col">
+                    <p class="font-poppins text-[70px] tracking-[3px] text-white font-bold flex-grow text-center">Visit Us</p>
+                    <p class="text-[20px] text-white flex-grow text-center">{{ businessInfo.business_Address }}</p>
+                    <p class="text-[20px] text-white">
+                        {{ businessInfo.business_Province }}, 
+                        {{ businessInfo.business_City }}, {{ businessInfo.business_Barangay }}
+                    </p>
+                </div>
+                <div class="-mt-[60px] map-section h-[700px] w-full mb-[100px]">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3856.341368136968!2d120.81536007492927!3d14.862178085655763!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c9c439257747%3A0x5d3762a1e14af687!2sLimesen%20Network%20Solutions%20Inc.!5e0!3m2!1sen!2sph!4v1734287746976!5m2!1sen!2sph" 
+                        width="100%" 
+                        height="100%" 
+                        style="border:0;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+        </section>
 
-      <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-          <a class="icon-color border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-phone text-gray-800 text-[40px]"></i>
-          </a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-          <p class="text-white text-[19px] text-center break-words">{{ textAreas.about_us3 }}</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
-    <!-- section 3/EditWebsite3 -->
-    
-    <section v-if="feature_toggle==='true'">
-        <div class=" bg-website-main mb-20 flex min-h-screen relative" style="min-height: calc(100vh + 100px);">
 
-<div class="flex flex-col items-center p-3 absolute top-[10px] left-0 right-0 bottom-[500px] m-auto">
-    <p class="mt-[30px] text-[55px]  text-black font-bold  text-center">Featured Products</p>
-    <p class="mt-[10px] text-[20px]  text-black  text-center">
-        A list of the most popular products loved by customers. 
-        Best prices guaranteed everyday.
-    </p>
-</div>
-
-<!-- edit business info wag to iedit kasi business name ito-->
-<div class=" mt-8 mx-auto my-auto flex flex-wrap justify-center gap-4 w-full max-w-screen-lg mt-[10px] px-4 pt-[200px]">
-    
-    <div class="block flex flex-row gap-5">
-    <!-- card 1 -->
-        <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-            <img :src="`/storage/products/${textAreas.card1_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card1.value}}</p>
-        </div>
-
-     <!-- card 2 -->
-     <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-        <div class="w-full bg-gray-800 h-[35px]"></div>    
-        <img :src="`/storage/products/${textAreas.card2_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card2.value}}</p>
-        </div>
-    
-
-    <!-- card 3 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card3_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card3.value}}</p>
-        </div>
-    </div>
-
-    <div class="block flex flex-row gap-5">
-    <!-- card 4 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card4_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card4.value}}</p>
-        </div>
-
-    <!-- card 5 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card5_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card5.value}}</p>
-        </div>
-
-    <!-- card 6 -->
-    <div class="flex flex-col w-[320px] h-[380px] rounded-xl shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 transition-transform duration-300 hover:scale-105">
-<div class="w-full bg-gray-800 h-[35px]"></div>
-        <img :src="`/storage/products/${textAreas.card6_img.value}`" class="w-full h-5/6 object-cover"/>
-            <p class="text-white text-[20px] h-1/6 mt-[20px] text-center">{{textAreas.card6.value}}</p>
-        </div> 
-    </div>
-</div>
-        </div>
-    </section>
-
-    <!-- section 4/Chat Section -->
+    <!-- section /Chat Section -->
 <section class="border-t border-gray-200 shadow-sm">
         <div style="background-color: ghostwhite" class="flex flex-col min-h-screen">
 
         
     <div class="flex w-full justify-center items-center p-3">
-        <p class="mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
+        <p class="font-poppins mt-[30px] text-[60px] tracking-[3px] text-black font-bold flex-grow text-center">Connect with Us!</p>
     </div>
 
 <div class="flex flex-row items-center">
@@ -411,6 +788,25 @@ const handleScroll = () => {
 
 </div>
 
+<div class="mr-auto mt-40 ml-8 flex flex-col max-w-md">
+    <p class="text-[17px] text-white mt-2"> Subscribe to Us!</p>
+
+    <div class="flex items-center space-x-4 mt-4">
+        <input 
+            v-model="email" 
+            type="email" 
+            placeholder="Enter your email" 
+            class="px-3 py-2 rounded-lg text-black focus:outline-none"
+        />
+        <button 
+            @click="subscribe" 
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        >
+            Subscribe
+        </button>
+    </div>
+</div>
+
 <!-- Contact Us -->
 <div class="mt-[100px] ml-auto flex flex-grow-0 w-1/2 max-w-md w-1/2 max-w-md">
     <div class="mt-2 flex flex-col ">
@@ -436,9 +832,129 @@ const handleScroll = () => {
 
 <Chatbot />
 
+
+
 </section>
 </template>
-<style>
+<style scoped>
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+    background-color: #4B5563;
+  }
+  .scrollbar-track-gray-900::-webkit-scrollbar-track {
+    background-color: #111827;
+  }
+}
+
+.carousel-container {
+  display: flex;
+  justify-content: center; /* Center the carousel */
+  align-items: center;
+  overflow: hidden; /* Hide overflow */
+  position: relative;
+  width: 100%; /* Full width */
+}
+
+.carousel-track {
+  display: flex;
+  gap: 32px; /* Space between cards */
+  transition: transform 1s ease-in-out;
+}
+
+.carousel-item {
+  flex-shrink: 0;
+  width: 1200px; /* Updated card width */
+  scroll-snap-align: center; /* Snap active card to center */
+}
+
+.swiper {
+  width: 100%;
+  padding: 0 20px;
+}
+
+.packages-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.packages-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.package-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.package-card:hover {
+  transform: translateY(-5px);
+}
+
+.package-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.package-items {
+  list-style-type: none;
+  padding: 0;
+}
+
+.package-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.package-item:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #34495e;
+}
+
+.item-quantity {
+  color: #7f8c8d;
+}
+
+.no-packages {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #7f8c8d;
+}
+
+@media (max-width: 768px) {
+  .packages-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .translate-custom {
   transform: translateY(50px);
@@ -461,10 +977,15 @@ body, html {
   max-width: 100vw;
   overflow-x: hidden;
 }
+
+/* Ensure all sections have full width */
 section {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+}
+.bg-cover {
+  transition: background-image 1s ease-in-out;
 }
 
 .icon-color {
@@ -476,5 +997,14 @@ section {
 .fa.fa-twitter::before{
 	content:"𝕏";
 	font-size:1.2em;
+}
+
+#map {
+  margin: 0 auto;
+  padding: 0;
+  width: 80%;
+  height: 750px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
 }
 </style>

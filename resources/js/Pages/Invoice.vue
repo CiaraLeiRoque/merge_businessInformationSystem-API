@@ -517,17 +517,17 @@ const selectProduct = (product, index) => {
 };
 
 
-
-
+const packageDiscount = ref(0);
+const isPackageSelected = ref(false);
 const selectProductOrPackage = (item, index) => {
   if (item.name) {
-    // Determine the price based on on_sale status
+    // Logic for selecting a product
     const isOnSale = item.on_sale === 'yes';
     const selectedAmount = isOnSale
       ? parseFloat(item.on_sale_price)
       : parseFloat(item.price);
 
-    // Update the textItemFields for the selected item
+    // Update the textItemFields for the selected product
     textItemFields.value[index] = {
       product_id: item.id,
       image: item.image,
@@ -543,10 +543,13 @@ const selectProductOrPackage = (item, index) => {
       seniorPWD_discountable: 'no',
     };
   } else if (item.product_package_name) {
-    // Handle package selection
+    // Set the package discount value when a package is selected
+    packageDiscount.value = item.product_package_discount;
+    isPackageSelected.value = true;
+    // Clear existing item and insert products from the package
     textItemFields.value.splice(index, 1); // Remove the current item
-
-    // Add rows for each product in the package
+    
+    // Add new rows for each product in the package
     item.products.forEach((product, i) => {
       const newItem = {
         product_id: product.id,
@@ -567,11 +570,11 @@ const selectProductOrPackage = (item, index) => {
         },
       };
 
-      // Insert the new item at the correct position
+      // Insert new items for the products in the package
       textItemFields.value.splice(index + i, 0, newItem);
     });
 
-    // If the inserted package items are the last, add an empty field
+    // Optionally add a new empty field if it's the last item
     if (index + item.products.length >= textItemFields.value.length) {
       addItemTextField();
     }
@@ -583,6 +586,29 @@ const selectProductOrPackage = (item, index) => {
   console.log('Updated textItemFields:', textItemFields.value);
 };
 
+const resetFields = () => {
+  newInvoice.value = {
+    invoice_id: null,
+    date: null,
+    status: null,
+    payment_Type: null,
+    terms: null,
+    customer_Name: null,
+    customer_Address: null,
+    customer_TIN: null,
+    customer_OSCA_PWD_ID_No: null,
+    customer_PO_No: null,
+    customer_Business_Style: null,
+    authorized_Representative: null,
+  };
+  isPackageSelected.value = false;
+  packageDiscount.value = 0;
+
+};
+
+watch(showAddInvoiceModal, (newValue) => {
+  if (!newValue) resetFields();
+});
 
 
 
@@ -765,6 +791,9 @@ const addInvoiceComputation = async () => {
         formData.append('Amount_Due', AmountDueValue);
         formData.append('Add_VAT', AddVatValue);
         formData.append('tax', taxValue)
+        
+        formData.append('package_discount_percent', packageDiscount.value)
+
         // formData.append('tax', taxValue);
 
         // Send the request to the server
@@ -828,9 +857,15 @@ const totalAmountDue = computed(() => {
   return roundToTwoDecimals(productTotal + additionalTotal);
 });
 
+const undiscountedTotalAmountDueHolder = ref(0);
 const totalAmountDueHolder = ref(0);
 watch(totalAmountDue, (newValue) => {
   totalAmountDueHolder.value = roundToTwoDecimals(newValue); // Round the new value
+  
+  if(isPackageSelected){
+    undiscountedTotalAmountDueHolder.value = totalAmountDueHolder.value;
+    totalAmountDueHolder.value = totalAmountDueHolder.value - (totalAmountDueHolder.value * packageDiscount.value) /100;
+}
 });
 
 watch(totalAmountDueHolder, (newValue) => {
@@ -1643,7 +1678,7 @@ const editInvoiceComputation = ref({
     VAT_Exempt_Sales: 0,
     Zero_Rated_Sales: 0,
     VAT_Amount: 0,
-
+    package_discount_percent: 0,
     VAT_Inclusive: 0,
     Less_VAT: 0,
     Amount_NET_of_VAT: 0,
@@ -2890,10 +2925,11 @@ fetchPackageData();
                                     </tbody>
                                 </table>
                             </div>
+
                         </form>
   
                     </div>
-
+                    
 
 
                     <div class="px-12">
@@ -2959,6 +2995,17 @@ fetchPackageData();
                     
                     <div class="px-12">
                         <p class="font-bold text-9x1 p-5 border inline-block rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 font-medium text-white">Step 4: Invoice Computation</p>
+                    
+                        <div class="pl-4 items-center flex mt-1 space-x-2">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="editInvoiceComputation.package_discount_percent"
+                            placeholder="%"
+                        /> 
+                        </div>
                     </div>
                     <div class="px-12 mb-10">
 
@@ -3191,9 +3238,9 @@ fetchPackageData();
                         <form @submit.prevent="addInvoiceItem" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg overflow-hidden" style="max-height: 430px;">
                             <div class="overflow-auto" style="max-height: 400px;"> <!-- Adjusted for scrolling -->
                                 <table class="min-w-full bg-white border-gray-700">
-                                    <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                                    <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 z-20 dark:bg-gray-700">
                                         <tr>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
+                                            <th class="sticky top-0 px-6 py-3 z-20 text-white bg-gray-700">Product</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
@@ -3203,7 +3250,7 @@ fetchPackageData();
                                     </thead>
                                     <tbody>
                                         <tr v-for="(field, index) in textItemFields" :key="index" :class="index % 2 === 0 ? 'bg-blue-900 bg-opacity-5' : 'bg-white'" class="items-center text-center">
-                                            <td class="px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
+                                            <td class="z-10 px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
                                                 <div class="flex items-center justify-center relative">
                                                     <div class="flex flex-shrink-0 items-center">
                                                         <div v-if="field.image">
@@ -3257,7 +3304,7 @@ fetchPackageData();
                                                     </div>
                                                 </div>
                                             </td>
-
+                                                    
                                             <td class=" pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
                                                 <div class="flex items-center justify-center">
                                                     <div class="-ml-4 flex items-center justify-between">
@@ -3296,7 +3343,7 @@ fetchPackageData();
                                         <tr>
                                             <td colspan="6">
                                                 <div class="flex items-center justify-center my-6">
-                                                    <button type="button" @click="addItemTextField" class="flex items-center justify-center">
+                                                    <button :disabled="isPackageSelected" type="button" @click="addItemTextField" class="flex items-center justify-center">
                                                         <font-awesome-icon :icon="['fas', 'plus']" class="w-6 h-6 mr-2" />
                                                         Click to add New Field
                                                     </button>
@@ -3306,8 +3353,18 @@ fetchPackageData();
                                     </tbody>
                                 </table>
                             </div>
+
                         </form>
-  
+                        <div class="items-center flex mt-1 space-x-2" v-if="isPackageSelected">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="packageDiscount"
+                            placeholder="%"
+                        />
+                        </div>
                     </div>
 
 
@@ -3372,11 +3429,32 @@ fetchPackageData();
                     </div> 
 
 
-                    <div class="px-12">
+                    <div class="flex px-12">
                         <p class="font-bold text-9x1 p-5 border inline-block rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 font-medium text-white">Step 4: Invoice Computation</p>
+                        <div class="pl-4 items-center flex mt-1 space-x-2" v-if="isPackageSelected">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="packageDiscount"
+                            placeholder="%"
+                        />
+                        </div>
+
+                        <div class="pl-4 items-center flex mt-1 space-x-2" v-if="isPackageSelected">
+                        <p class="pl-4">Undiscounted Total Amount: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="undiscountedTotalAmountDueHolder"
+                            placeholder="%"
+                        />
+                        </div>
+
                     </div>
                     <div class="px-12 mb-10">
-
                         <form @submit.prevent="addInvoiceComputation" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg">
                             <div class="flex p-14 gap-8">
                                 <div class="w-1/2">
@@ -3609,7 +3687,7 @@ fetchPackageData();
                                 <table class="min-w-full bg-white border-gray-700">
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
+                                            <th class="sticky top-0 px-6 py-3 z-20 text-white bg-gray-700">Product</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
@@ -3724,9 +3802,21 @@ fetchPackageData();
                     </div> 
 
 
-                    <div class="px-12">
+                    
+                    <div class="flex px-12">
                         <p class="font-bold text-9x1 p-5 border inline-block rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 font-medium text-white">Step 4: Invoice Computation</p>
+                        <div class="pl-4 items-center flex mt-1 space-x-2">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="selectedInvoiceComputation.package_discount_percent"
+                            placeholder="%"
+                        />
+                        </div>
                     </div>
+
                     <div class="px-12 mb-10">
 
                         <form @submit.prevent="addInvoiceComputation" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg">

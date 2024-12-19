@@ -17,7 +17,7 @@ class InvoiceComputation extends Model
         'VAT_Exempt_Sales',
         'Zero_Rated_Sales',
         'VAT_Amount',
-
+        'package_discount_percent',
         'VAT_Inclusive',
         'Less_VAT',
         'Amount_NET_of_VAT',
