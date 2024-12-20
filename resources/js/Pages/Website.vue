@@ -473,8 +473,8 @@ onMounted(fetchAnalyticsData);
 <style scoped>
 .custom-chart-width {
         width: 750px;
-        max-height: 300px;
-        height: 300px;
+        max-height: 350px;
+        height: 350px;
         
     }
 </style>

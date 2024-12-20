@@ -274,6 +274,7 @@ class ProductController extends Controller
         $businessAddress = $business->business_Address;
         $businessTIN = $business->business_TIN;
         $businessImage = $business->business_image;
+        $businessNumber = $business->business_Telephone_Number;
 
         
         // Prepare data for the PDF
@@ -297,7 +298,9 @@ class ProductController extends Controller
             'businessAddress' => $businessAddress,
             'businessTIN' => $businessTIN,
             'businessImage' => $businessImage,
+            'businessNumber' => $businessNumber,
             'exportTitle' => $exportTitle,
+
         ];
     
         $pdf = PDF::loadView('productsPdf', $data)->setPaper('a4', 'landscape');
@@ -336,6 +339,7 @@ class ProductController extends Controller
     $businessAddress = $business->business_Address;
     $businessTIN = $business->business_TIN;
     $businessImage = $business->business_image;
+    $businessNumber = $business->business_Telephone_Number;
 
     $data = [
         'visibleColumns' => $visibleColumns,
@@ -345,6 +349,7 @@ class ProductController extends Controller
         'businessAddress' => $businessAddress,
         'businessTIN' => $businessTIN,
         'businessImage' => $businessImage,
+        'businessNumber' => $businessNumber,
         'exportTitle' => $exportTitle,
     ];
 
