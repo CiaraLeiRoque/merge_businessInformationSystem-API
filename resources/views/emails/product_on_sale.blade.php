@@ -76,8 +76,8 @@
         <div class="email-body">
             <p>Great news! Our featured product, <strong>{{ $product->name }}</strong>, is now available at a discounted price of <strong>₱{{ number_format($product->on_sale_price, 2) }}</strong>.</p>
             
-            @if($product->image)
-                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+            @if(isset($product->embedded_image_cid))
+                <img src="{{ $product->embedded_image_cid }}" alt="{{ $product->name }}">
             @endif
             
             <p>Don't miss out on this limited-time offer! Click the button below to view the product at our page!</p>

@@ -171,16 +171,22 @@ class ProductController extends Controller
     }
 
     private function notifySubscribers(Product $product)
-{
-    $subscribers = Subscribers::whereNotNull('email_verified_at')->pluck('email');
-
-    foreach ($subscribers as $email) {
-        Mail::send('emails.product_on_sale', ['product' => $product, 'email' => $email], function ($message) use ($email, $product) {
-            $message->to($email)
-                    ->subject("Product on Sale: {$product->name}");
-        });   
+    {
+        $subscribers = Subscribers::whereNotNull('email_verified_at')->pluck('email');
+    
+        foreach ($subscribers as $email) {
+            Mail::send('emails.product_on_sale', ['product' => $product, 'email' => $email], function ($message) use ($email, $product) {
+                $message->to($email)
+                        ->subject("Product on Sale: {$product->name}");
+    
+                // Embed the image and get the CID
+                if ($product->image) {
+                    $cid = $message->embed(public_path('storage/' . $product->image));
+                    $product->embedded_image_cid = $cid; // Pass the CID to the Blade template
+                }
+            });
+        }
     }
-}
 
 
 
