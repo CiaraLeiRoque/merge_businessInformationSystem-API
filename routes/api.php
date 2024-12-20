@@ -8,6 +8,9 @@ use App\Http\Controllers\InvoiceItemController;
 use App\Http\Controllers\InvoiceAdditionalController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductNotificationSettingsController;
+use App\Http\Controllers\ProductColumnTableVisibilityController;
+use App\Http\Controllers\ProductPackageController;
+use App\Http\Controllers\ProductPackageNameController;
 use App\Models\InvoiceAdditional;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -21,11 +24,13 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\GetIdController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\ImagesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatbotController;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\SubscriberController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -44,6 +49,27 @@ Route::get('/all-invoices', function(){
 });
 
 
+Route::get('productPackageNamesWithProducts', [ProductPackageNameController::class, 'getAllPackageNamesWithProducts']);
+
+
+Route::get('productPackageName', [ProductPackageNameController::class, 'show']);  
+Route::post('productPackageName', [ProductPackageNameController::class, 'savePackageName']);  
+
+
+Route::delete('productPackageName/{id}', [ProductPackageNameController::class, 'deletePackage']);  
+Route::post('productPackageName/{id}', [ProductPackageNameController::class, 'updatePackageName']);  
+Route::get('productPackageName/{id}', [ProductPackageNameController::class, 'showPackageName']);  
+
+Route::get('productPackage', [ProductPackageController::class, 'show']);  
+Route::post('productPackage', [ProductPackageController::class, 'savePackage']);  
+
+Route::get('productPackage/{id}', [ProductPackageController::class, 'showProductPackage']);  
+Route::delete('productPackage/{id}', [ProductPackageController::class, 'deleteProductPackage']);  
+Route::post('productPackage/{id}', [ProductPackageController::class, 'updateProductPackage']);  
+
+
+Route::get('productVis', [ProductColumnTableVisibilityController::class, 'show']);  
+Route::put('productVis', [ProductColumnTableVisibilityController::class, 'updateVisibility']);
 
 Route::get('/productNotif', [ProductNotificationSettingsController::class, 'show']);
 Route::put('/productNotif', [ProductNotificationSettingsController::class, 'updateCounts']);
@@ -59,6 +85,10 @@ Route::get('/business_info', [BusinessController::class, 'showBusiness']);
 Route::post('/website', [WebsiteController::class, 'store']);
 Route::get('/website', [WebsiteController::class, 'info']);
 Route::post('/website-update', [WebsiteController::class, 'update']);
+
+Route::get('/images', [ImagesController::class, 'info']);
+Route::post('/images', [ImagesController::class, 'store']);
+Route::post('/images-update', [ImagesController::class, 'update']);
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::post('/products', [ProductController::class, 'store']);
@@ -78,6 +108,8 @@ Route::post('/chatbot-response', [ChatbotController::class, 'store']);
 Route::put('/chatbot-response/{id}', [ChatbotController::class, 'update']);
 Route::delete('/chatbot-response/{id}', [ChatbotController::class, 'destroy']);
 
+Route::post('/subscribe', [SubscriberController::class, 'store']);
+Route::get('/verify-subscription', [SubscriberController::class, 'verify'])->name('verify-subscription');
 
 
 Route::get('/featured-products', [ProductController::class, 'featured_products'])->name('featured_products');
@@ -143,6 +175,9 @@ Route::get('/invoice_additional/{invoice_system_id}', [InvoiceAdditionalControll
 Route::get('invoice_computation',[InvoiceComputationController::class,'index']);
 Route::post('invoice_computation',[InvoiceComputationController::class,'store']);
 Route::get('/invoice_computation/{invoice_system_id}',[InvoiceComputationController::class,'show']);
+Route::get('/invoice_computation/{invoice_system_id}',[InvoiceComputationController::class,'show']);
+
+
 
 Route::get('invoice_print/{invoice_id}', [InvoiceController::class, 'invoice_print']);
 
@@ -173,5 +208,13 @@ Route::get('products/print/pdf', [FinanceController::class, 'printProductsPdf'])
 
 Route::post('products/import/xlsx', [ProductController::class, 'importProductsXlsx']);
 
-Route::get('products/print/export/xlsx', [ProductController::class, 'exportProductsXslx']);
 
+Route::get('products/print/master/export/xlsx', [ProductController::class, 'exportMasterProductsXlsx']);
+
+Route::get('products/print/export/pdf', [ProductController::class, 'exportProductsPdf']);
+Route::get('products/print/export/xlsx', [ProductController::class, 'exportProductsXlsx']);
+
+Route::get('products/print/export/template_xslx', [ProductController::class, 'downloadTemplate']);
+
+Route::get('/export-products-pdf', [ProductController::class, 'exportCriticalStockPdf']);
+Route::get('/brands', [ProductController::class, 'getBrands']);

@@ -429,6 +429,59 @@ const filteredProducts = (query) => {
   });
 };
 
+const filteredProductsAndPackages = computed(() => (query) => {
+  if (!query) {
+    return [];
+  }
+
+  const searchTerm = query.toLowerCase();
+
+  // Filter products
+  const filteredProducts = products.value.filter((product) => {
+    return (
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.status.toLowerCase().includes(searchTerm) ||
+      product.brand.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  // Group packages by product_package_id
+  const groupedPackages = packageData.value.reduce((acc, pkg) => {
+    if (!acc[pkg.product_package_id]) {
+      acc[pkg.product_package_id] = {
+        ...pkg.package_name,
+        products: []
+      };
+    }
+    const productInfo = products.value.find(p => p.id === pkg.product_id);
+    acc[pkg.product_package_id].products.push({
+      id: pkg.product_id,
+      name: pkg.product_name,
+      quantity: pkg.product_quantity,
+      stock: productInfo ? productInfo.stock : 'N/A',
+      price: productInfo ? productInfo.price : 'N/A'
+    });
+    return acc;
+  }, {});
+
+  // Convert grouped packages to array and filter based on the query
+  const filteredPackages = Object.values(groupedPackages).filter((pkg) => {
+    return (
+      pkg.product_package_name.toLowerCase().includes(searchTerm) ||
+      pkg.products.some(product => product.name.toLowerCase().includes(searchTerm))
+    );
+  });
+
+  console.log('COMBINED AND FILTERED PACKAGES:', filteredPackages);
+
+  // Combine filtered products and filtered packages
+  return [...filteredProducts, ...filteredPackages];
+});
+
+
+
+
 const textItemFields = ref([
   { 
     product_id:'', sold:'', image:'', searchProductQuery: '', on_sale: 'no', amount: '', quantity: '', stock:'', total_amount: '', areFieldsEnabled: false, isSearching: false, seniorPWD_discountable:'no' }
@@ -462,6 +515,102 @@ const selectProduct = (product, index) => {
   console.log('Selected Product ID:', textItemFields.value[index].product_id)
   console.log('Selected Product Image:', textItemFields.value[index].image)
 };
+
+
+const packageDiscount = ref(0);
+const isPackageSelected = ref(false);
+const selectProductOrPackage = (item, index) => {
+  if (item.name) {
+    // Logic for selecting a product
+    const isOnSale = item.on_sale === 'yes';
+    const selectedAmount = isOnSale
+      ? parseFloat(item.on_sale_price)
+      : parseFloat(item.price);
+
+    // Update the textItemFields for the selected product
+    textItemFields.value[index] = {
+      product_id: item.id,
+      image: item.image,
+      searchProductQuery: item.name,
+      on_sale: item.on_sale, // 'yes' or 'no'
+      amount: selectedAmount,
+      total_amount: selectedAmount.toFixed(2),
+      stock: item.stock,
+      sold: item.sold,
+      quantity: 1,
+      areFieldsEnabled: true,
+      isSearching: false,
+      seniorPWD_discountable: 'no',
+    };
+  } else if (item.product_package_name) {
+    // Set the package discount value when a package is selected
+    packageDiscount.value = item.product_package_discount;
+    isPackageSelected.value = true;
+    // Clear existing item and insert products from the package
+    textItemFields.value.splice(index, 1); // Remove the current item
+    
+    // Add new rows for each product in the package
+    item.products.forEach((product, i) => {
+      const newItem = {
+        product_id: product.id,
+        image: product.image || '',
+        searchProductQuery: product.name,
+        on_sale: 'no', // Assuming packages don't have on_sale status
+        amount: parseFloat(product.price),
+        stock: product.stock,
+        quantity: product.quantity,
+        total_amount: (parseFloat(product.price) * product.quantity).toFixed(2),
+        areFieldsEnabled: true,
+        isSearching: false,
+        seniorPWD_discountable: 'no',
+        addItemText: `${item.product_package_name} - ${product.name}`,
+        product_package: {
+          id: item.id,
+          name: item.product_package_name,
+        },
+      };
+
+      // Insert new items for the products in the package
+      textItemFields.value.splice(index + i, 0, newItem);
+    });
+
+    // Optionally add a new empty field if it's the last item
+    if (index + item.products.length >= textItemFields.value.length) {
+      addItemTextField();
+    }
+  }
+
+  // Hide the search dropdown for all items
+  textItemFields.value.forEach((field) => (field.isSearching = false));
+
+  console.log('Updated textItemFields:', textItemFields.value);
+};
+
+const resetFields = () => {
+  newInvoice.value = {
+    invoice_id: null,
+    date: null,
+    status: null,
+    payment_Type: null,
+    terms: null,
+    customer_Name: null,
+    customer_Address: null,
+    customer_TIN: null,
+    customer_OSCA_PWD_ID_No: null,
+    customer_PO_No: null,
+    customer_Business_Style: null,
+    authorized_Representative: null,
+  };
+  isPackageSelected.value = false;
+  packageDiscount.value = 0;
+
+};
+
+watch(showAddInvoiceModal, (newValue) => {
+  if (!newValue) resetFields();
+});
+
+
 
 const addInvoiceItem = async () => {
     try {
@@ -642,6 +791,9 @@ const addInvoiceComputation = async () => {
         formData.append('Amount_Due', AmountDueValue);
         formData.append('Add_VAT', AddVatValue);
         formData.append('tax', taxValue)
+        
+        formData.append('package_discount_percent', packageDiscount.value)
+
         // formData.append('tax', taxValue);
 
         // Send the request to the server
@@ -705,9 +857,15 @@ const totalAmountDue = computed(() => {
   return roundToTwoDecimals(productTotal + additionalTotal);
 });
 
+const undiscountedTotalAmountDueHolder = ref(0);
 const totalAmountDueHolder = ref(0);
 watch(totalAmountDue, (newValue) => {
   totalAmountDueHolder.value = roundToTwoDecimals(newValue); // Round the new value
+  
+  if(isPackageSelected){
+    undiscountedTotalAmountDueHolder.value = totalAmountDueHolder.value;
+    totalAmountDueHolder.value = totalAmountDueHolder.value - (totalAmountDueHolder.value * packageDiscount.value) /100;
+}
 });
 
 watch(totalAmountDueHolder, (newValue) => {
@@ -1146,7 +1304,7 @@ const updateInvoice = async () => {
 
 
 //----------------------------------------------FOR UPDATING INVOICE ITEMS------------------------------------------
-const filteredUpdateProducts = (query) => {
+const filteredUpdateProducts1 = (query) => {
   if (!query) {
     return [];
   }
@@ -1161,6 +1319,153 @@ const filteredUpdateProducts = (query) => {
   });
 };
 
+
+const filteredUpdateProducts = computed(() => (query) => {
+  if (!query) {
+    return [];
+  }
+
+  const searchTerm = query.toLowerCase();
+
+  // Filter products
+  const filteredProducts = products.value.filter((product) => {
+    return (
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.status.toLowerCase().includes(searchTerm) ||
+      product.brand.toLowerCase().includes(searchTerm)
+    );
+  });
+
+  // Group packages by product_package_id
+  const groupedPackages = packageData.value.reduce((acc, pkg) => {
+    if (!acc[pkg.product_package_id]) {
+      acc[pkg.product_package_id] = {
+        ...pkg.package_name,
+        products: []
+      };
+    }
+    const productInfo = products.value.find(p => p.id === pkg.product_id);
+    acc[pkg.product_package_id].products.push({
+      id: pkg.product_id,
+      name: pkg.product_name,
+      quantity: pkg.product_quantity,
+      stock: productInfo ? productInfo.stock : 'N/A',
+      price: productInfo ? productInfo.price : 'N/A'
+    });
+    return acc;
+  }, {});
+
+  // Convert grouped packages to array and filter based on the query
+  const filteredPackages = Object.values(groupedPackages).filter((pkg) => {
+    return (
+      pkg.product_package_name.toLowerCase().includes(searchTerm) ||
+      pkg.products.some(product => product.name.toLowerCase().includes(searchTerm))
+    );
+  });
+
+  console.log('COMBINED AND FILTERED PACKAGES:', filteredPackages);
+
+  // Combine filtered products and filtered packages
+  return [...filteredProducts, ...filteredPackages];
+});
+
+const selectUpdateProduct = async (item, index) => {
+  if (item.name) {
+    // Handle individual product selection
+    selectedInvoiceItems.value[index] = {
+      product_id: item.id,
+      sold: item.sold,
+      image: item.image,
+      product_name: item.name,
+      on_sale: item.on_sale,
+      product_price: parseFloat(item.price),
+      seniorPWD_discountable: 'no',
+      isNew: true,
+      areFieldsEnabled: true,
+      isSearching: false,
+      quantity: 0,
+      final_price: 0,
+      stock: item.stock,
+      oldQuantity: 0
+    };
+
+    oldStock.value = item.stock;
+
+    try {
+      const response = await axios.get(`/api/products/${item.id}/stock`);
+      selectedInvoiceItems.value[index].stock = response.data.stock;
+    } catch (error) {
+      console.error('Error fetching product stock:', error);
+      selectedInvoiceItems.value[index].stock = 0; // Set default stock if there's an error
+    }
+  } else if (item.product_package_name) {
+    // Handle package selection
+    // Remove the current item
+    selectedInvoiceItems.value.splice(index, 1);
+
+    // Add rows for each product in the package
+    item.products.forEach((product, i) => {
+      const newItem = {
+        product_id: product.id,
+        sold: product.sold || 0,
+        image: product.image || '',
+        product_name: product.name,
+        on_sale: 'no', // Assuming packages don't have on_sale status
+        product_price: parseFloat(product.price),
+        seniorPWD_discountable: 'no',
+        areFieldsEnabled: true,
+        isSearching: false,
+        quantity: product.quantity,
+        final_price: (parseFloat(product.price) * product.quantity).toFixed(2),
+        stock: product.stock,
+        oldQuantity: 0,
+        isNew: true,
+        product_package: {
+          id: item.id,
+          name: item.product_package_name
+        }
+      };
+
+      // Insert the new item at the current index + i
+      selectedInvoiceItems.value.splice(index + i, 0, newItem);
+
+      // Fetch stock for each product in the package
+      axios.get(`/api/products/${product.id}/stock`)
+        .then(response => {
+          selectedInvoiceItems.value[index + i].stock = response.data.stock;
+        })
+        .catch(error => {
+          console.error(`Error fetching stock for product ${product.id}:`, error);
+          selectedInvoiceItems.value[index + i].stock = 0;
+        });
+    });
+
+    // If there are no more items after the inserted package items, add a new empty field
+    if (index + item.products.length >= selectedInvoiceItems.value.length) {
+      selectedInvoiceItems.value.push({
+        product_id: '',
+        sold: '',
+        image: '',
+        product_name: '',
+        on_sale: 'no',
+        product_price: '',
+        areFieldsEnabled: false,
+        isSearching: false,
+        quantity: 0,
+        final_price: 0,
+        stock: 0,
+        oldQuantity: 0,
+        isNew: true
+      });
+    }
+  }
+
+  // Hide the search dropdown for all items
+  selectedInvoiceItems.value.forEach(item => item.isSearching = false);
+
+  console.log('Updated selectedInvoiceItems:', selectedInvoiceItems.value);
+};
 
 const selectedInvoiceItems = ref([
   { 
@@ -1233,34 +1538,9 @@ const removeItemTextField1 = (index) => {
   console.log('edit remove text field clicked');
   editInvoiceComputation.value.Less_SC_PWD_Discount_Percent = 0;
 };
-const selectUpdateProduct = async (product, index) => {
-  // Assign the selected product's details to the corresponding text field
-  selectedInvoiceItems.value[index].product_id = product.id;
-  selectedInvoiceItems.value[index].sold = product.sold;
 
 
-  selectedInvoiceItems.value[index].image = product.image;
-  selectedInvoiceItems.value[index].product_name = product.name;
-  selectedInvoiceItems.value[index].on_sale = product.on_sale;
-  // Hide the search results (clear the search query)
-  selectedInvoiceItems.value[index].product_price = product.price;
-  selectedInvoiceItems.value[index].areFieldsEnabled = true;
-  selectedInvoiceItems.value[index].isSearching = false; // Hide the search results 
-  selectedInvoiceItems.value[index].quantity = 0;
-  selectedInvoiceItems.value[index].final_price = 0;
-  selectedInvoiceItems.value[index].stock = product.stock;
-  selectedInvoiceItems.value[index].oldQuantity = 0;
 
-  oldStock.value = product.stock;
-  try {
-    const response = await axios.get(`/api/products/${product.id}/stock`);
-    selectedInvoiceItems.value[index].stock = response.data.stock;
-  } catch (error) {
-    console.error('Error fetching product stock:', error);
-    selectedInvoiceItems.value[index].stock = 0; // Set default stock if there's an error
-  }
-  console.log('TANG INA ANO BA YUNG PANGALAN MO HAHAHAHA', selectedInvoiceItems.value[index].stock)
-};
 
 
 const updateInvoiceItem = async () => {
@@ -1398,7 +1678,7 @@ const editInvoiceComputation = ref({
     VAT_Exempt_Sales: 0,
     Zero_Rated_Sales: 0,
     VAT_Amount: 0,
-
+    package_discount_percent: 0,
     VAT_Inclusive: 0,
     Less_VAT: 0,
     Amount_NET_of_VAT: 0,
@@ -2017,6 +2297,30 @@ function validateKeyPress(event) {
     event.preventDefault();
   }
 }
+
+
+const packageData = ref([]);
+
+const fetchPackageData = async () => {
+  try {
+    const response = await axios.get('/api/productPackage')
+    packageData.value = response.data
+    console.log('Fetched package data:', packageData.value)
+    
+    console.log('PACKAGE DATA')
+    // Log each package and its products
+    packageData.value.forEach((pkg, index) => {
+      console.log(`Package ${index + 1}:`, pkg.package_name?.product_package_name)
+      console.log('Products:', pkg.products)
+    })
+  } catch (error) {
+    console.error('Error fetching package data:', error)
+  }
+}
+
+
+
+fetchPackageData();
 </script>
 
 
@@ -2493,7 +2797,7 @@ function validateKeyPress(event) {
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
@@ -2520,27 +2824,47 @@ function validateKeyPress(event) {
                                                     <div class="relative z-10 ">
                                                         <!-- Assuming you have an input field above this list -->
                                                         <ul
-                                                        v-if="field.product_name && field.isSearching"
-                                                        class="ml-10 w-80 bg-white shadow-xl rounded-lg mt-2 max-h-80 overflow-y-auto border border-gray-200"
+                                                            v-if="field.product_name && field.isSearching"
+                                                            class="ml-10 w-80 bg-white shadow-xl rounded-lg mt-2 max-h-80 overflow-y-auto border border-gray-200"
                                                         >
-                                                        <li
-                                                            v-for="product in filteredUpdateProducts(field.product_name)"
-                                                            :key="product.id"
-                                                            @click="selectUpdateProduct(product, index)"
+                                                            <li
+                                                            v-for="item in filteredUpdateProducts(field.product_name)"
+                                                            :key="item.id || item.product_package_id"
+                                                            @click="selectUpdateProduct(item, index)"
                                                             class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                                                        >
-                                                            <div class="flex-shrink-0">
-                                                            <img
-                                                                :src="'/storage/' + product.image"
-                                                                :alt="product.name"
+                                                            >
+                                                            <!-- Check if it's a product -->
+                                                            <div v-if="item.name" class="flex-shrink-0 flex items-center">
+                                                                <img
+                                                                :src="'/storage/' + item.image"
+                                                                :alt="item.name"
                                                                 class="w-12 h-12 object-cover rounded-md"
-                                                            />
+                                                                />
+                                                                <div class="ml-4 flex-grow">
+                                                                <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
+                                                                <p class="text-sm text-gray-500">Price: {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(item.price) }}</p>
+                                                                <p class="text-sm text-gray-500">Stock: {{ item.stock }}</p>
+                                                                </div>
                                                             </div>
-                                                            <div class="ml-4 flex-grow">
-                                                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                                                            <p class="text-sm text-gray-500">{{ product.price }}</p>
+
+                                                            <!-- Check if it's a package -->
+                                                            <div v-else-if="item.product_package_name" class="flex-shrink-0 w-full">
+                                                                <div class="flex items-center">
+                                                                <div class="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                                                                    <font-awesome-icon icon="fa-box" size="lg" />
+                                                                </div>
+                                                                <div class="ml-4 flex-grow">
+                                                                    <p class="text-sm font-medium text-gray-900">{{ item.product_package_name }}</p>
+                                                                    <p class="text-sm text-gray-500">Package ({{ item.products.length }} products)</p>
+                                                                </div>
+                                                                </div>
+                                                                <ul class="mt-2 space-y-2">
+                                                                <li v-for="product in item.products" :key="product.id" class="text-sm text-gray-600">
+                                                                    {{ product.name }} (Qty: {{ product.quantity }}, Stock: {{ product.stock }}, Price: {{ product.price }})
+                                                                </li>
+                                                                </ul>
                                                             </div>
-                                                        </li>
+                                                            </li>
                                                         </ul>
                                                     </div>
 
@@ -2573,7 +2897,7 @@ function validateKeyPress(event) {
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input  @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.final_price" placeholder="Total Amount" />
+                                                <input  @keypress="validateKeyPress" disabled :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-32" type="number" v-model="field.final_price" placeholder="Total Amount" />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2601,10 +2925,11 @@ function validateKeyPress(event) {
                                     </tbody>
                                 </table>
                             </div>
+
                         </form>
   
                     </div>
-
+                    
 
 
                     <div class="px-12">
@@ -2618,7 +2943,7 @@ function validateKeyPress(event) {
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Description</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Action</th>
@@ -2670,6 +2995,17 @@ function validateKeyPress(event) {
                     
                     <div class="px-12">
                         <p class="font-bold text-9x1 p-5 border inline-block rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 font-medium text-white">Step 4: Invoice Computation</p>
+                    
+                        <div class="pl-4 items-center flex mt-1 space-x-2">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="editInvoiceComputation.package_discount_percent"
+                            placeholder="%"
+                        /> 
+                        </div>
                     </div>
                     <div class="px-12 mb-10">
 
@@ -2902,10 +3238,10 @@ function validateKeyPress(event) {
                         <form @submit.prevent="addInvoiceItem" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg overflow-hidden" style="max-height: 430px;">
                             <div class="overflow-auto" style="max-height: 400px;"> <!-- Adjusted for scrolling -->
                                 <table class="min-w-full bg-white border-gray-700">
-                                    <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                                    <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 z-20 dark:bg-gray-700">
                                         <tr>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 z-20 text-white bg-gray-700">Product</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
@@ -2914,48 +3250,61 @@ function validateKeyPress(event) {
                                     </thead>
                                     <tbody>
                                         <tr v-for="(field, index) in textItemFields" :key="index" :class="index % 2 === 0 ? 'bg-blue-900 bg-opacity-5' : 'bg-white'" class="items-center text-center">
-                                            <td class="px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
-        <div class="flex items-center justify-center relative">
-            <div class="flex flex-shrink-0 items-center">
-                <div v-if="field.image">
-                    <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" />
-                </div>
-                <div v-else>
-                    <font-awesome-icon :icon="['fas', 'image']" class="w-5 h-5 object-cover" size="sm" />
-                </div>
-            </div>
-            <div class="ml-4 relative"> <!-- Added relative class here -->
-                <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
-                
-                <!-- The searchProductQuery dropdown -->
-                <ul
-                    v-if="field.searchProductQuery && field.isSearching"
-                    class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
-                    style="z-index: 15;"
-                >
-                    <li
-                        v-for="product in filteredProducts(field.searchProductQuery)"
-                        :key="product.id"
-                        @click="selectProduct(product, index)"
-                        class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
-                    >
-                        <div class="flex-shrink-0">
-                            <img
-                                :src="'/storage/' + product.image"
-                                :alt="product.name"
-                                class="w-12 h-12 object-cover rounded-md"
-                            />
-                        </div>
-                        <div class="ml-4 flex-grow">
-                            <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
-                            <p class="text-sm text-gray-500">{{ product.price }}</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </td>
+                                            <td class="z-10 px-6 py-3 border-b border-gray-200 dark:border-gray-400 align-middle">
+                                                <div class="flex items-center justify-center relative">
+                                                    <div class="flex flex-shrink-0 items-center">
+                                                        <div v-if="field.image">
+                                                            <img :src="'/storage/' + field.image" class="w-5 h-5 object-cover" />
+                                                        </div>
+                                                        <div v-else>
+                                                            <font-awesome-icon :icon="['fas', 'image']" class="w-5 h-5 object-cover" size="sm" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="ml-4 relative"> <!-- Added relative class here -->
+                                                        <input class="w-44" @input="field.isSearching = true" type="text" v-model="field.searchProductQuery" placeholder="Search for a Product" />
+                                                        
+                                                            <!-- The searchProductQuery dropdown -->
+                                                            <ul
+                                                                v-if="field.searchProductQuery && field.isSearching"
+                                                                class="relative left-16 top-0 w-80 bg-white shadow-xl rounded-lg max-h-80 overflow-y-auto border border-gray-200"
+                                                                style="z-index: 15;"
+                                                            >
+                                                                <li
+                                                                v-for="item in filteredProductsAndPackages(field.searchProductQuery)"
+                                                                :key="item.id"
+                                                                @click="selectProductOrPackage(item, index)"
+                                                                class="flex items-center p-3 hover:bg-gray-50 transition-colors duration-150 ease-in-out cursor-pointer"
+                                                                >
+                                                                <!-- Check if it's a product -->
+                                                                <div v-if="item.name" class="flex-shrink-0">
+                                                                    <img
+                                                                    :src="'/storage/' + item.image"
+                                                                    :alt="item.name"
+                                                                    class="w-12 h-12 object-cover rounded-md"
+                                                                    />
+                                                                    <div class="ml-4 flex-grow">
+                                                                    <p class="text-sm font-medium text-gray-900">{{ item.name }}</p>
+                                                                    <p class="text-sm text-gray-500">{{ item.price }}</p>
+                                                                    </div>
+                                                                </div>
 
+                                                                <!-- Check if it's a package -->
+                                                                <div v-else-if="item.product_package_name" class="flex-shrink-0">
+                                                                    <div class="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center">
+                                                                    <font-awesome-icon icon="fa-box" size="lg" />
+                                                                    </div>
+                                                                    <div class="ml-4 flex-grow">
+                                                                    <p class="text-sm font-medium text-gray-900">{{ item.product_package_name }}</p>
+                                                                    <p class="text-sm text-gray-500">Package ({{ item.products.length }} products)</p>
+                                                                    </div>
+                                                                </div>
+                                                                </li>
+                                                            </ul>
+
+                                                    </div>
+                                                </div>
+                                            </td>
+                                                    
                                             <td class=" pr-8 py-4 border-b border-gray-200 dark:border-gray-400">
                                                 <div class="flex items-center justify-center">
                                                     <div class="-ml-4 flex items-center justify-between">
@@ -2973,7 +3322,7 @@ function validateKeyPress(event) {
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
-                                                <input @keypress="validateKeyPress" :disabled="!field.areFieldsEnabled" class="text-center no-spinner w-16" type="number" @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
+                                                <input @keypress="validateKeyPress" class="text-center no-spinner w-16" type="number" disabled @input="updateTotalProductAmount(index)" v-model="field.quantity" placeholder="Qty." />
                                             </td>
 
                                             <td class="px-6 py-4 border-b border-gray-200 dark:border-gray-400">
@@ -2994,7 +3343,7 @@ function validateKeyPress(event) {
                                         <tr>
                                             <td colspan="6">
                                                 <div class="flex items-center justify-center my-6">
-                                                    <button type="button" @click="addItemTextField" class="flex items-center justify-center">
+                                                    <button :disabled="isPackageSelected" type="button" @click="addItemTextField" class="flex items-center justify-center">
                                                         <font-awesome-icon :icon="['fas', 'plus']" class="w-6 h-6 mr-2" />
                                                         Click to add New Field
                                                     </button>
@@ -3004,8 +3353,18 @@ function validateKeyPress(event) {
                                     </tbody>
                                 </table>
                             </div>
+
                         </form>
-  
+                        <div class="items-center flex mt-1 space-x-2" v-if="isPackageSelected">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="packageDiscount"
+                            placeholder="%"
+                        />
+                        </div>
                     </div>
 
 
@@ -3020,7 +3379,7 @@ function validateKeyPress(event) {
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Description</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Action</th>
@@ -3070,11 +3429,32 @@ function validateKeyPress(event) {
                     </div> 
 
 
-                    <div class="px-12">
+                    <div class="flex px-12">
                         <p class="font-bold text-9x1 p-5 border inline-block rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 font-medium text-white">Step 4: Invoice Computation</p>
+                        <div class="pl-4 items-center flex mt-1 space-x-2" v-if="isPackageSelected">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="packageDiscount"
+                            placeholder="%"
+                        />
+                        </div>
+
+                        <div class="pl-4 items-center flex mt-1 space-x-2" v-if="isPackageSelected">
+                        <p class="pl-4">Undiscounted Total Amount: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="undiscountedTotalAmountDueHolder"
+                            placeholder="%"
+                        />
+                        </div>
+
                     </div>
                     <div class="px-12 mb-10">
-
                         <form @submit.prevent="addInvoiceComputation" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg">
                             <div class="flex p-14 gap-8">
                                 <div class="w-1/2">
@@ -3307,8 +3687,8 @@ function validateKeyPress(event) {
                                 <table class="min-w-full bg-white border-gray-700">
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Product</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 z-20 text-white bg-gray-700">Product</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Stock</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
@@ -3382,7 +3762,7 @@ function validateKeyPress(event) {
                                     <thead class="border-b rounded-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                                         <tr>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Description</th>
-                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Amount</th>
+                                            <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Unit Price</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Quantity</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Total Amount</th>
                                             <th class="sticky top-0 px-6 py-3 text-white bg-gray-700">Action</th>
@@ -3422,9 +3802,21 @@ function validateKeyPress(event) {
                     </div> 
 
 
-                    <div class="px-12">
+                    
+                    <div class="flex px-12">
                         <p class="font-bold text-9x1 p-5 border inline-block rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 font-medium text-white">Step 4: Invoice Computation</p>
+                        <div class="pl-4 items-center flex mt-1 space-x-2">
+                        <p>PACKAGE DISCOUNT %: </p>
+                        <input
+                            disabled
+                            class="text-center no-spinner w-32"
+                            type="number"
+                            v-model="selectedInvoiceComputation.package_discount_percent"
+                            placeholder="%"
+                        />
+                        </div>
                     </div>
+
                     <div class="px-12 mb-10">
 
                         <form @submit.prevent="addInvoiceComputation" class="w-full border-4 border-black rounded-bl-lg rounded-r-lg shadow-lg">

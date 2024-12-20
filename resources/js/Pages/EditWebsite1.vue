@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { App } from '@inertiajs/inertia-vue3';
 import { Head } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch, reactive  } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 
@@ -33,6 +33,7 @@ onMounted(()=>{
         insertBreakLines(paragraph);
     }
     getWebsiteInfo();
+    getImages();
 });
 
 //store default / to be changed data:
@@ -59,13 +60,24 @@ async function getWebsiteInfo(){
         textAreas.businessDescription.value = getWebsiteInfo.data.website_description;
         textAreas.businessDetails.value = getWebsiteInfo.data.website_details;
         let imgUrl = `/storage/${getWebsiteInfo.data.website_image}`;
-        // storage/app/public//app/public/images
+        
         textAreas.homePageImage.value=imgUrl;
-    }catch(error){
+    }
+    catch(error){
         console.error('There was an error fetching the data:', error);
     }
 }
 
+function base64ToBlob(base64) {
+    const [prefix, data] = base64.split(',');
+    const mimeType = prefix.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const array = [];
+    for (let i = 0; i < binary.length; i++) {
+        array.push(binary.charCodeAt(i));
+    }
+    return new Blob([new Uint8Array(array)], { type: mimeType });
+}
 
 const editButton=ref(null);
 function edit(area){
@@ -89,44 +101,155 @@ async function save(){
         formData.append('website_details', textAreas.businessDetails.value);
 
 
-        if(uploadedFile){
+        if(uploadedFile.value){
             const imgFormData = new FormData();
             imgFormData.append('business_id', businessId);
-            imgFormData.append('website_image', uploadedFile);
+            imgFormData.append('website_image', uploadedFile.value);
 
             await axios.post('/api/website-update', imgFormData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
         });
-        }uploadedFile=null;
+        }uploadedFile.value=null;
+
+        if (uploadedFiles.value.length>0) {
+            const imgFormData = new FormData();
+
+            uploadedFiles.value.forEach((base64File, index) => {
+                // Convert base64 string to Blob
+                const blob = base64ToBlob(base64File);
+                const fileName = `image${index + 1}.png`; // You can set a custom file name
+                imgFormData.append(`image${index + 1}`, blob, fileName);
+            });
+
+             console.log('Uploaded Files:', JSON.stringify(uploadedFiles.value, null, 2))
+
+            try {
+                const response = await axios.post('/api/images-update', imgFormData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                console.log(response.data.message);
+            } catch (error) {
+                console.error('Error uploading images:', error);
+            }
+
+            showSuccessAddModal.value = true;
+
+            uploadedFiles.value = [];
+        }
+
     const saveBusinessDesc = await axios.post('/api/website-update', formData, {
         headers:{
             'Content-Type': 'multipart/form-data'
         }
     });
     console.log('Save response:', saveBusinessDesc.data);
-    showSuccessAddModal.value = true;
-    setTimeout(() => {
-        showSuccessAddModal.value = false;
-        }, 1000) 
+
     
 }
 
-let uploadedFile = null;
+let uploadedFile = ref(null);
+let uploadedFiles = ref([]);
 async function imageUpload(event){
-    const file = event.target.files[0];
-    if (file){
-        uploadedFile=file;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            textAreas.homePageImage.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+    if(editButton.value==='image'){
+        const file = event.target.files[0];
+        if (file){
+            uploadedFile.value=file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                textAreas.homePageImage.value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+
+        }
+        }else if(editButton.value==='slideshow'){
+            const files = event.target.files;
+            for(let i=0;i<files.length;i++){
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedFiles.value.push(e.target.result);
+                    images.value.push(e.target.result); 
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 }
+
 function goToEditWebsite2(){
     Inertia.visit(route('editWebsite2'));
+}
+
+const images = reactive({ value: [] });
+const currentImage = ref(null);
+let currentIndex = 0;
+const slideShowClick = ref(null);
+
+const getImages = async () => {
+    try {
+        const response = await axios.get('/api/images', {
+            params: { business_id: 1 }
+        });
+        
+        console.log("Response data: ", response.data);
+
+        if (response.data) {
+            for (let i = 1; i <= 5; i++) {
+                const imageKey = `image${i}`;
+                if(response.data[imageKey]){
+                const imagePath = `/storage/${response.data[imageKey]}`;
+                console.log("Response data imageKey: ", imagePath);
+
+                if (imagePath && imagePath !== null) {
+
+                    images.value.push(imagePath);
+                }
+            }
+            }
+        }
+
+        console.log("Updated images.value: ", images.value);
+
+        // If there are images, set the first one as the current image
+        if (images.value.length > 0) {
+            currentImage.value = images.value[0];  
+        }
+    } catch (error) {
+        console.error("Error fetching images:", error);
+    }
+};
+
+watch(() => images.value,  () => {
+    if (images.value.length > 0) {
+        currentImage.value = images.value[0];  
+    }
+});
+const startSlideshow = () => {
+    if (slideShowClick.value === null) {
+  slideShowClick.value=setInterval(() => {
+    currentIndex = (currentIndex + 1) % images.value.length;
+    currentImage.value = images.value[currentIndex];
+  }, 1000); 
+}
+};
+
+const stopSlideshow = () => {
+  if (slideShowClick.value) {
+    clearInterval(slideShowClick.value);
+  }
+};
+
+const moveSlideShow=(direction)=>{
+    stopSlideshow();
+    if(direction=='right'){
+        currentIndex = (currentIndex + 1) % images.value.length;
+    }else if(direction=='left'){
+        currentIndex = (currentIndex - 1 + images.value.length) % images.value.length;
+    }
+    currentImage.value = images.value[currentIndex];
 }
 </script>
 
@@ -135,10 +258,6 @@ function goToEditWebsite2(){
 
     <AuthenticatedLayout>
         <!-- header of edit website to save changes -->
-    
-        <!-- <div>
-            <button @click="getWebsiteInfo">Show</button>
-        </div> -->
      
         <div class="bg-gray-300 flex items-center p-2">
             <p class="flex-grow text-center mr-3">You are currently using the edit mode.</p>
@@ -161,73 +280,84 @@ function goToEditWebsite2(){
                 </div>
         </div>
 
-        <div class="ml-1 bg-website-main flex min-h-screen">
-            <!-- edit business info wag to iedit kasi business name ito-->
-
-
-            <div class="mt-[90px] ml-8 flex-col h-1/2">
+       
+        <section>
+        <div :style="{ backgroundImage: `url(${textAreas.homePageImage.value})` }" class="bg-no-repeat bg-cover min-h-screen">
+            <div class="flex flex-row ">
+            <div class="h-auto flex-grow-0 flex-shrink-0">
+            <div class="max-w-[880px] mt-[90px] ml-[85px] flex flex-col h-auto flex-shrink-0 rounded-lg p-4">
+                <div class="flex-grow-0 max-w-[260px] z-30">
+                    <div class="mt-2 flex flex-col">
+                    <button @click="edit('image')" class="bg-black text-white text-[19px] border border-white rounded-xl p-2">Edit Background Image</button>
+                        <div v-if="editButton==='image'" class="flex flex-col items-center">
+                            <input class="p6 bg-white" type="file" @change="imageUpload"/>
+                            <button @click="save" class="mt-5 bg-gray-300 rounded-xl p-1 w-25">Save</button>
+                        </div>
+                    </div>
+                </div>
                 <div>
-                    <button @click="edit('businessName')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
-                    <p class="mt-[10px] text-black text-[29px] font-bold tracking-[3px]">{{textAreas.businessName.value}}</p>
-                <div v-if="editButton==='businessName'">
-                    <textarea v-model="textAreas.businessName.value" class="rows-2 cols-50 border boder-black"></textarea>
-                    <button @click="save" class="bg-white rounded-xl p-1">Save</button>
+                    <h1 class="font-poppins font-bold text-white text-[70px] tracking-[5px]">{{textAreas.businessName.value}}</h1>
                 </div>
-
-                </div>
-                <div class="mt-5">
+                <div class="mt-[10px]">
                     <div class="max-w-[100px]">
                         <button @click="edit('businessDescription')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
                     </div>
                     <div class="max-w-[550px]">
-                    <p class="mt-[10px] font-bold text-xl text-black">{{ textAreas.businessDescription.value }}</p>
+                    <p class=" font-poppins font-extrabold text-[25px] text-white">{{ textAreas.businessDescription.value }}</p>
                     </div>
                     <div v-if="editButton==='businessDescription'">
                         <textarea v-model="textAreas.businessDescription.value" class="w-full h-[100px] border boder-black"></textarea>
                         <button @click="save" class="bg-white rounded-xl p-1">Save</button>
                     </div>
                 </div>
-                <div class="mt-5" >
+                <div class="mt-[30px]" >
                     <div class="max-w-[100px]">
                         <button @click="edit('businessDetails')" class="bg-white border border-white rounded-xl p-1">Edit Text</button>
                     </div>
-                    <div class="max-w-[520px]">
-                        <p id="business-details" class="mt-[10px] text-black">{{ textAreas.businessDetails.value }} </p>
+                    <div class="max-w-[600px]">
+                        <p id=" font-poppins business-details" class="text-[19px] text-white">{{ textAreas.businessDetails.value }} </p>
                     </div>
                     <div v-if="editButton==='businessDetails'">
-                        <textarea v-model="textAreas.businessDetails.value" class="w-full h-[130px] border boder-black"></textarea>
+                        <textarea v-model="textAreas.businessDetails.value" class="w-full h-[100px] border boder-black"></textarea>
                         <button @click="save" class="bg-white rounded-xl p-1">Save</button>
                     </div>
-                    <div class="mt-[30px] flex flex-row">
-                    <button class="mr-[20px] cursor-pointer bg-white border border-white rounded-sm py-[8px] px-[50px]">Register</button>
-                    <p class="text-black text-xl">|</p>
-                    <a class="ml-[35px] justify-center text-black text-[18px]">See All Products</a>
                 </div>
-                </div>
-            
             </div>
-            <transition name="modal-fade" >
+            </div>
+            
+            
+            <div class="flex-grow-0 max-w-[260px] mt-[50px] mr-[10px]">
+                    <div class="mt-2 flex flex-col">
+                        <button @click="edit('slideshow')" class="bg-black text-white text-[19px] border border-white rounded-xl p-2">Edit Slideshow Image</button>
+                            <div v-if="editButton==='slideshow'" class="flex flex-col items-center">
+                                <input class="p6 bg-white" type="file" @change="imageUpload" multiple />
+                                <button @click="save" class="mt-5 bg-gray-300 rounded-xl p-1 w-25">Save</button>
+                            </div>
+
+                            <div v-if="editButton==='slideshow'" class="mt-3 grid grid-cols-3 gap-2">
+                                <img v-for="(image, index) in uploadedFiles" :key="index" :src="image" class="w-24 h-24 object-cover rounded-md" />
+                            </div>
+                    </div>
+            </div>
+
+            <div class="mr-[45px] mt-[75px] ml-auto relative flex-grow-0 max-w-2xl z-20">
+                <a class="absolute top-1/2 right-0 mr-[10px] cursor-pointer" @click="moveSlideShow('right')"><i class="text-white text-[80px] fas fa-angle-right z-20"></i></a>
+                <a class="absolute top-1/2 left-0 ml-[10px] cursor-pointer" @click="moveSlideShow('left')"><i class="text-white text-[80px] fas fa-angle-left z-20"></i></a>
+                <img :src='currentImage' class ="mt-8 w-[800px] h-[605px] object-cover rounded-[5px] z-10"/>
+            </div>
+        </div>
+        </div>
+
+        <transition name="modal-fade" >
             <div v-if="showSuccessAddModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 overflow-y-auto h-full w-full">
                 <div class="flex flex-col mx-12 items-center justify-center bg-white p-5 rounded-lg shadow-xl text-center">
                     <font-awesome-icon icon="fa-solid fa-check" size="10x" style="color: green;"/>
                     <h2 class="text-xl font-bold mb-4">Success!</h2>
-                    <p class="mb-4">The Business Information has been successfully Changed!.</p>
+                    <p class="mb-4">The Slideshow is updated! Please Refresh the Page.</p>
                 </div>
             </div>
             </transition>
-
-            <!-- image -->
-            <div class="mt-[50px] ml-auto flex-grow-0 w-1/2 max-w-lg">
-                <div class="mt-2 flex flex-col items-center">
-                <button @click="edit('image')" class="bg-white border border-white rounded-xl p-1">Edit Photo</button>
-                <img :src='textAreas.homePageImage.value' class ="mr-[8px] mt-8 w-full h-[340px] object-cover rounded-tl-[30px]"/>
-                <div v-if="editButton==='image'" class="flex flex-col items-center">
-                    <input class="p6 bg-white" type="file" @change="imageUpload"/>
-                    <button @click="save" class="mt-5 bg-gray-300 rounded-xl p-1 w-25">Save</button>
-                </div>
-            </div>
-            </div>
-        </div>
+        </section>
 
         <!-- button to next section of homepage -->
         <div class="ml-auto z-50 fixed bottom-4 right-4">

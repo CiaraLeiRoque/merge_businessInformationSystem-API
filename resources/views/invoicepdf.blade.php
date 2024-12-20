@@ -236,6 +236,13 @@
                 <table style="margin-top: 6px; line-height: 10px; font-size:15px">
                     <tr>
                         <td style="width: 210px;" colspan="1">
+                        <span style="font-weight: 700;">Package Discount %: </span> {{$invoice_computation->package_discount_percent }}%
+                        </td> <!-- Empty cells for spacing -->
+                    </tr>
+
+
+                    <tr>
+                        <td style="width: 210px;" colspan="1">
                         <span style="font-weight: 700;">VATable Sales: </span> {{ number_format($invoice_computation->VATable_Sales,2) }}
                         </td> <!-- Empty cells for spacing -->
                         <td style="width: 189px; text-align: right; font-weight: bold; ">

@@ -1,17 +1,13 @@
 <template>
   <div id="chatbot">
-    <!-- The chat circle - only display when chatbotImageUrl is loaded and chat is not expanded -->
-    <div 
-      v-if="chatbotImageUrl && !chatExpanded" 
-      @click="expandChat" 
-      class="chat-circle"
-    >
-      <!-- Dynamically bind the image source -->
-      <img 
-        :src="chatbotImageUrl" 
-        alt="Chat" 
-        class="chat-icon"
-      />  
+    <!-- The chat circle and "Chat with us!" bubble -->
+    <div v-if="chatbotImageUrl && !chatExpanded" class="chat-container">
+      <div @click="expandChat" class="chat-circle">
+        <img :src="chatbotImageUrl" alt="Chat" class="chat-icon" />
+      </div>
+      <transition name="fade">
+        <div v-if="showBubble" class="chat-bubble">Chat with us!</div>
+      </transition>
     </div>
 
     <!-- Expanded chat window -->
@@ -24,18 +20,16 @@
       <div class="chat-body">
         <div ref="messages" class="messages">
           <transition-group name="message" tag="div">
-            <div 
-              v-for="message in messages" 
-              :key="message.id" 
+            <div
+              v-for="message in messages"
+              :key="message.id"
               :class="['message', message.sender]"
             >
-              <!-- Use v-html here to render HTML in the message -->
               <div v-html="message.text"></div>
-
               <div v-if="message.buttons && message.sender === 'bot'" class="chat-buttons">
-                <button 
-                  v-for="button in message.buttons" 
-                  :key="button.id" 
+                <button
+                  v-for="button in message.buttons"
+                  :key="button.id"
                   @click="handleButtonClick(button)"
                   :disabled="buttonsDisabled"
                 >
@@ -68,12 +62,17 @@ export default {
       businessName: '',
       chatInitialized: false,
       chatbotImageUrl: '',
-      buttonsDisabled: false, // New property to disable buttons
+      buttonsDisabled: false, 
+      showBubble: true, 
+      bubbleTimer: null, 
     };
   },
   mounted() {
-    // Preload the business data and image when the component is mounted
     this.preloadBusinessData();
+    this.startBubbleAnimation();
+  },
+  beforeUnmount() {
+    clearInterval(this.bubbleTimer);
   },
     methods: {
     expandChat() {
@@ -122,9 +121,8 @@ export default {
         const chatbotResponse = await axios.get('/api/chatbot-response'); // Example endpoint
         if (chatbotResponse.data && chatbotResponse.data.length > 0) {
           const firstResponse = chatbotResponse.data[0]; // Get the first chatbot response
-
           this.workingHours = firstResponse?.chabot_BWHours || 'Unavailable';
-          this.productDescription = firstResponse?.chabot_BPDescription || 'description unavailable';
+          this.productDescription = firstResponse?.chabot_BPDescription || 'Unavailable';
           this.lazada = firstResponse?.chabot_Lazada || 'Lazada Link unavailable';
           this.shopee = firstResponse?.chabot_Shopee || 'Shopee Link unavailable';
           this.region1 = firstResponse.chabot_Region1 || 'Delivery time for Region 1 unavailable';
@@ -145,6 +143,15 @@ export default {
       } catch (error) {
         console.error("Error fetching business or chatbot response data:", error);
       }
+    },
+    startBubbleAnimation() {
+      // Show bubble for 3 seconds, hide for 15 seconds, and repeat
+      this.bubbleTimer = setInterval(() => {
+        this.showBubble = true;
+        setTimeout(() => {
+          this.showBubble = false;
+        }, 3000); // Hide after 3 seconds
+      }, 18000); // 3 seconds bubble + 15 seconds delay
     },
     async initializeChat() {
       if (!this.chatbotImageUrl) {
@@ -198,7 +205,7 @@ export default {
                 { id: 3, text: "Location" },
                 { id: 4, text: "Contact" },
                 { id: 5, text: "Working Hours"},
-                { id: 6, text: "Product Description"},
+                { id: 6, text: "Products"},
               ],
               buttonContainerClass: 'chat-buttons-container',
             });
@@ -224,18 +231,51 @@ export default {
           
             break;
             
-          case 3:
-          this.messages.push({
-              id: new Date().getTime(),
-              text: `We are located at ${this.businessProvince}, ${this.businessCity},  ${this.businessBarangay},  ${this.businessAddress}  `,
-              sender: 'bot',
-            });
-            setTimeout(() => {
-              this.showEndMessage(); 
-              this.scrollToBottom();
-            }, 1000);
-            
+            case 3:
+            const address = `${this.businessAddress}, ${this.businessBarangay}, ${this.businessCity}, ${this.businessProvince}`;
+            const encodedAddress = encodeURIComponent(address);
+
+            // Request user's current location
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+
+                    // Create a Google Maps directions URL
+                    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&origin=${userLat},${userLng}`;
+
+                    // Push the message with the Google Maps link
+                    this.messages.push({
+                        id: new Date().getTime(),
+                        text: `We are located at ${address}. \n <a href="${googleMapsUrl}" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to view us on Google Maps and get directions from your current location.`,
+                        sender: 'bot',
+                    });
+
+                    setTimeout(() => {
+                        this.showEndMessage();
+                        this.scrollToBottom();
+                    }, 1000);
+                },
+                (error) => {
+                    // Fallback in case geolocation fails
+                    console.error("Geolocation error:", error);
+
+                    this.messages.push({
+                        id: new Date().getTime(),
+                        text: `We are located at ${address}. Unfortunately, we couldn't get your current location. \n <a href="https://www.google.com/maps/search/?api=1&query=${encodedAddress}" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to view us on Google Maps.`,
+                        sender: 'bot',
+                    });
+
+                    setTimeout(() => {
+                        this.showEndMessage();
+                        this.scrollToBottom();
+                    }, 1000);
+                }
+            );
+
             break;
+
+
             
           case 4:
           this.messages.push({
@@ -252,31 +292,51 @@ export default {
           
             break;
 
-          case 5:
-          this.messages.push({
+            case 5:
+            let messageText;
+
+            if (this.workingHours === 'Unavailable') {
+              messageText = "The working hours are currently unavailable.";
+            } else {
+              messageText = `We are available from ${this.workingHours}`;
+            }
+
+            this.messages.push({
               id: new Date().getTime(),
-              text: `We are available from  ${this.workingHours}  `,
+              text: messageText,
               sender: 'bot',
             });
+
             setTimeout(() => {
-              this.showEndMessage(); 
+              this.showEndMessage();
               this.scrollToBottom();
             }, 1000);
-            
+
             break;
+
           
-          case 6:
-          this.messages.push({
+            case 6:
+            let productMessage;
+
+            if (this.productDescription === 'Unavailable' || !this.productDescription) {
+                productMessage = "Sorry, the product list is currently unavailable.";
+            } else {
+                productMessage = `We sell ${this.productDescription} \n <a href="http://127.0.0.1:8000/products_page" target="_blank" style="color: blue; text-decoration: underline;">Click here</a> to check out our products.`;
+            }
+
+            this.messages.push({
               id: new Date().getTime(),
-              text: `We sell ${this.productDescription}  `,
+              text: productMessage,
               sender: 'bot',
             });
+
             setTimeout(() => {
-              this.showEndMessage(); 
+              this.showEndMessage();
               this.scrollToBottom();
             }, 1000);
-            
+
             break;
+
           
           
           case 7:
@@ -294,37 +354,38 @@ export default {
             
             break;
 
-          case 8:
-          this.messages.push({
+            case 8:
+            this.messages.push({
               id: new Date().getTime(),
-              text:this.formatMessage( `You can contact us through the following Social Media Sites: 
-                    \n Facebook: ${this.businessFacebook} 
-                    \n X: ${this.businessX} 
-                    \n Instagram: ${this.businessInstagram} 
-                    \n Tiktok: ${this.businessTiktok} `),
+              text: this.formatMessage(`You can contact us through the following Social Media Sites: 
+                <br> Facebook: <a href="https://${this.businessFacebook}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessFacebook}</a> 
+                <br> X: <a href="https://${this.businessX}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessX}</a> 
+                <br> Instagram: <a href="https://${this.businessInstagram}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessInstagram}</a> 
+                <br> Tiktok: <a href="https://${this.businessTiktok}" target="_blank" style="color: blue; text-decoration: underline;">${this.businessTiktok}</a>`),
               sender: 'bot',
             });
             setTimeout(() => {
               this.showEndMessage(); 
               this.scrollToBottom();
             }, 1000);
-            
             break;
 
-          case 9:
-          this.messages.push({
+
+            case 9:
+            this.messages.push({
               id: new Date().getTime(),
-              text:this.formatMessage( `You can contact us through the following E-Commerce Sites: 
-                    \n Lazada: ${this.lazada} 
-                    \n Shopee: ${this.shopee} `),
+              text: this.formatMessage(`You can contact us through the following E-Commerce Sites: 
+                <br> Lazada: <a href="https://${this.lazada}" target="_blank" style="color: blue; text-decoration: underline;">${this.lazada}</a> 
+                <br> Shopee: <a href="https://${this.shopee}" target="_blank" style="color: blue; text-decoration: underline;">${this.shopee}</a>`),
               sender: 'bot',
             });
             setTimeout(() => {
               this.showEndMessage(); 
               this.scrollToBottom();
             }, 1000);
-            
             break;
+
+
           
           case 10:
           this.messages.push({
@@ -450,10 +511,20 @@ export default {
     },
     formatMessage(messageText) {
     return messageText.replace(/\n/g, '<br>'); 
-  }
+  },
 
-  } 
+  startBubbleAnimation() {
+      // Show bubble for 3 seconds, hide it for 15 seconds, and repeat
+      this.bubbleTimer = setInterval(() => {
+        this.showBubble = true;
+        setTimeout(() => {
+          this.showBubble = false;
+        }, 2000); 
+      }, 15000); 
+    },
+  },
 };
+
 </script>
 
 <style scoped>
@@ -461,6 +532,7 @@ export default {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  z-index: 10000;
 }
 
 .chat-circle {
@@ -474,6 +546,35 @@ export default {
   justify-content: center;
   cursor: pointer;
   overflow: hidden; 
+}
+/* Chat bubble */
+.chat-container {
+  position: relative;
+}
+
+.chat-bubble {
+  position: absolute;
+  left: -120px;
+  top: 30%;
+  background-color: #20242c;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: bold;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .chat-icon {
@@ -496,7 +597,7 @@ export default {
 }
 
 .chat-header {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
   padding: 5px 10px; 
   display: flex;
@@ -518,7 +619,7 @@ export default {
 }
 
 .chat-header button:hover {
-  color: #ccc; /* Add hover effect if desired */
+  color: white; /* Add hover effect if desired */
 }
 
 
@@ -553,12 +654,13 @@ export default {
 }
 
 .message.bot {
-  background-color: #f1f1f1;
+  background-color: hsl(0, 100%, 100%);
+  border: 1px solid #20242c;
   text-align: left;
 }
 
 .message.user {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
   text-align: right;
 }
@@ -573,8 +675,8 @@ export default {
 .chat-button {
   padding: 10px 20px; 
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: #20242c;
+  border: 1px solid #20242c;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
@@ -585,15 +687,15 @@ export default {
 }
 
 .chat-button:hover {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
 }
 
 .chat-buttons button {
   padding: 10px 20px; 
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: #20242c;
+  border: 1px solid #20242c;
   border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
@@ -603,7 +705,7 @@ export default {
 
 
 .chat-buttons button:hover {
-  background-color: #007bff;
+  background-color: #20242c;
   color: white;
 }
 
@@ -615,7 +717,7 @@ export default {
 .dot {
   width: 6px;
   height: 6px;
-  background-color: #007bff;
+  background-color: #20242c;
   border-radius: 50%;
   animation: blink 1s infinite alternate;
 }

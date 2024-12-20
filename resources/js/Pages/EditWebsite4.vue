@@ -55,7 +55,7 @@ async function getWebsiteInfo(){
     // textAreas.businessImage.value = getBusinessInfo.data.business_image;
         textAreas.businessName.value = getBusinessInfo.data.business_Name;
         textAreas.business_Email.value = getBusinessInfo.data.business_Email;
-        textAreas.business_Contact_Number.value = getBusinessInfo.data.business_Contact_Number;
+        textAreas.business_Contact_Number.value = getBusinessInfo.data.business_Phone_Number;
         
         textAreas.business_Address.value = getBusinessInfo.data.business_Address;
         textAreas.business_Province.value = getBusinessInfo.data.business_Province;

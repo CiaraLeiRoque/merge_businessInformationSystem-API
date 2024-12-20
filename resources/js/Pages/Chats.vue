@@ -137,7 +137,7 @@ const showSuccessModal = ref(false);
                     </div>
                     <div>   
                         <label for="product-description" class="block text-gray-700 text-sm font-bold mb-2">
-                                Product Description
+                                Product List
                             </label>
                             <input
                                 type="text"

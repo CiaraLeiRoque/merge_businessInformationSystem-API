@@ -103,6 +103,7 @@ return new class extends Migration
             $table->unsignedBigInteger('invoice_system_id');
             $table->foreign('invoice_system_id')->references('invoice_system_id')->on('invoices')->onDelete('cascade');
 
+            $table->decimal('package_discount_percent', 8, 2)->nullable(); // VATable_Sales = VAT_Inclusive / 1.12
             //FOR STORING VAT, DISCOUNTS, ETC. (WITH COMPUTATIONS)
             $table->decimal('VATable_Sales', 8, 2)->nullable(); // VATable_Sales = VAT_Inclusive / 1.12
             $table->decimal('VAT_Exempt_Sales', 8, 2)->nullable(); // VAT_Exempt_Sales = VAT_Inclusive / 1.12

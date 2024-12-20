@@ -556,7 +556,7 @@ function sortByAmount() {
                                     </span>
                                 </div>
                                 </td>
-                                <td class="text-white px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center align-middle">{{ finance.amount }}</td>
+                                <td class="text-white px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-center align-middle">{{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(finance.amount) }}</td>
                                 <td class="text-white px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                                 <div class="flex items-center justify-center space-x-1">
                                     <button @click="editFinanceDetails(finance)" class="hover:bg-yellow-600 transition hover:scale-105 ease-in-out duration-150 bg-yellow-500 text-white px-2 py-1 rounded-full">

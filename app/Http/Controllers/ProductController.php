@@ -1,10 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Exports\ExportProduct;
 use App\Imports\ImportProduct;
+use App\Exports\ExportProductTemplate;
+use App\Exports\ExportMasterProduct;
+use App\Models\ProductColumnTableVisibility;
+use App\Models\ProductNotificationSettings;
 use App\Models\Product;
+use App\Models\Business;
 use App\Exports\ProductsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,8 +18,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Validators\ValidationException; 
-
-
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Subscribers;
+use Illuminate\Support\Facades\Mail;
 
 class ProductController extends Controller
 {
@@ -25,7 +30,7 @@ class ProductController extends Controller
         // Find the product by its ID and select only the stock field
         $product = Product::find($id);
 
-        // Check if the product exists
+        // Check if the     product exists
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);
         }
@@ -34,6 +39,12 @@ class ProductController extends Controller
         return response()->json(['stock' => $product->stock]);
     }
 
+
+    public function getBrands()
+{
+    $brands = Product::select('brand')->distinct()->pluck('brand');
+    return response()->json($brands, 200);
+}
 
     public function updateSold(Request $request, $id)
     {
@@ -81,19 +92,20 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'brand' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'category' => 'required|string|max:255',
-            'stock' => 'required|integer',
-            'sold' => 'required|integer',
-            'status' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'expDate' => 'required|date',
+            'name' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric',
+            'category' => 'nullable|string|max:255',
+            'total_stock' => 'nullable|integer',
+            'stock' => 'nullable|integer',
+            'sold' => 'nullable|integer',
+            'status' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'expDate' => 'nullable|date',
             'image' => 'nullable|image|mimes:jpg,png,jpeg|max:5120', // Validate the file input
             'on_sale' => 'nullable|in:yes,no',
             'on_sale_price' => 'nullable|numeric',
-            'featured' => 'required|in:true,false',
+            'featured' => 'nullable|in:true,false',
         ]);
 
         $product = new Product($request->except('image'));
@@ -104,6 +116,10 @@ class ProductController extends Controller
         }
 
         $product->save();
+
+        if ($product->on_sale === 'yes') {
+            $this->notifySubscribers($product);
+        }
 
         return response()->json(['message' => 'Product added successfully', 'product' => $product], 201);
     }
@@ -118,24 +134,26 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'brand' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'category' => 'required|string|max:255',
-            'stock' => 'required|integer',
-            'sold' => 'required|integer',
-            'status' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'expDate' => 'required|date',
+            'name' => 'nullable|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric',
+            'category' => 'nullable|string|max:255',
+            'total_stock' => 'nullable|integer',
+            'stock' => 'nullable|integer',
+            'sold' => 'nullable|integer',
+            'status' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'expDate' => 'nullable|date',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-            'on_sale' => 'required|in:yes,no',
-            'on_sale_price' => 'required|numeric',
-            'featured' => 'required|in:true,false',
+            'on_sale' => 'nullable|in:yes,no',
+            'on_sale_price' => 'nullable|numeric',
+            'featured' => 'nullable|in:true,false',
         ]);
 
         $product = Product::findOrFail($id);
+        $previousOnSale = $product->on_sale;
 
-        $product->update($validated);
+       $product->update($validated);
 
         if ($request->hasFile('image')) {
             // Handle image upload
@@ -144,8 +162,25 @@ class ProductController extends Controller
             $product->save();
         }
 
+        if ($previousOnSale !== 'yes' && $product->on_sale === 'yes') {
+            $this->notifySubscribers($product);
+        }
+    
+
         return response()->json(['product' => $product], 200);
     }
+
+    private function notifySubscribers(Product $product)
+{
+    $subscribers = Subscribers::whereNotNull('email_verified_at')->pluck('email');
+
+    foreach ($subscribers as $email) {
+        Mail::send('emails.product_on_sale', ['product' => $product, 'email' => $email], function ($message) use ($email, $product) {
+            $message->to($email)
+                    ->subject("Product on Sale: {$product->name}");
+        });   
+    }
+}
 
 
 
@@ -204,11 +239,131 @@ class ProductController extends Controller
         return response()->json($financesByDate);
     }
 
-    public function exportProductsXslx(Request $request)
+    public function exportMasterProductsXlsx(Request $request)
+    {
+        return Excel::download(new ExportMasterProduct, 'products_master.xlsx');
+    }
+
+
+
+    public function exportCriticalStockPdf(Request $request)
+    {
+
+        
+    $exportTitle = $request->query('exportTitle');
+
+        // Get visible columns
+        $visibleColumns = ProductColumnTableVisibility::where('is_visible', true)
+            ->pluck('column_Table')
+            ->toArray();
+    
+        // Always include stock
+        if (!in_array('productStock', $visibleColumns)) {
+            $visibleColumns[] = 'productStock';
+        }
+    
+        // Get stock threshold from product_notification_settings
+        $stockThreshold = ProductNotificationSettings::where('stock_expDate', 'stock')
+            ->value('count');
+    
+        // Retrieve products with low stock
+        $products = Product::where('stock', '<', $stockThreshold)->get();
+    
+        $business = Business::first();
+        $businessName = $business->business_Name;
+        $businessAddress = $business->business_Address;
+        $businessTIN = $business->business_TIN;
+        $businessImage = $business->business_image;
+
+        
+        // Prepare data for the PDF
+        $data = [
+            'visibleColumns' => $visibleColumns,
+            'columnMapping' => [
+                'productId' => 'id',
+                'productImage' => 'image',
+                'productName' => 'name',
+                'productBrand' => 'brand',
+                'productPrice' => 'price',
+                'productCategory' => 'category',
+                'productTotalStock' => 'total_stock',
+                'productStock' => 'stock',
+                'productSold' => 'sold',
+                'productStatus' => 'status',
+                'productExpiry' => 'expDate',
+            ],
+            'products' => $products,
+            'businessName' => $businessName,
+            'businessAddress' => $businessAddress,
+            'businessTIN' => $businessTIN,
+            'businessImage' => $businessImage,
+            'exportTitle' => $exportTitle,
+        ];
+    
+        $pdf = PDF::loadView('productsPdf', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('low_stock_products.pdf');
+    }
+
+
+    public function exportProductsPdf(Request $request)
+{
+
+    
+    $exportTitle = $request->query('exportTitle');
+
+    $visibleColumns = ProductColumnTableVisibility::where('is_visible', true)
+        ->pluck('column_Table')
+        ->toArray();
+
+    $columnMapping = [
+        'productId' => 'id',
+        'productImage' => 'image',
+        'productName' => 'name',
+        'productBrand' => 'brand',
+        'productPrice' => 'price',
+        'productCategory' => 'category',
+        'productTotalStock' => 'total_stock',
+        'productStock' => 'stock',
+        'productSold' => 'sold',
+        'productStatus' => 'status',
+        'productExpiry' => 'expDate',
+    ];
+
+    $products = Product::all();
+    
+    $business = Business::first();
+    $businessName = $business->business_Name;
+    $businessAddress = $business->business_Address;
+    $businessTIN = $business->business_TIN;
+    $businessImage = $business->business_image;
+
+    $data = [
+        'visibleColumns' => $visibleColumns,
+        'columnMapping' => $columnMapping,
+        'products' => $products,
+        'businessName' => $businessName,
+        'businessAddress' => $businessAddress,
+        'businessTIN' => $businessTIN,
+        'businessImage' => $businessImage,
+        'exportTitle' => $exportTitle,
+    ];
+
+
+
+    $pdf = \PDF::loadView('productsPdf', $data)->setPaper([0, 0, 612, 936], 'landscape'); ;
+    return $pdf->download('products.pdf');
+}
+
+
+    public function exportProductsXlsx(Request $request)
     {
         return Excel::download(new ExportProduct, 'products.xlsx');
     }
 
+    public function downloadTemplate(Request $request)
+    {
+        return Excel::download(new ExportProductTemplate, 'products_template.xlsx');
+    }
 
 
     public function importProductsXlsx(Request $request)

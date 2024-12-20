@@ -26,15 +26,12 @@ return new class extends Migration
             $table->string('about_us3')->nullable();
             $table->string('website_footNote')->nullable();
             $table->enum('featured_section',['true','false'])->default('true');
+            $table->enum('package_section',['true','false'])->default('true');
             $table->enum('onSale_section',['true','false'])->default('true');
             $table->timestamps();
     
         });
     }
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('website_page');

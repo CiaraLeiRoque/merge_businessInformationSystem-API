@@ -13,7 +13,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Montserrat','Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Montserrat', 'Figtree', ...defaultTheme.fontFamily.sans],
+                poppins: ['Poppins', 'sans-serif'], 
 
             },
             colors: {

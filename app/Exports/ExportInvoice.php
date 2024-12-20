@@ -68,6 +68,7 @@ class ExportInvoice implements FromCollection, WithHeadings, WithMapping, WithSt
         
         // Concatenate all computation fields into a single string, using a newline "\n" as the separator
         $computationData = $invoice->computation ? implode("\n", [
+            'Package Discount Percent: ' . $invoice->computation->package_discount_percent,
             'Total Amount Due: ' . $invoice->computation->total_Amount_Due,
             'Tax: ' . $invoice->computation->tax,
             'VAT Inclusive: ' . $invoice->computation->VAT_Inclusive,

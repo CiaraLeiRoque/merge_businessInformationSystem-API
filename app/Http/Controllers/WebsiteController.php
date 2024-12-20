@@ -55,6 +55,7 @@ class WebsiteController extends Controller
             'about_us2'=>'nullable|string|max:255',
             'about_us3'=>'nullable|string|max:255',
             'featured_section'=>'sometimes|in:true,false',
+            'package_section'=>'sometimes|in:true,false',
             'onSale_section'=>'sometimes|in:true,false'
         ]);
 

@@ -6,7 +6,7 @@ use App\Models\Product;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
-use Illuminate\Validation\Rule; 
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 class ImportProduct implements ToModel, WithHeadingRow, WithValidation
@@ -17,23 +17,23 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
     public function model(array $row)
     {
         return new Product([
-            'id'                     => $row['id'],
-            'name'                   => $row['name'],
-            'description'            => $row['description'],
-            'brand'                  => $row['brand'], // No need for formatBrand here
-            'price'                  => $row['price'],
-            'category'               => $row['category'],
-            'stock'                  => $row['stock'],
+            'id'                     => $row['id'] ?? null,
+            'name'                   => $row['name'] ?? null,
+            'description'            => $row['description'] ?? null,
+            'brand'                  => $row['brand'] ?? null,
+            'price'                  => $row['price'] ?? null,
+            'category'               => $row['category'] ?? null,
+            'total_stock'            => $row['total_stock'] ?? null,
+            'stock'                  => $row['stock'] ?? null,
             'sold'                   => $row['sold'] ?? 0,
-            'status'                 => $row['status'],
-            'expDate'                => $this->transformDate($row['expiration_date']),
-            'image'                  => $row['image'],
-            'featured'               => $row['featured'],
-            'on_sale'                => $row['on_sale'],
-            'on_sale_price'          => $row['on_sale_price'],
-            'business_id'            => $row['business_id'],
-            'created_at'             => $this->transformDate($row['created_at']),
-            'updated_at'             => $this->transformDate($row['updated_at']),
+            'status'                 => $row['status'] ?? null,
+            'expDate'                => $this->transformDate($row['expiration_date'] ?? null),
+            'image'                  => $row['image'] ?? null,
+            'featured'               => $this->transformBoolean($row['featured'] ?? null),
+            'on_sale'                => $this->transformOnSale($row['on_sale'] ?? null),
+            'on_sale_price'          => $row['on_sale_price'] ?? null,
+            'business_id'            => $row['business_id'] ?? null,
+            // Exclude 'created_at' and 'updated_at' as they are managed by Eloquent
         ]);
     }
 
@@ -46,15 +46,38 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
     }
 
     /**
-     * Prepare data for validation, converting the brand to a string before validation.
+     * Transform 'featured' value to boolean (1 or 0).
+     */
+    private function transformBoolean($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    }
+
+    /**
+     * Transform 'on_sale' to a valid boolean-like field ('yes' => 1, 'no' => 0).
+     */
+    private function transformOnSale($value)
+    {
+        return strtolower(trim($value)) === 'yes' ? 1 : 0;
+    }
+
+    /**
+     * Prepare data for validation, converting specific fields to appropriate formats.
      */
     public function prepareForValidation($data)
     {
-        // Convert brand, description, and category to strings and trim any whitespace
         $data['brand'] = trim((string)$data['brand']);
         $data['description'] = trim((string)$data['description']);
         $data['category'] = trim((string)$data['category']);
-        
+
+        if (isset($data['featured'])) {
+            $data['featured'] = strtolower(trim($data['featured']));
+        }
+
+        if (isset($data['on_sale'])) {
+            $data['on_sale'] = strtolower(trim($data['on_sale']));
+        }
+
         return $data;
     }
 
@@ -64,23 +87,22 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            '*.id'                     => 'required|integer',
-            '*.name'                   => 'required|string',
-            '*.description'            => 'required|string',
-            '*.brand'                  => 'required|string',
-            '*.price'                  => 'required|numeric',
-            '*.category'               => 'required|string',
-            '*.stock'                  => 'required|integer',
+            '*.id'                     => 'nullable|integer',
+            '*.name'                   => 'nullable|string',
+            '*.description'            => 'nullable|string',
+            '*.brand'                  => 'nullable|string',
+            '*.price'                  => 'nullable|numeric',
+            '*.category'               => 'nullable|string',
+            '*.total_stock'            => 'nullable|integer',
+            '*.stock'                  => 'nullable|integer',
             '*.sold'                   => 'nullable|integer',
-            '*.status'                 => 'required|string',
-            '*.expiration_date'        => 'required|date',
+            '*.status'                 => 'nullable|string',
+            '*.expiration_date'        => 'nullable|numeric',
             '*.image'                  => 'nullable|string',
-            '*.featured'               => 'required|in:true,false',
-            '*.on_sale'                => 'required|in:yes,no',
+            '*.featured'               => 'nullable|string',
+            '*.on_sale'                => 'nullable|string',
             '*.on_sale_price'          => 'nullable|numeric',
-            '*.business_id'            => 'required|integer',
-            '*.created_at'             => 'nullable|date',
-            '*.updated_at'             => 'nullable|date',
+            '*.business_id'            => 'nullable|integer',
         ];
     }
 
@@ -90,8 +112,8 @@ class ImportProduct implements ToModel, WithHeadingRow, WithValidation
     public function customValidationMessages()
     {
         return [
-            '*.featured.in'               => 'The featured field must be either "true" or "false".',
-            '*.on_sale.in'                => 'The on sale field must be either "yes" or "no".',
+            '*.featured.in'               => 'The featured field must be either "true", "false", "1", or "0".',
+            '*.on_sale.in'                => 'The on sale field must be either "yes", "no", "1", or "0".',
         ];
     }
 }

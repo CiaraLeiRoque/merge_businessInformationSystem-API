@@ -52,6 +52,7 @@ function logout(button){
 }
 
 onMounted(()=>{
+    loadMap();
     getWebsiteInfo();
 })
 
@@ -112,6 +113,22 @@ async function getWebsiteInfo(){
         console.error('There was an error fetching the data:', error);
     }
 }
+
+function loadMap() {
+  const mapOptions = {
+    center: { lat: 14.862140, lng: 120.817826}, 
+    zoom: 15,
+  };
+
+  const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+  // Optional: Add a marker
+  new google.maps.Marker({
+    position: { lat: 14.862140, lng: 120.817826 }, 
+    map: map,
+    title: "Limesen Network Solutions Inc.",
+  });
+}
 </script>
 
 <template>
@@ -149,43 +166,48 @@ async function getWebsiteInfo(){
         
 <div class=" bg-website-main flex min-h-screen relative">
         <div class="flex items-center p-3 absolute top-[5px] left-0 right-0 bottom-[500px] m-auto">
-        <p class="mt-[10px] text-[70px] tracking-[3px] text-black font-bold flex-grow text-center">About Us</p>
-    </div>
+            <p class="mt-[10px] text-[70px] tracking-[3px] text-black font-bold flex-grow text-center">About Us</p>
+        </div>
 
-<!-- edit business info wag to iedit kasi business name ito-->
-<div class=" mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[250px]">
-    
-    <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-            <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-                <i class="fa fa-check-circle text-black text-[50px]"></i></a>
+    <!-- edit business info wag to iedit kasi business name ito-->
+    <div class=" mx-auto flex flex-row items-center justify-between w-full max-w-screen-lg mt-[250px]">
+        
+        <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
+            <div class="flex justify-center w-full">
+                <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                    <i class="fa fa-check-circle text-black text-[50px]"></i></a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+                <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us1}}</p>
+            </div>
         </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us1}}</p>
-        </div>
-    </div>
 
-    <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
-        <div class="flex justify-center w-full">
-            <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-tag text-black text-[50px]"></i></a>
+        <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3 mx-[100px]">
+            <div class="flex justify-center w-full">
+                <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-tag text-black text-[50px]"></i></a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+                <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us2}}</p>
+            </div>
         </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us2}}</p>
-        </div>
-    </div>
 
-    <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
-        <div class="flex justify-center w-full">
-            <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
-            <i class="fa fa-phone text-black text-[40px]"></i></a>
-        </div>
-        <div class="max-w-[330px] min-h-[170px] mt-[100px]">
-            <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us3}}</p>
+        <div class="flex -mt-[20px] flex-col items-center space-y-4 w-1/3">
+            <div class="flex justify-center w-full">
+                <a class=" border border-gray-400 rounded-[30px] p-12 flex inline-flex items-center justify-center">
+                <i class="fa fa-phone text-black text-[40px]"></i></a>
+            </div>
+            <div class="max-w-[330px] min-h-[170px] mt-[100px]">
+                <p class="text-black text-[19px] text-center break-words">{{textAreas.about_us3}}</p>
+            </div>
         </div>
     </div>
 </div>
-</div>
+
+        <!-- Map Section -->
+        <div class="map-section h-[500px] w-full mb-10">
+            <div id="map" class="h-full w-full"></div>
+        </div>
 </section>
 
 <section>
@@ -268,5 +290,13 @@ section {
 .fa.fa-twitter::before{
 	content:"𝕏";
 	font-size:1.2em;
+}
+
+#map {
+  margin: 0 auto;
+  padding: 0;
+  width: 80%;
+  height: 500px;
+  border: 1px solid #ccc;
 }
 </style>

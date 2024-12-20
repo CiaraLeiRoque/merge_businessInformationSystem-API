@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('category');
             $table->integer('stock')->default(0);
             $table->integer('sold')->default(0);
+            $table->integer('total_stock')->default(0);
             $table->string('status');
             $table->text('description');
             $table->date('expDate');
@@ -38,12 +39,55 @@ return new class extends Migration
             $table->integer('count')->unique(); // Ensure 'category' is unique
             $table->timestamps();
         });
-
         DB::table('product_notification_settings')->insert([
             ['stock_expDate' => 'stock', 'count' => 10, 'created_at' => now(), 'updated_at' => now()],
             ['stock_expDate' => 'expDate', 'count' => 7, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
+
+        Schema::create('product_column_table_visibilities', function (Blueprint $table) {
+            $table->id();
+            $table->string('column_Table')->unique(); // Ensure 'category' is unique
+            $table->boolean('is_visible')->default(true);
+            $table->timestamps();
+        });
+        DB::table('product_column_table_visibilities')->insert([
+            ['column_table' => 'productId', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productImage', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productName', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productBrand', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productPrice', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productCategory', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productTotalStock', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productStock', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productSold', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productStatus', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['column_table' => 'productExpiry', 'is_visible' => true, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+
+        Schema::create('product_package_names', function (Blueprint $table) {
+            //TO STORE MULTIPLE ITEMS IN ONE TABLE 
+            $table->id();
+            $table->string('image')->nullable();
+            $table->string('product_package_name')->nullable(); // name
+            $table->string('product_package_description')->nullable(); // names
+            $table->string(column: 'product_package_discount')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('product_packages', function (Blueprint $table) {
+            $table->id(); // Primary key
+            $table->unsignedBigInteger('product_package_id'); // Define the column first
+
+            $table->unsignedBigInteger('product_id'); // Define the product_id column    
+            $table->string('product_name')->nullable();
+            $table->bigInteger('product_quantity')->nullable();
+            $table->timestamps();
+
+            // Define foreign keys
+            $table->foreign('product_package_id')->references('id')->on('product_package_names')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+        });
     }
 
     /**
@@ -53,5 +97,8 @@ return new class extends Migration
     {
         Schema::dropIfExists('products');
         Schema::dropIfExists('product_notification_settings');
+        Schema::dropIfExists('product_column_table_visibility');
+        Schema::dropIfExists('product_packages');
+        Schema::dropIfExists('product_package_names');
     }
 };
