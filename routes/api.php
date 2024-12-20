@@ -217,3 +217,4 @@ Route::get('products/print/export/xlsx', [ProductController::class, 'exportProdu
 Route::get('products/print/export/template_xslx', [ProductController::class, 'downloadTemplate']);
 
 Route::get('/export-products-pdf', [ProductController::class, 'exportCriticalStockPdf']);
+Route::get('/brands', [ProductController::class, 'getBrands']);

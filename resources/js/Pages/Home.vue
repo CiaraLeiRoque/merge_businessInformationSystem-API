@@ -98,7 +98,8 @@
             <!-- Right-side Content -->
             <div class="flex flex-col">
                 <div class="py-8 px-4 rounded-lg mx-10" style="background-color: rgb(31, 41, 55); max-width: 90%; min-width: 90%;">
-                    <div class="text-xl font-semibold text-white mb-4 bg-red-500 rounded-lg flex flex-row justify-center p-2"><h2>Critical Stock Items</h2></div>
+                    <div class="text-xl font-semibold text-white mb-4 bg-red-500 rounded-lg flex flex-row justify-center p-2" >
+                        <ResponsiveNavLink class="hover-bg-white" :href="route('inventory')" :active="route().current('inventory')"><h2 class="text-white flex items-center justify-center">Critical Stock Items</h2></ResponsiveNavLink></div>
                     <div 
                         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto pb-7" 
                         style=" max-height: 300px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
@@ -170,7 +171,6 @@ import CategoriesModal from "@/Components/CategoriesModal.vue";
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Chart, registerables } from 'chart.js';
 import { Head } from '@inertiajs/vue3';
-
 
 Chart.register(...registerables);
 

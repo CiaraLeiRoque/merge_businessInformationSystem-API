@@ -1763,7 +1763,39 @@ const handleEditImageUploadPackage = (event) => {
 };
 
 
+const brandSuggestions = ref([]);
+const showSuggestions = ref(false);
 
+// Methods
+const fetchBrands = async () => {
+  // Avoid fetching for very short input
+  if (newProduct.value.brand.length < 2) {
+    brandSuggestions.value = [];
+    return;
+  }
+
+  try {
+    const response = await axios.get('/api/brands'); // Call your Laravel API
+    brandSuggestions.value = response.data.filter((brand) =>
+      brand.toLowerCase().includes(newProduct.value.brand.toLowerCase())
+    );
+    showSuggestions.value = true;
+  } catch (error) {
+    console.error('Error fetching brand suggestions:', error);
+  }
+};
+
+const selectBrand = (brand) => {
+  newProduct.value.brand = brand;
+  showSuggestions.value = false;
+};
+
+const hideSuggestions = () => {
+  // Add a small delay to allow the click event to trigger
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
+};
 
 </script>
 
@@ -3018,10 +3050,35 @@ const handleEditImageUploadPackage = (event) => {
                                 </div>
                                 <!-- Brand Field -->
                                 <div>
-                                    <label for="brand" style="font-size: 11px;" class="pl-2 p-1 border rounded-t-lg border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline  text-white">Brand <span class="text-red-500">*</span></label>
-                                    <input type="text" id="brand" v-model="newProduct.brand" class="input-field text-xs p-1"/>
-                                    <span v-if="validationErrors.brand" class="text-red-500 text-xs">{{ validationErrors.brand }}</span>
-                                </div>
+    <label
+      for="brand"
+      class="pl-2 p-1 border rounded-t-lg text-[11px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 inline text-white"
+    >
+      Brand <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      id="brand"
+      v-model="newProduct.brand"
+      class="input-field text-xs p-1"
+      @input="fetchBrands"
+      @blur="hideSuggestions"
+    />
+    <ul
+      v-if="brandSuggestions.length && showSuggestions"
+      class="bg-white border border-gray-300 rounded shadow-md text-sm"
+    >
+      <li
+        v-for="brand in brandSuggestions"
+        :key="brand"
+        @click="selectBrand(brand)"
+        class="p-2 cursor-pointer hover:bg-gray-200"
+      >
+        {{ brand }}
+      </li>
+    </ul>
+    <span v-if="validationErrors.brand" class="text-red-500 text-xs">{{ validationErrors.brand }}</span>
+  </div>
                             </div>
                             <!-- Description -->
                             <div class="col-span-3">

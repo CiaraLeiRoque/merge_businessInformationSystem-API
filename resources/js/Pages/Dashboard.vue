@@ -4,12 +4,49 @@
         <div class="flex flex-row">
             <div class="w-full sm:px-6 lg:px-8 py-6 flex flex-col" style="width: 60vw;">
                 <div class="bg-whiteoverflow-hidden shadow-sm sm:rounded-lg" style="background-color: #1F2937;">
-                    <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col items-center">
-                        <div class="flex flex-row justify-center"><div class="flex flex-col text-center mr-20"><div style="font-size: 18px;"><b>Total Income (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalIncome }}</div></div>
-                        <div class="flex flex-col text-center"><div style="font-size: 18px;"><b>Total Expenses (30 Days)</b></div><div style="font-size: 25px">₱ {{ totalExpenses }}</div></div></div>
-                        <div class="flex flex-row justify-center">
+                    <div class="p-6 text-gray-900 dark:text-gray-100 flex flex-col ">
+                        <div class="flex flex-row content-evenly gap-8">
+                            <div class="flex flex-row text-center justify-center">
+                                <label for="filterType" style="font-size: 18px; margin-right: 10px">Filter By:</label>
+                                <select id="filterType" style="font-size:15px; background-color: #1F2937; color: #FFFFFF" class="-mt-[7px] rounded-md border-white text-center" v-model="filterType" @change="applyDateFilter">
+                                    <option value="day">Day</option>
+                                    <option value="month">Month</option>
+                                    <option value="year">Year</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex flex-row items-center justify-evenly content-evenly gap-8">
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Total Income ({{ filterLabel }})</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalIncome) }}</div>
+                            </div>
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Total Expenses ({{ filterLabel }})</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalExpenses) }}</div>
+                            </div>
+                            <div class="flex flex-col text-center">
+                                <div style="font-size: 18px;">
+                                    <b>Other Finances ({{ filterLabel }})</b>
+                                </div>
+                                <div style="font-size: 25px">₱ {{ new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalOthers) }}</div>
+                            </div>
+                                <div class="flex flex-col text-center">
+                                    <div style="font-size: 18px;">
+                                        <b>Total Invoices ({{ filterLabel }})</b>
+                                    </div>
+                                    <div style="font-size: 25px">₱ {{  new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoicesByDateTotal)  }}</div>
+                                </div>
+                        </div>
+                        <div class="flex flex-row justify-around">
                             <button style="background-color: #FFFFFF; border-radius: 14px;">
                                 <ResponsiveNavLink :href="route('finance')" :active="route().current('finance')" style="color: #0F2C4A; font-size: 12px;">View Finance</ResponsiveNavLink>
+                            </button>
+                            <button style="background-color: #FFFFFF; border-radius: 14px;">
+                                <ResponsiveNavLink :href="route('invoice')" :class="{ active: route().current('invoice')}" style="color: #0F2C4A; font-size: 12px;">View Invoices</ResponsiveNavLink>
                             </button>
                         </div>
                     </div>
@@ -60,15 +97,39 @@
 
             <!-- Right-side Content -->
             <div class="flex flex-col">
-                <table>
-                    <div>
-                        <div v-for="product in filteredProducts" :key="product.id">
-                            <div class="flex flex-row justify-between px-4 py-2">
-                                <div style="font-size: 23px;"><b>{{ product.name }}</b></div>
+                <div class="py-8 px-4 rounded-lg mx-10" style="background-color: rgb(31, 41, 55); max-width: 90%; min-width: 90%;">
+                    <div class="text-xl font-semibold text-white mb-4 bg-red-500 rounded-lg flex flex-row justify-center p-2">
+                        
+                        <h2>Critical Stock Items</h2></div>
+                    <div 
+                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto pb-7" 
+                        style=" max-height: 300px; max-width: 100%; overflow-y: auto; overflow-x: hidden;">
+                        <div 
+                            v-for="product in filteredProducts.filter(product => product.stock < stocksDays)" 
+                            :key="product.id" 
+                            class="bg-white shadow-md rounded-lg p-4 flex flex-row md:flex-col justify-between">
+                            <div class="flex flex-row md:flex-col">
+                                <div class="relative w-full aspect-square mb-4">
+                                    <img 
+                                        :src="'/storage/' + product.image" 
+                                        :alt="product.name" 
+                                        class="absolute inset-0 w-full h-full object-cover rounded-lg">
+                                </div>
+                                <div class="text-md font-semibold">{{ product.name }}</div>
+                                <div class="text-md font-medium">Remaining Stock: <span class="text-red-500 font-semibold">{{ product.stock }}</span></div>
                             </div>
                         </div>
                     </div>
-                </table>
+                    <br>
+                    <hr class="border-white mx-auto w-11/12 pt-6">
+                    <div class="pb-2">
+                        <div class="flex flex-row justify-between text-white px-4">
+                            <div class="text-center"><b>Total Products:</b><br>{{ filteredProducts.length }}</div>
+                            <div class="text-center"><b>Total Critical:</b><br>{{ filteredProducts.filter(product => product.stock < stocksDays).length }}</div>
+                            <div class="text-center"><b>Total Sold:</b><br>{{ filteredProducts.reduce((total, product) => total + product.sold, 0) }}</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="flex flex-col items-center mt-4 text-white">
                     <h3 style="color: black"><b>Social Media</b></h3>
                     <div class="flex flex-row">
@@ -326,14 +387,28 @@ const soldProductsByMonth = computed(() => {
 
     return monthlySales;
 });
-
+onMounted(() => {
+    const filterType = ref('month'); // Default to month
+    applyDateFilter(); // Automatically load the default filter (e.g., last 30 days)
+});
 const isDateFiltered = ref(false);
 const startDate = ref('');
 const endDate = ref('');
 const financesByDate = ref([]);
 const totalExpenses = ref(0);
 const totalIncome = ref(0);
+const totalOthers = ref(0);
 const roundToTwoDecimals = (num) => Math.round(num * 100) / 100;
+const filterType = ref('month'); // Default to month
+
+const filterLabel = computed(() => {
+    switch (filterType.value) {
+        case 'day': return '1 Day';
+        case 'month': return '30 Days';
+        case 'year': return '1 Year';
+        default: return 'Custom Range';
+    }
+});
 
 const formatDate = (date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
@@ -342,17 +417,62 @@ const formatDate = (date) => {
     return `${month}/${day}/${year}`;
 };
 
-const setDateRange = () => {
+const applyDateFilter = () => {
     const currentDate = new Date();
-    const pastDate = new Date();
-    pastDate.setDate(currentDate.getDate() - 30);
+    let pastDate = new Date();
+
+    if (filterType.value === 'day') {
+        pastDate.setDate(currentDate.getDate() - 1);
+    } else if (filterType.value === 'month') {
+        pastDate.setDate(currentDate.getDate() - 30);
+    } else if (filterType.value === 'year') {
+        pastDate.setFullYear(currentDate.getFullYear() - 1);
+    }
 
     startDate.value = formatDate(pastDate);
     endDate.value = formatDate(currentDate);
+    fetchFinancesByDate(); // Trigger data fetch for the selected range
+    fetchInvoicesByDate();
 };
 
+const invoices = ref([]); 
+const fetchInvoices = async () => {
+    try {
+        const response = await axios.get('/api/invoice');
+        invoices.value = response.data;
+    } catch (error) {
+        console.error("Error fetching invoices:", error);
+    }
+}
+
+const isOpen = ref(false);
+const stocksDays = ref(0);
+const expiryDays = ref(0);
+
+// Fetch notification settings from the API
+onMounted(async () => {
+    try {
+        const response = await axios.get('/api/productNotif');
+        const settings = response.data;
+
+        // Map API data to the Vue component's variables
+        settings.forEach(setting => {
+            if (setting.stock_expDate === 'stock') {
+                stocksDays.value = setting.count;
+            } else if (setting.stock_expDate === 'expDate') {
+                expiryDays.value = setting.count;
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching product notification settings:', error);
+    }
+});
+
+// Reset totals and fetch new data
 const fetchFinancesByDate = async () => {
-    setDateRange(); // Set the start and end dates before fetching
+    totalIncome.value = 0;
+    totalExpenses.value = 0;
+    totalOthers.value = 0;
 
     try {
         const response = await axios.get('/api/finance_by_date', {
@@ -362,25 +482,64 @@ const fetchFinancesByDate = async () => {
             }
         });
         financesByDate.value = response.data;
-        isDateFiltered.value = true; // Set flag to true after fetching by date
 
         for (const finance of financesByDate.value) {
             if (finance.category === 'income') {
                 totalIncome.value += roundToTwoDecimals(finance.amount);
-            }
-            if (finance.category === 'expense') {
+            } else if (finance.category === 'expense') {
                 totalExpenses.value += roundToTwoDecimals(finance.amount);
+            } else {
+                totalOthers.value += roundToTwoDecimals(finance.amount);
             }
         }
 
-        console.log("Finances by date:", financesByDate);
-        console.log("Total Income:", totalIncome.value);
-        console.log("Total Expenses:", totalExpenses.value);
 
     } catch (error) {
         console.error("Error fetching finances by date:", error);
     }
 };
+
+const invoicesByDate = ref([]);
+const invoice_computations = ref([]);
+const invoicesByDateTotal = ref(0);
+
+const fetchInvoicesByDate = async () => {
+    try {
+        const response = await axios.get('/api/invoice_by_date', {
+            params: {
+                start_date: startDate.value,
+                end_date: endDate.value
+            }
+        });
+        const responseComputations = await axios.get('/api/invoice_computation');
+        
+        invoice_computations.value = responseComputations.data;
+        invoicesByDate.value = response.data;
+        isDateFiltered.value = true; // Set flag to true after fetching by date
+
+        // Calculate cumulative total_Amount_Due for paid invoices only
+        let totalAmountDue = 0;
+        invoicesByDate.value.forEach(invoice => {
+            if (invoice.status === "paid") {
+                const computation = invoice_computations.value.find(comp => comp.invoice_system_id === invoice.invoice_system_id);
+                if (computation) {
+                    totalAmountDue += parseFloat(computation.total_Amount_Due);
+                }
+            }
+        });
+
+        invoicesByDateTotal.value = totalAmountDue;
+
+        console.log("Invoices by date:", invoicesByDate.value);
+        console.log("Invoice computations:", invoice_computations.value);
+        console.log("Cumulative Total Amount Due (Paid Invoices):", invoicesByDateTotal.value);
+
+        return invoicesByDate.value;
+    } catch (error) {
+        console.error("Error fetching invoices by date:", error);
+    }
+};
+
         const business_Facebook = ref('');
         const business_X = ref('');
         const business_Instagram = ref('');
@@ -389,24 +548,22 @@ const fetchFinancesByDate = async () => {
 const fetchsocialmediaLinks = async() =>{
     try {const response_userId = await axios.get('/user-id');
         const userId = response_userId.data.user_id;
-        console.log(userId);
+
 
         const getBusinessInfo = await axios.get('/api/business_info', {
             params: {user_id: userId}
         });
-        console.log(getBusinessInfo.data);
+
         const businessId = getBusinessInfo.data.business_id;
 
         const getWebsiteInfo = await axios.get('/api/website', {
             params: {business_id: businessId}
         });
-        console.log(getWebsiteInfo.data);
+
         business_Facebook.value = validateAndFormatUrl(getBusinessInfo.data.business_Facebook, "facebook.com");
         business_X.value = validateAndFormatUrl(getBusinessInfo.data.business_X, "X.com");
         business_Instagram.value = validateAndFormatUrl(getBusinessInfo.data.business_Instagram, "Instagram.com");
         business_Tiktok.value = validateAndFormatUrl(getBusinessInfo.data.business_Tiktok, "Tiktok.com");
-
-        console.log("Social Media Links:", business_Facebook.value, business_X.value, business_Instagram.value, business_Tiktok.value);
     }catch(error){
         console.error('There was an error fetching the data:', error);
     }
@@ -443,11 +600,19 @@ function validateAndFormatUrl(url, baseUrl) {
     console.warn("Invalid URL format provided:", url);
     return '';
 }
+const totalProducts = computed(() => {
+    return products.value.length;
+}); 
+
+const totalSold = computed(() => {
+    return products.value.reduce((sum, product) => sum + product.sold, 0);
+});
 
 fetchsocialmediaLinks();
 fetchFinancesByDate();
 fetchProducts();
 fetchListedCategories();
+fetchInvoicesByDate();
 </script>
 <style>
 /* Button and Table Styling */

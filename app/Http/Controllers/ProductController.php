@@ -40,6 +40,12 @@ class ProductController extends Controller
     }
 
 
+    public function getBrands()
+{
+    $brands = Product::select('brand')->distinct()->pluck('brand');
+    return response()->json($brands, 200);
+}
+
     public function updateSold(Request $request, $id)
     {
         // Validate only the sold field
