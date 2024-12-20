@@ -157,8 +157,8 @@
             <div class="info">
                 <p class="name">{{ $businessName }}</p>
                 <p>Address: {{ $businessAddress }}</p>
-                <p>TIN: {{ $businessTIN ?? 'N/A' }}</p>
-            </div>
+                <p>Number: {{ $businessNumber }}</p>
+            </div>  
         </div>
         
         <!-- Export Title -->
@@ -168,45 +168,49 @@
         <div class="table-container">
             <table>
             <thead>
-                    <tr>
-                        @foreach ($visibleColumns as $column)
-                            <th>
-                                @if ($column === 'productTotalStock')
-                                    Total Quantity
-                                @elseif ($column === 'productStock')
-                                    Products Unsold
-                                @elseif ($column === 'productSold')
-                                    Products Sold
-                                @elseif ($column === 'image')
-                                    <div class>
-                                        <img src="{{ $product[$column] }}" alt="Product Image">
-                                    </div>
-                                @else
-                                    {{ ucwords(str_replace(['_', 'product'], [' ', ''], $column)) }}
-                                @endif
-                            </th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($products->forPage($page, $itemsPerPage) as $product)
-                        <tr>
-                            @foreach ($visibleColumns as $column)
-                                <td>
-                                    @if ($column === 'image')
-                                        <div class="image-cell">
-                                            <img src="{{ $product[$column] }}" alt="Product Image">
-                                        </div>
-                                    @elseif ($column === 'status')
-                                        <span class="status-{{ strtolower($product[$column]) }}">{{ ucfirst($product[$column]) }}</span>
-                                    @else
-                                        {{ $product[$columnMapping[$column] ?? $column] ?? 'N/A' }}
-                                    @endif
-                                </td>
-                            @endforeach
-                        </tr>
-                    @endforeach
-                </tbody>
+    <tr>
+        <th>Item No.</th> <!-- Added "Item" column header -->
+        @foreach ($visibleColumns as $column)
+            <th>
+                @if ($column === 'productTotalStock')
+                    Total Quantity
+                @elseif ($column === 'productStock')
+                    Products Unsold
+                @elseif ($column === 'productSold')
+                    Products Sold
+                @elseif ($column === 'productPrice')
+                    Price (PHP)
+                @else
+                    {{ ucwords(str_replace(['_', 'product'], [' ', ''], $column)) }}
+                @endif
+            </th>
+        @endforeach
+    </tr>
+</thead>
+<tbody>
+    @php
+        $itemNumber = 1 + ($page - 1) * $itemsPerPage; // Calculate item numbers across pages
+    @endphp
+    @foreach ($products->forPage($page, $itemsPerPage) as $product)
+        <tr>
+            <td>{{ $itemNumber++ }}</td> <!-- Add the Item number -->
+            @foreach ($visibleColumns as $column)
+                <td>
+                    @if ($column === 'image')
+                        <div class="image-cell">
+                            <img src="{{ $product[$column] }}" alt="Product Image">
+                        </div>
+                    @elseif ($column === 'status')
+                        <span class="status-{{ strtolower($product[$column]) }}">{{ ucfirst($product[$column]) }}</span>
+                    @else
+                        {{ $product[$columnMapping[$column] ?? $column] ?? 'N/A' }}
+                    @endif
+                </td>
+            @endforeach
+        </tr>
+    @endforeach
+</tbody>
+
             </table>
         </div>
 
