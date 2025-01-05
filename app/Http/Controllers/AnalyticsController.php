@@ -24,45 +24,40 @@ class AnalyticsController extends Controller
         $propertyId = '460219113';
         $period = $request->input('period', 'today');
         $granularity = $request->input('granularity', 'day');
+        $year = $request->input('year');
 
         $fromDate = $request->input('fromDate');
         $toDate = $request->input('toDate');
 
         // Initialize $startDate and $endDate based on the period
         if ($fromDate && $toDate) {
-            // If custom dates are provided, use them
             $startDate = Carbon::parse($fromDate)->startOfDay();
             $endDate = Carbon::parse($toDate)->endOfDay();
         } else {
-            // Otherwise, set default dates based on the period
             switch ($period) {
                 case 'today':
-                    $startDate = Carbon::today();
                     $endDate = Carbon::today();
+                    $startDate = $endDate->copy();
                     break;
-
                 case 'weekly':
-                    $startDate = Carbon::now()->subDays(7);
+                    $startDate = Carbon::now()->subDays(6);
                     $endDate = Carbon::now();
                     break;
-
                 case 'monthly':
-                    $startDate = Carbon::now()->subDays(30);
-                    $endDate = Carbon::now();
+                    $endDate = Carbon::today();
+                    $startDate = $endDate->copy()->subDays(29); // This will give us 30 days including today
                     break;
-
                 case 'yearly':
-                    $startDate = Carbon::now()->startOfYear();
-                    $endDate = Carbon::now()->endOfYear();
-                    $granularity = 'month'; // Adjust granularity for yearly
+                    $year = $year ?? Carbon::now()->year;
+                    $startDate = Carbon::create($year)->startOfYear();
+                    $endDate = Carbon::create($year)->endOfYear();
+                    $granularity = 'month';
                     break;
-
                 default:
                     return response()->json(['error' => 'Invalid period'], 400);
             }
         }
 
-        // Ensure the start date is before the end date
         if ($startDate->greaterThan($endDate)) {
             return response()->json(['error' => 'The start date must be before the end date.'], 400);
         }
@@ -72,21 +67,6 @@ class AnalyticsController extends Controller
             'end_date' => $endDate->toDateString(),
         ]);
 
-
-
-        $dateRange = new DateRange([
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-        ]);
-
-        
-
-        $dateRange = new DateRange([
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
-        ]);
-
-        // Request 1: Aggregate data for top metrics
         $metrics = [
             new Metric(['name' => 'screenPageViews']),
             new Metric(['name' => 'sessions']),
@@ -96,131 +76,206 @@ class AnalyticsController extends Controller
             new Metric(['name' => 'engagementRate']),
         ];
 
-        $aggregateResponse = $this->analyticsDataClient->runReport([
-            'property' => 'properties/' . $propertyId,
-            'dateRanges' => [$dateRange],
-            'metrics' => $metrics,
-        ]);
+        try {
+            $aggregateResponse = $this->analyticsDataClient->runReport([
+                'property' => 'properties/' . $propertyId,
+                'dateRanges' => [$dateRange],
+                'metrics' => $metrics,
+            ]);
 
-        // Calculate average engagement time for top metrics
-        $totalEngagementTime = $aggregateResponse->getRows()[0]->getMetricValues()[4]->getValue(); // in seconds
-        $totalUsers = $aggregateResponse->getRows()[0]->getMetricValues()[2]->getValue();
-        $averageEngagementTimePerUser = $totalUsers > 0 ? ($totalEngagementTime / $totalUsers) : 0;
-        $avgMinutes = floor($averageEngagementTimePerUser / 60);
-        $avgSeconds = $averageEngagementTimePerUser % 60;
+            // Check if there are any rows in the response
+            if ($aggregateResponse->getRowCount() > 0) {
+                $totalEngagementTime = $aggregateResponse->getRows()[0]->getMetricValues()[4]->getValue();
+                $totalUsers = $aggregateResponse->getRows()[0]->getMetricValues()[2]->getValue();
+                $averageEngagementTimePerUser = $totalUsers > 0 ? ($totalEngagementTime / $totalUsers) : 0;
+                $avgMinutes = floor($averageEngagementTimePerUser / 60);
+                $avgSeconds = $averageEngagementTimePerUser % 60;
 
-        $engagementRate = $aggregateResponse->getRows()[0]->getMetricValues()[5]->getValue();
+                $engagementRate = $aggregateResponse->getRows()[0]->getMetricValues()[5]->getValue();
 
-        $metricsData = [
-            'views' => $aggregateResponse->getRows()[0]->getMetricValues()[0]->getValue(),
-            'visits' => $aggregateResponse->getRows()[0]->getMetricValues()[1]->getValue(),
-            'visitors' => $totalUsers,
-            'bounceRate' => number_format($aggregateResponse->getRows()[0]->getMetricValues()[3]->getValue() * 100, 2) . '%',
-            'avgVisitTime' => $avgMinutes . ' M ' . $avgSeconds . ' S',
-            'engagementRate' => number_format($engagementRate * 100, 2) . '%',
-        ];
+                $metricsData = [
+                    'views' => $aggregateResponse->getRows()[0]->getMetricValues()[0]->getValue(),
+                    'visits' => $aggregateResponse->getRows()[0]->getMetricValues()[1]->getValue(),
+                    'visitors' => $totalUsers,
+                    'bounceRate' => number_format($aggregateResponse->getRows()[0]->getMetricValues()[3]->getValue() * 100, 2) . '%',
+                    'avgVisitTime' => $avgMinutes . ' M ' . $avgSeconds . ' S',
+                    'engagementRate' => number_format($engagementRate * 100, 2) . '%',
+                ];
+            } else {
+                // If there are no rows, set default values
+                $metricsData = [
+                    'views' => 0,
+                    'visits' => 0,
+                    'visitors' => 0,
+                    'bounceRate' => '0.00%',
+                    'avgVisitTime' => '0 M 0 S',
+                    'engagementRate' => '0.00%',
+                ];
+            }
 
-        // Request 2: Daily breakdown for views and visitors (for the chart)
-        $dimensions = $granularity === 'hour'
-            ? [new Dimension(['name' => 'hour'])]
-            : ($granularity === 'month' ? [new Dimension(['name' => 'month'])] : [new Dimension(['name' => 'date'])]);
+            $dimensions = $granularity === 'hour'
+                ? [new Dimension(['name' => 'hour'])]
+                : ($granularity === 'month' ? [new Dimension(['name' => 'month'])] : [new Dimension(['name' => 'date'])]);
 
-        $dailyResponse = $this->analyticsDataClient->runReport([
-            'property' => 'properties/' . $propertyId,
-            'dateRanges' => [$dateRange],
-            'metrics' => 
-            [
-                new Metric(['name' => 'screenPageViews']), 
-                new Metric(['name' => 'totalUsers']), 
-                new Metric(['name' => 'engagementRate']),
-                new Metric(['name' => 'bounceRate']),
-            ],
-            'dimensions' => $dimensions,
-        ]);
+            $dailyResponse = $this->analyticsDataClient->runReport([
+                'property' => 'properties/' . $propertyId,
+                'dateRanges' => [$dateRange],
+                'metrics' => [
+                    new Metric(['name' => 'screenPageViews']),
+                    new Metric(['name' => 'totalUsers']),
+                    new Metric(['name' => 'engagementRate']),
+                    new Metric(['name' => 'bounceRate']),
+                ],
+                'dimensions' => $dimensions,
+            ]);
 
-        $dataArray = [];
-        foreach ($dailyResponse->getRows() as $row) {
-            $dimensionValue = $granularity === 'hour' 
-                ? $row->getDimensionValues()[0]->getValue() 
-                : ($granularity === 'month' 
-                    ? Carbon::create(null, $row->getDimensionValues()[0]->getValue())->format('Y-m')
-                    : Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString());
+            if ($period === 'weekly' || $period === 'yearly') {
+                $allPeriods = [];
+                if ($period === 'weekly') {
+                    for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
+                        $key = $date->toDateString();
+                        $allPeriods[$key] = [
+                            'dimension' => $key,
+                            'views' => 0,
+                            'visitors' => 0,
+                            'engagementRate' => '0.00',
+                            'bounceRate' => '0.00',
+                        ];
+                    }
+                } else { // yearly
+                    $monthNames = [
+                        'January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'
+                    ];
+                    foreach ($monthNames as $index => $month) {
+                        $allPeriods[$month] = [
+                            'dimension' => $month,
+                            'views' => 0,
+                            'visitors' => 0,
+                            'engagementRate' => '0.00',
+                            'bounceRate' => '0.00',
+                        ];
+                    }
+                }
 
-            $dataArray[] = [
-                'dimension' => $dimensionValue,
-                'views' => $row->getMetricValues()[0]->getValue(),
-                'visitors' => $row->getMetricValues()[1]->getValue(),
-                'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
-                'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
+                foreach ($dailyResponse->getRows() as $row) {
+                    if ($period === 'weekly') {
+                        $key = Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString();
+                    } else { // yearly
+                        $monthNumber = (int)$row->getDimensionValues()[0]->getValue();
+                        $key = $monthNames[$monthNumber - 1];
+                    }
+
+                    $allPeriods[$key] = [
+                        'dimension' => $key,
+                        'views' => $row->getMetricValues()[0]->getValue(),
+                        'visitors' => $row->getMetricValues()[1]->getValue(),
+                        'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
+                        'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
+                    ];
+                }
+
+                $dataArray = array_values($allPeriods);
+            } elseif ($period === 'monthly') {
+                $allDates = [];
+                for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
+                    $key = $date->toDateString();
+                    $allDates[$key] = [
+                        'dimension' => $key,
+                        'views' => 0,
+                        'visitors' => 0,
+                        'engagementRate' => '0.00',
+                        'bounceRate' => '0.00',
+                    ];
+                }
+
+                foreach ($dailyResponse->getRows() as $row) {
+                    $key = Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString();
+                    if (isset($allDates[$key])) {
+                        $allDates[$key] = [
+                            'dimension' => $key,
+                            'views' => $row->getMetricValues()[0]->getValue(),
+                            'visitors' => $row->getMetricValues()[1]->getValue(),
+                            'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
+                            'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
+                        ];
+                    }
+                }
+
+                $dataArray = array_values($allDates);
+            } else{
+                if ($granularity === 'hour') {
+                    $allHours = [];
+                    for ($hour = 0; $hour < 24; $hour++) {
+                        $allHours[sprintf('%02d', $hour)] = [
+                            'dimension' => sprintf('%02d', $hour),
+                            'views' => 0,
+                            'visitors' => 0,
+                            'engagementRate' => '0.00',
+                            'bounceRate' => '0.00',
+                        ];
+                    }
+            
+                    foreach ($dailyResponse->getRows() as $row) {
+                        $hour = $row->getDimensionValues()[0]->getValue();
+                        if (isset($allHours[$hour])) {
+                            $allHours[$hour] = [
+                                'dimension' => $hour,
+                                'views' => $row->getMetricValues()[0]->getValue(),
+                                'visitors' => $row->getMetricValues()[1]->getValue(),
+                                'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
+                                'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
+                            ];
+                        }
+                    }
+            
+                    $dataArray = array_values($allHours); // Flatten array for response
+                } else {
+                    $dataArray = [];
+                    foreach ($dailyResponse->getRows() as $row) {
+                        $dimensionValue = Carbon::createFromFormat('Ymd', $row->getDimensionValues()[0]->getValue())->toDateString();
+                        $dataArray[] = [
+                            'dimension' => $dimensionValue,
+                            'views' => $row->getMetricValues()[0]->getValue(),
+                            'visitors' => $row->getMetricValues()[1]->getValue(),
+                            'engagementRate' => number_format($row->getMetricValues()[2]->getValue() * 100, 2),
+                            'bounceRate' => number_format($row->getMetricValues()[3]->getValue() * 100, 2),
+                        ];
+                    }
+                }
+            }
+
+            $userTypeResponse = $this->analyticsDataClient->runReport([
+                'property' => 'properties/' . $propertyId,
+                'dateRanges' => [$dateRange],
+                'dimensions' => [new Dimension(['name' => 'newVsReturning'])],
+                'metrics' => [new Metric(['name' => 'totalUsers'])],
+            ]);
+
+            $userTypes = [
+                'new' => 0,
+                'returning' => 0,
             ];
-        }
 
-        // Generate complete dimension range
-        if ($granularity === 'hour') {
-            $dimensionsArray = range(0, 23); // 00:00 to 23:00
-        } elseif ($granularity === 'month') {
-            $dimensionsArray = array_map(fn($month) => Carbon::create($startDate->year, $month)->format('Y-m'), range(1, 12));
-        } else {
-            $datePeriod = new \DatePeriod(
-                new \DateTime($startDate->toDateString()),
-                new \DateInterval('P1D'),
-                (new \DateTime($endDate->toDateString()))->modify('+1 day')
-            );
-            $dimensionsArray = array_map(fn($date) => $date->format('Y-m-d'), iterator_to_array($datePeriod));
-        }
+            foreach ($userTypeResponse->getRows() as $row) {
+                $userType = $row->getDimensionValues()[0]->getValue();
+                $userCount = $row->getMetricValues()[0]->getValue();
 
-        // Prepare data with defaults
-        $completeData = array_map(fn($dim) => [
-            'dimension' => $dim,
-            'views' => 0,
-            'visitors' => 0,
-            'engagementRate' => '0.00',
-            'bounceRate' => '0.00',
-        ], $dimensionsArray);
-
-        // Merge API data into complete data
-        foreach ($dataArray as $row) {
-            $index = array_search($row['dimension'], array_column($completeData, 'dimension'));
-            if ($index !== false) {
-                $completeData[$index] = $row;
+                if ($userType === 'new') {
+                    $userTypes['new'] = $userCount;
+                } elseif ($userType === 'returning') {
+                    $userTypes['returning'] = $userCount;
+                }
             }
+
+            return response()->json([
+                'metricsData' => $metricsData,
+                'dailyData' => $dataArray,
+                'userTypes' => $userTypes,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $dataArray = $completeData; // Use complete data in response
-
-        // Request 3: Breakdown of returning vs. new users
-        $userTypeResponse = $this->analyticsDataClient->runReport([
-            'property' => 'properties/' . $propertyId,
-            'dateRanges' => [$dateRange],
-            'dimensions' => [
-                new Dimension(['name' => 'newVsReturning']),
-            ],
-            'metrics' => [
-                new Metric(['name' => 'totalUsers']),
-            ],
-        ]);
-
-        $userTypes = [
-            'new' => 0,
-            'returning' => 0,
-        ];
-
-        foreach ($userTypeResponse->getRows() as $row) {
-            $userType = $row->getDimensionValues()[0]->getValue();
-            $userCount = $row->getMetricValues()[0]->getValue();
-
-            if ($userType === 'new') {
-                $userTypes['new'] = $userCount;
-            } elseif ($userType === 'returning') {
-                $userTypes['returning'] = $userCount;
-            }
-        }
-
-        // Include both total metrics and daily data in the response
-        return response()->json([
-            'metricsData' => $metricsData,
-            'dailyData' => $dataArray,
-            'userTypes' => $userTypes,
-        ]);
     }
 }
+
