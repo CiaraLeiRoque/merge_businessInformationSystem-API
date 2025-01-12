@@ -68,7 +68,7 @@ class BusinessController extends Controller
         if ($request->hasFile('business_image')) {
             $image = $request->file('business_image');
             // Store the image in the 'public/business_logos' directory
-            $path = $image->store('public/business_logos');
+            $path = $image->store('business_logos');
             // Get the basename of the stored file path
             $business_image = basename($path);
         }
@@ -151,7 +151,7 @@ class BusinessController extends Controller
                 }
 
                 // Store the new image
-                $image->storeAs('public/business_logos', $imageName);
+                $image->storeAs('business_logos', $imageName);
                 $business->business_image = $imageName;
 
                 // Track the change only if the old image was not default or null
