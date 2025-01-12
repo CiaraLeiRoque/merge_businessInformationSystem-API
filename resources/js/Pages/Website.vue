@@ -6,13 +6,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { Inertia } from '@inertiajs/inertia';
 import { route } from 'ziggy-js';
-import WebsiteModal from '@/Pages/WebsiteModal.vue'; // Import the modal
+import WebsiteModal from '@/Pages/WebsiteModal.vue';
 
 const showModal = ref(false);
 
 const handleFilterApplied = ({ fromDate, toDate }) => {
     console.log('Filter applied with dates:', fromDate, toDate);
-    // Now you can modify your fetchAnalyticsData or API request to use the selected date range
     fetchAnalyticsData({ fromDate, toDate });
 };
 
@@ -26,12 +25,14 @@ function goToEditWebsite1(){
 }
 
 function goToPreviewHomePage(){
-        Inertia.visit(route('preview_homepage'));
+    Inertia.visit(route('preview_homepage'));
 }
 
 Chart.register(...registerables);
 
-const selectedPeriod = ref('today'); // Default period
+const selectedPeriod = ref('today');
+const selectedYear = ref(2025);
+const availableYears = [2024, 2025,];
 const views = ref(0);
 const visits = ref(0);
 const visitors = ref(0);
@@ -42,7 +43,7 @@ const engagementRate = ref(0);
 const dailyData = ref([]);
 const userTypes = ref({ new: 0, returning: 0 });
 
-const granularity = ref('hour'); // Default granularity
+const granularity = ref('hour');
 
 const updateGranularity = () => {
   switch (selectedPeriod.value) {
@@ -53,7 +54,7 @@ const updateGranularity = () => {
       granularity.value = 'day';
       break;
     case 'monthly':
-      granularity.value = 'week';
+      granularity.value = 'day';
       break;
     case 'yearly':
       granularity.value = 'month';
@@ -65,15 +66,18 @@ const updateGranularity = () => {
 
 const fetchAnalyticsData = async ({ fromDate = '', toDate = '' } = {}) => {
     try {
-        updateGranularity(); // Update granularity based on the selected period
+        updateGranularity();
         const { data } = await axios.get(`/api/analytics`, {
             params: { 
                 period: selectedPeriod.value, 
                 granularity: granularity.value,
                 fromDate,
-                toDate 
+                toDate,
+                year: selectedPeriod.value === 'yearly' ? selectedYear.value : undefined
             },
         });
+
+        console.log('Received analytics data:', data);
 
         views.value = data.metricsData.views;
         visits.value = data.metricsData.visits;
@@ -82,8 +86,19 @@ const fetchAnalyticsData = async ({ fromDate = '', toDate = '' } = {}) => {
         avgVisitTime.value = data.metricsData.avgVisitTime;
         engagementRate.value = data.metricsData.engagementRate;
 
-        dailyData.value = data.dailyData;
-        userTypes.value = data.userTypes;
+        // Ensure dailyData is properly set
+        dailyData.value = data.dailyData.map(item => ({
+            ...item,
+            views: parseInt(item.views),
+            visitors: parseInt(item.visitors),
+            engagementRate: parseFloat(item.engagementRate),
+            bounceRate: parseFloat(item.bounceRate)
+        }));
+
+        userTypes.value = {
+            new: parseInt(data.userTypes.new),
+            returning: parseInt(data.userTypes.returning)
+        };
 
         renderVisitorsViewsChart();
         renderEngagementRateChart();
@@ -96,26 +111,22 @@ const fetchAnalyticsData = async ({ fromDate = '', toDate = '' } = {}) => {
 };
 
 const renderVisitorsViewsChart = () => {
-    // If chart already exists, destroy it before creating a new one
     if (visitorsViewsChart) {
         visitorsViewsChart.destroy();
     }
 
     const labels = dailyData.value.map(data => {
-        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
-            // Convert date to weekday name
-            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
+        if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
+            return new Date(`${data.dimension}-01`).toLocaleString('default', { month: 'short' });
         }
-        else if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
-            // Convert date to month name
-            const monthNames = ["January", "February", "March", "April", "May", "June",
-                                "July", "August", "September", "October", "November", "December"];
-            return monthNames[new Date(data.dimension).getMonth()];
+        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
+            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'short' });
         }
         return granularity.value === 'hour'
             ? `${data.dimension.toString().padStart(2, '0')}:00`
             : data.dimension;
     });
+
     const viewsData = dailyData.value.map(data => data.views);
     const visitorsData = dailyData.value.map(data => data.visitors);
 
@@ -123,7 +134,7 @@ const renderVisitorsViewsChart = () => {
     visitorsViewsChart = new Chart(ctx, {
         type: "line",
         data: {
-            labels: labels,
+            labels,
             datasets: [
                 {
                     label: "Visitors",
@@ -131,7 +142,7 @@ const renderVisitorsViewsChart = () => {
                     backgroundColor: "#8392AC",
                     borderColor: "#8392AC",
                     borderWidth: 1,
-                    stack: 'combined',
+                    fill: false,
                 },
                 {
                     label: "Views",
@@ -139,7 +150,7 @@ const renderVisitorsViewsChart = () => {
                     backgroundColor: "#0F2C4A",
                     borderColor: "#0F2C4A",
                     borderWidth: 1,
-                    stack: 'combined',
+                    fill: false,
                 },
             ],
         },
@@ -148,20 +159,34 @@ const renderVisitorsViewsChart = () => {
             maintainAspectRatio: false,
             scales: {
                 x: {
-                    stacked: true,
+                    grid: {
+                        display: false,
+                    },
+                    ticks: {
+                        maxRotation: 15,
+                        minRotation: 15,
+                        callback: function(val, index) {
+                            if (selectedPeriod.value === 'monthly') {
+                                return index % 3 === 0 ? this.getLabelForValue(val) : '';
+                            }
+                            return this.getLabelForValue(val);
+                        }
+                    }
                 },
                 y: {
                     beginAtZero: true,
-                    stacked: true,
+                    grid: {
+                        color: "#E5E7EB",
+                    },
                 },
             },
-        plugins: {
+            plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: "bottom",
                     labels: {
-                        usePointStyle: true, // Use circles instead of rectangles for legend icons
-                        pointStyle: 'circle',
+                        usePointStyle: true,
+                        pointStyle: "circle",
                     },
                 },
             },
@@ -170,21 +195,18 @@ const renderVisitorsViewsChart = () => {
 };
 
 
+
+
 const renderBounceRateChart = () => {
     if (bounceRateChart) {
         bounceRateChart.destroy();
     }
 
     const labels = dailyData.value.map(data => {
-        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
-            // Convert date to weekday name
-            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
-        }
-        else if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
-            // Convert date to month name
-            const monthNames = ["January", "February", "March", "April", "May", "June",
-                                "July", "August", "September", "October", "November", "December"];
-            return monthNames[new Date(data.dimension).getMonth()];
+        if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
+            return new Date(data.dimension + '-01').toLocaleString('default', { month: 'short' });
+        } else if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
+            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'short' });
         }
         return granularity.value === 'hour'
             ? `${data.dimension.toString().padStart(2, '0')}:00`
@@ -213,11 +235,15 @@ const renderBounceRateChart = () => {
             maintainAspectRatio: false,
             scales: {
                 x: { ticks: { maxRotation: 15, minRotation: 15 } },
-                y: { beginAtZero: true, ticks: { callback: (value) => `${value}%` } },
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { callback: (value) => `${value}%` },
+                    max: 100,
+                },
             },
-        plugins: {
+            plugins: {
                 legend: {
-                    display: false,
+                    display: true,
                     position: 'bottom',
                 },
             },
@@ -225,23 +251,16 @@ const renderBounceRateChart = () => {
     });
 };
 
-
-
 const renderEngagementRateChart = () => {
     if (engagementRateChart) {
         engagementRateChart.destroy();
     }
 
     const labels = dailyData.value.map(data => {
-        if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
-            // Convert date to weekday name
-            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'long' });
-        }
-        else if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
-            // Convert date to month name
-            const monthNames = ["January", "February", "March", "April", "May", "June",
-                                "July", "August", "September", "October", "November", "December"];
-            return monthNames[new Date(data.dimension).getMonth()];
+        if (selectedPeriod.value === 'yearly' && granularity.value === 'month') {
+            return new Date(data.dimension + '-01').toLocaleString('default', { month: 'short' });
+        } else if (selectedPeriod.value === 'weekly' && granularity.value === 'day') {
+            return new Date(data.dimension).toLocaleDateString('en-US', { weekday: 'short' });
         }
         return granularity.value === 'hour'
             ? `${data.dimension.toString().padStart(2, '0')}:00`
@@ -271,12 +290,13 @@ const renderEngagementRateChart = () => {
             scales: {
                 x: {
                     ticks: {
-                        maxRotation: 15, // Set max rotation
-                        minRotation: 15, // Set min rotation to make them diagonal
+                        maxRotation: 15,
+                        minRotation: 15,
                     },
                 },
                 y: {
                     beginAtZero: true,
+                    max: 100,
                     ticks: {
                         callback: (value) => `${value}%`,
                     },
@@ -284,14 +304,13 @@ const renderEngagementRateChart = () => {
             },
             plugins: {
                 legend: {
-                    display: false,
+                    display: true,
                     position: 'bottom',
                 },
             },
         },
     });
 };
-
 
 const renderUserTypesChart = () => {
     if (userTypesChart) {
@@ -333,64 +352,28 @@ const renderUserTypesChart = () => {
                         },
                     },
                 },
-                // Custom plugin to display the new and returning users count and percentages
-                beforeDraw: (chart) => {
-                    const { ctx } = chart;
-                    const { new: newUsers, returning: returningUsers } = userTypes.value;
-
-                    // Calculate chart dimensions and position
-                    const chartWidth = chart.width;
-                    const chartHeight = chart.height;
-
-                    // Position the text labels beside the chart
-                    const leftX = chart.chartArea.left + chartWidth + 20;
-                    const startY = chart.chartArea.top + chartHeight / 2 - 30;
-
-                    ctx.save();
-                    ctx.textAlign = 'left';
-                    ctx.font = '16px Arial';
-
-                    // Draw new users count and percentage
-                    ctx.fillStyle = '#5E9FF2';
-                    ctx.fillText('New Users:', leftX, startY);
-                    ctx.font = 'bold 18px Arial';
-                    ctx.fillText(`${newUsers} (${newUsersPercentage}%)`, leftX, startY + 20);
-
-                    // Draw returning users count and percentage
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = '#FFB74D';
-                    ctx.fillText('Returning Users:', leftX, startY + 50);
-                    ctx.font = 'bold 18px Arial';
-                    ctx.fillText(`${returningUsers} (${returningUsersPercentage}%)`, leftX, startY + 70);
-
-                    ctx.restore();
-                },
             },
         },
     });
 };
 
-
-
 watch(selectedPeriod, async () => {
-    await fetchAnalyticsData();  // Fetch new data based on selected period
-    renderVisitorsViewsChart();  // Re-render the chart with new data
-    renderEngagementRateChart();
+    await fetchAnalyticsData();
 });
 
+watch(selectedYear, async () => {
+    if (selectedPeriod.value === 'yearly') {
+        await fetchAnalyticsData();
+    }
+});
 
-// Fetch data initially and refetch on period change
 onMounted(fetchAnalyticsData);
-
 </script>
-
-
 
 <template>
     <Head title="Website" />
 
     <AuthenticatedLayout>
-        <!-- Top stats section -->
         <div class="px-8 border-b border-black">
             <div class="grid grid-cols-7 gap-4 text-center">
                 <div>
@@ -421,7 +404,14 @@ onMounted(fetchAnalyticsData);
                         <option value="yearly">Yearly</option>
                     </select>
                 </div>
-                <div>
+                <div v-if="selectedPeriod === 'yearly'">
+                    <select v-model="selectedYear" class="ml-4 p-2 pr-8 border rounded">
+                        <option v-for="year in availableYears" :key="year" :value="year">
+                            {{ year }}
+                        </option>
+                    </select>
+                </div>
+                <div v-else>
                     <button 
                         @click="showModal = true"
                         class="ml-4 p-2 pr-8 border-black #0E2940 rounded text-white mr-10"
@@ -434,47 +424,45 @@ onMounted(fetchAnalyticsData);
         </div>
 
         <div class="flex flex-wrap justify-center px-8 gap-5">
-            <!-- Visitors & Views Chart -->
-            <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
+            <h2 v-if="selectedPeriod === 'yearly'" class="w-full text-2xl font-bold text-center mt-4">
+                Generated Analytics for Year {{ selectedYear }}
+            </h2>
+            <div class="custom-chart-width p-4 border border-black rounded-lg mt-6">
                 <h3 class="text-l font-semibold text-center">Visitors and Views</h3>
                 <canvas id="visitorsViewsChart" class="w-full" style="height: 280px;"></canvas>
             </div>
-            <!-- Bounce Rate Chart -->
-            <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
+            <div class="custom-chart-width p-4 border border-black rounded-lg mt-6">
                 <h3 class="text-l font-semibold text-center">Retention Rate</h3>
                 <canvas id="bounceRateChart" class="w-full" style="height: 280px;"></canvas>
             </div>
-            <!-- Engagement Rate Chart -->
             <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
                 <h3 class="text-l font-semibold text-center">Engagement Rate</h3>
                 <canvas id="engagementRateChart" class="w-full" style="height: 280px;"></canvas>
             </div>
-            <!-- User Types Pie Chart -->
             <div class="custom-chart-width p-4 border border-black rounded-lg mt-10">
                 <h3 class="text-l font-semibold text-center">User Types</h3>
                 <canvas id="userTypesChart" class="w-full" style="height: 280px;"></canvas>
             </div>
         </div>
 
-        <!-- Footer buttons -->
         <div class="ml-48 fixed bottom-0 left-0 right-0 flex justify-center mb-3 space-x-2">
             <button class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-6 py-4 rounded-md" @click="goToPreviewHomePage">Preview Website</button>
             <button class="hover:bg-blue-600 transition hover:scale-105 ease-in-out duration-150 mr-1 bg-blue-500 text-white px-6 py-4 rounded-md" @click="goToEditWebsite1">Edit Website</button>
         </div>
 
         <WebsiteModal 
-        :showModal="showModal" 
-        @filter-applied="handleFilterApplied" 
-        @close="showModal = false" 
-    />
+            :showModal="showModal" 
+            @filter-applied="handleFilterApplied" 
+            @close="showModal = false" 
+        />
     </AuthenticatedLayout>
 </template>
 
 <style scoped>
 .custom-chart-width {
-        width: 750px;
-        max-height: 350px;
-        height: 350px;
-        
-    }
+    width: 750px;
+    max-height: 300px;
+    height: 300px;
+}
 </style>
+
